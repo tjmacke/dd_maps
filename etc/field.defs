@@ -1,0 +1,14 @@
+1	date		YYYY-MM-DD	ALL
+2	tStart		HH:MM		BEGIN
+3	tEnd		HH:MM		END
+4	Mileage		int		BEGIN,END
+5	jobType		str		ALL
+6	locStart	str		BEGIN,Job
+7	locEnd		str		Job,END
+8	Amount		money		Job
+9	Payment		str		Job
+10	Notes		str		NONE
+
+jobType = {BEGIN, END, Job}
+
+New field: 8.5 = Boost	?	Job
