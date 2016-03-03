@@ -34,8 +34,14 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
+lcnt=0
 cat $FILE	|\
 while read line ; do
+	lcnt=$((lcnt+1))
+	# skip the header
+	if [ $lcnt -eq 1 ] ; then
+		continue
+	fi
 	src="$(echo "$line" | awk -F'\t' '{ print $1 }')"
 	dst="$(echo "$line" | awk -F'\t' '{ print $2 }')"
 	q_dst="$(echo "$line" | awk -F'\t' '{ print $3 }')"
@@ -53,7 +59,7 @@ while read line ; do
 			lat = $5
 			r_dst = $6
 			if(index(r_dst, q_dst))
-				printf("%s\t%s\t%s\t%s\t%s\n", src, dst, long, lat, r_dst)
+				printf("%s\t%s\t%s\t%s\t%s\n", src, q_dst, long, lat, r_dst)
 			else{
 				printf("ERROR: dst: %s: not found:\n", dst) > "/dev/stderr"
 				printf("{\n") > "/dev/stderr"
