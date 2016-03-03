@@ -1,6 +1,10 @@
-source('./makeDateLabels.R')
-
 plotSrcInfo <- function(df, fn) {
+
+	if (!exists('dm_home')) {
+		stop('DM_HOME is not defined', call.=T)
+	}
+	sfn <- paste(dm_home, 'lib', 'makeDateLabels.R', sep='/')
+	source(sfn, chdir=R)
 
 	pdf(file = fn)
 	dl <- makeDateLabels(df$date)

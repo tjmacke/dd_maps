@@ -1,6 +1,10 @@
-source('./makeDateLabels.R')
-
 plotPayRates <- function(df, fn) {
+
+	if (!exists('dm_home')) {
+		stop('dm_home is not defined.', call.=F)
+	}
+	sfn <- paste(dm_home, 'lib', 'makeDateLabels.R', sep='/')
+	source(sfn, chdir=T)
 
 	df <- read.csv(args[1], sep='\t')
 	m_hrate <- lm(df$hrate ~ as.Date(df$date, '%Y-%m-%d'))
