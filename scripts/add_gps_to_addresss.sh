@@ -42,24 +42,31 @@ while read line ; do
 	if [ $lcnt -eq 1 ] ; then
 		continue
 	fi
-	src="$(echo "$line" | awk -F'\t' '{ print $1 }')"
-	dst="$(echo "$line" | awk -F'\t' '{ print $2 }')"
-	q_dst="$(echo "$line" | awk -F'\t' '{ print $3 }')"
+	date="$(echo "$line" | awk -F'\t' '{ print $1 }')"
+	src="$(echo "$line" | awk -F'\t' '{ print $2 }')"
+	dst="$(echo "$line" | awk -F'\t' '{ print $3 }')"
+	q_dst="$(echo "$line" | awk -F'\t' '{ print $4 }')"
+	if [ -z "$q_dst" ] ; then
+		echo "ERROR: dst: $dst: q_dst is empty" 1>&2
+		continue
+	fi
 	ll="$($DD_SCRIPTS/get_latlong.sh "$q_dst")"
 	if [ -z "$ll" ] ; then
 		LOG ERROR "get_latlong.sh failed for $q_dst"
 	else
 		# validate what came back
-		echo -e "$src\t$dst\t$q_dst\t$ll"	|\
+		echo -e "$date\t$src\t$dst\t$q_dst\t$ll"	|\
 		awk -F'\t' '{
-			src = $1
-			dst = $2
-			q_dst = $3
-			long = $4
-			lat = $5
-			r_dst = $6
+			date = $1
+			src = $2
+			dst = $3
+			q_dst = $4
+			long = $5
+			lat = $6
+			r_dst = $7
+			# this is way too simple
 			if(index(r_dst, q_dst))
-				printf("%s\t%s\t%s\t%s\t%s\n", src, q_dst, long, lat, r_dst)
+				printf("%s\t%s\t%s\t%s\t%s\t%s\n", date, src, q_dst, long, lat, r_dst)
 			else{
 				printf("ERROR: dst: %s: not found:\n", dst) > "/dev/stderr"
 				printf("{\n") > "/dev/stderr"
@@ -67,6 +74,13 @@ while read line ; do
 				printf("\treply = %s\n", r_dst) > "/dev/stderr"
 				printf("}\n") > "/dev/stderr"
 			}
+			# Instead 
+			# split the r_dst, q_dst on , 
+			# trim trailing ' '
+			# for r_dst, expand street abbreviations
+			# match the fields of q_dst to those in r_dst
+			# Must match fiekd 1, the street
+			# Must match 1 of town + state pfx or state + zip
 		}'
 	fi
 	sleep 5

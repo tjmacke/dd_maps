@@ -35,67 +35,92 @@ fi
 
 awk -F'\t' 'BEGIN {
 	pr_hdr = 1
-	pr_ba_hdr = 1
 	apos = sprintf("%c", 39)
-	pfx["Apt." ] = 1
-	pfx["Bldg."] = 1
-	pfx["No."  ] = 1
-        pfx["Rm."  ] = 1
-	pfx["Ste." ] = 1
+
+	dirs["E"] = "East"
+	dirs["N"] = "North"
+	dirs["S"] = "South"
+	dirs["W"] = "West"
+
+	st_abbrevs["Ave" ] = "Avenue"
+	st_abbrevs["Ave."] = "Avenue"
+	st_abbrevs["Ct" ] = "Court"
+	st_abbrevs["Ct." ] = "Court"
+	st_abbrevs["Dr" ] = "Drive"
+	st_abbrevs["Dr." ] = "Drive"
+	st_abbrevs["Rd" ] = "Road"
+	st_abbrevs["Rd." ] = "Road"
+	st_abbrevs["St" ] = "Street"
+	st_abbrevs["St." ] = "Street"
+
+	unit["Apt." ] = 1
+	unit["Bldg."] = 1
+	unit["No."  ] = 1
+        unit["Rm."  ] = 1
+	unit["Ste." ] = 1
+
 	towns["East PA" ] = "East Palo Alto"
 	towns["LAH"     ] = "Los Altos Hills"
 	towns["MP"      ] = "Menlo Park"
 	towns["MV"      ] = "Mountain View"
 	towns["PA"      ] = "Palo Alto"
 	towns["RWC"     ] = "Redwood City"
-	abbrevs["Ave" ] = "Avenue"
-	abbrevs["Ave."] = "Avenue"
-	abbrevs["Ct" ] = "Court"
-	abbrevs["Ct." ] = "Court"
-	abbrevs["Dr" ] = "Drive"
-	abbrevs["Dr." ] = "Drive"
-	abbrevs["Rd" ] = "Road"
-	abbrevs["Rd." ] = "Road"
-	abbrevs["St" ] = "Street"
-	abbrevs["St." ] = "Street"
 }
 $5 == "Job" {
+	date = $1
 	src = $6
 	dst = $7
+
 	nf = split(dst, ary, ",")
 	for(i = 1; i <= nf; i++){
 		sub(/^  */, "", ary[i])
 		sub(/  *$/, "", ary[i])
 	}
 
-	if(nf == 2)
+	if(nf == 2){
 		street = ary[1]
-	else if(ary[nf] ~ /^CA 94305/)
+		town = ary[2]
+	}else if(ary[nf] ~ /^CA 94305/){
 		street = ary[nf - 1]
-	else if(ary[nf] ~ /^CA/)
+		town = ary[nf]
+	}else if(ary[nf] ~ /^CA/){
 		street = ary[nf-2]
-	else
+		town = ary[nf-1]
+	}else{
 		street = ary[nf-1]
-	sub(/^  */, "", street)
-	nf2 = split(street, ary2, /  */)
-	if(ary2[1] in pfx){
-		street = ary[nf-2]
-		sub(/^  */, "", street)
+		town = ary[nf]
 	}
-	for(ab in abbrevs){
+
+	# If the street address was followed by a unit: bldg, no, etc
+	# the actual street was the previous field
+	nf2 = split(street, ary2, /  */)
+	if(ary2[1] in unit){
+		street = ary[nf-2]
+	}
+
+	# replace all st type abbreviations with their long forms
+	for(ab in st_abbrevs){
 		l_street = length(street)
 		l_ab = length(ab)
 		if(l_ab >= l_street)
 			continue
 		ix = l_street - l_ab + 1
 		if(substr(street, ix) == ab){
-			street = substr(street, 1, ix - 1) abbrevs[ab]
+			street = substr(street, 1, ix - 1) st_abbrevs[ab]
 			break
 		}
 	}
 
+	# replace any direction abbreviations with their long forms
+	nf2 = split(street, ary2, /  */)
+	work = ""
+	for(i = 1; i <= nf2; i++){
+		w2 = ary2[i] in dirs ? dirs[ary2[i]] : ary2[i]
+		work = work == "" ? w2 : work " " w2
+	}
+	street = work
+
 	town = ary[nf]
-	sub(/^  */, "", town)
 	if(town in towns)
 		town = towns[town]
 
@@ -112,9 +137,9 @@ $5 == "Job" {
 
 	if(pr_hdr){
 		pr_hdr = 0
-		printf("%s\t%s\t%s\t%s\n", "src", "dst", "canDst", "badDst")
+		printf("%s\t%s\t%s\t%s\t%s\n", "date", "src", "dst", "canDst", "badDst")
 	}
-	printf("%s\t%s\t%s\t%s\n", src, dst, c_dst, b_dst)
+	printf("%s\t%s\t%s\t%s\t%s\n", date, src, dst, c_dst, b_dst)
 }
 # encode apos, space
 function simple_url_encoder(addr,   ix) {
