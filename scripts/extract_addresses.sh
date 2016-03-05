@@ -55,9 +55,15 @@ awk -F'\t' 'BEGIN {
 
 	unit["Apt." ] = 1
 	unit["Bldg."] = 1
+	unit["Class"] = 1
+	unit["class"] = 1
+	unit["Floor"] = 1
+	unit["floor"] = 1
 	unit["No."  ] = 1
+	unit["no."  ] = 1
         unit["Rm."  ] = 1
 	unit["Ste." ] = 1
+	unit["Unit" ] = 1
 
 	towns["East PA" ] = "East Palo Alto"
 	towns["LAH"     ] = "Los Altos Hills"
@@ -95,6 +101,8 @@ $5 == "Job" {
 	# the actual street was the previous field
 	nf2 = split(street, ary2, /  */)
 	if(ary2[1] in unit){
+		street = ary[nf-2]
+	}else if(substr(ary2[1], 1, 1) == "#"){
 		street = ary[nf-2]
 	}
 
