@@ -1,5 +1,7 @@
 #! /bin/bash
 #
+# No longer used
+#
 . ~/etc/funcs.sh
 
 U_MSG="usage: $0 [ -help ] [ address-tsv-file ]"
