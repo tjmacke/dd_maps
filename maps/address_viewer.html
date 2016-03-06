@@ -1,0 +1,52 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <script src="https://d3js.org/d3.v3.min.js"></script>
+  <style>
+    table {
+      border-collapse: collapse;
+      border: 2px black solid;
+      font: 12px sans-serif;
+    }
+    td {
+      border: 1px black solid;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="form">
+  <input type="file" id="fileinput" />
+    <script type="text/javascript">
+      function readSingleFile(evt) {
+        var f = evt.target.files[0];
+      
+        if (f) {
+          var r = new FileReader();
+          r.onload = function(e) {
+            var contents = e.target.result;
+            var parsedTSV = d3.tsv.parseRows(contents);
+            var container = d3.select("#results")
+                              .append("table")
+                              .selectAll("tr")
+                              .data(parsedTSV)
+                              .enter()
+                              .append("tr")
+                              .selectAll("td")
+                              .data(function(d) { return d; })
+                              .enter()
+                              .append("td")
+                              .text(function(d) { return d; });
+          };
+          r.readAsText(f);
+        } else {
+          alert("Failed to load file");
+        }
+      }
+      document.getElementById('fileinput').addEventListener('change', readSingleFile, false);
+    </script>
+  </div>
+  <div id="results">
+  </div>
+</body>
+</html>
