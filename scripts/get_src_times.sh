@@ -32,7 +32,7 @@ if [ $# -ne 0 ] ; then
 fi
 
 awk -F'\t' '$5 == "Job" {
-	printf("%s\t%sT%s:00\n", $6, $1, $2)
+	printf("%s\t%sT%s:00\n", $6, $1, $2 == "." ? "12:00" : $2)
 }' $FILE	|\
 sort -t $'\t' -k 1,1 -k 2,2	|\
 awk -F'\t' '{
