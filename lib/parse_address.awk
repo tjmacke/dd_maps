@@ -118,7 +118,7 @@ function get_town(nf, ary, result, f_st, st_quals, towns,   i, f_town) {
 	# handle possible CA zip
 	if(f_town == nf){				# town is last field, look closer
 		if(ary[f_town] == "CA 94305"){		# Stanford is special
-			ary[f_town] = "Stanford"
+			ary[f_town] = "Stanford University"
 		}else if(ary[f_town] ~ /^CA 9/){	# town cannot be a a zip code
 			result["status"] = "B"
 			result["emsg"  ] = "town=zip"
