@@ -57,24 +57,33 @@ $1 != "Date" {
 	n_lines++
 	lines[n_lines] = $0
 	if($5 == "BEGIN"){
-		if(NF != n_fields[$5]){
-			printf("%s: ERROR: line %7d: %s line with wrong number fields %d, need %d\n", ARGV[1], NR, $5, NF, n_fields[$5]) > "/dev/stderr"
+		if(NF != n_fields["BEGIN"]){
+			err = 1
+			printf("%s: ERROR: line %7d: %s line with wrong number fields %d, need %d\n",
+				ARGV[1] != "" ? ARGV[1] : "--stdin--", NR, $5, NF, n_fields[$5]) > "/dev/stderr"
+			pr_fields()
 			exit 1
 		}
 		l_begin = n_lines
 		t_begin = $2
 		m_begin = $4
 	}else if($5 == "END"){
-		if(NF != n_fields[$5]){
-			printf("%s: ERROR: line %7d: %s line with wrong number fields %d, need %d\n", ARGV[1], NR, $5, NF, n_fields[$5]) > "/dev/stderr"
+		if(NF != n_fields["END"]){
+			err = 1
+			printf("%s: ERROR: line %7d: %s line with wrong number fields %d, need %d\n",
+				ARGV[1] != "" ? ARGV[1] : "--stdin--", NR, $5, NF, n_fields[$5]) > "/dev/stderr"
+			pr_fields()
 			exit 1
 		}
 		l_end = n_lines
 		t_end = $3
 		m_end = $4
 	}else if($5 == "Job"){
-		if(NF != n_fields[$5]){
-			printf("%s: ERROR: line %7d: %s line with wrong number fields %d, need %d\n", ARGV[1], NR, $5, NF, n_fields[$5]) > "/dev/stderr"
+		if(NF != n_fields["Job"]){
+			err = 1
+			printf("%s: ERROR: line %7d: %s line with wrong number fields %d, need %d\n",
+				ARGV[1] != "" ? ARGV[1] : "--stdin--", NR, $5, NF, n_fields[$5]) > "/dev/stderr"
+			pr_fields()
 			exit 1
 		}
 		n_jobs++
@@ -82,11 +91,13 @@ $1 != "Date" {
 	}else if($5 == "Reject" ){
 	}else if($5 == "Expense" ){
 	}else{
-		printf("%s: ERROR: line %7d: unknown jobtype \"%s\"\n", ARGV[1], NR, $5) > "/dev/stderr"
+		printf("%s: ERROR: line %7d: unknown jobtype \"%s\"\n", ARGV[1] != "" ? ARGV[1] : "--stdin--", NR, $5) > "/dev/stderr"
 	}
 	l_1 = $1
 }
 END {
+	if(err)
+		exit err
 	if(l_1 != ""){
 		if(pr_hdr){
 			pr_hdr = 0
@@ -110,4 +121,11 @@ function t_diff(t_end, t_start,  ary, end, start){
 	start = 60*ary[1] + ary[2]
 
 	return (end - start)/60
+}
+function pr_fields() {
+
+	printf("fields = {\n") > "/dev/stderr"
+	for(i = 1; i <= NF; i++)
+		printf("\t%d:\t%s\n", i, $i) > "/dev/stderr"
+	printf("}\n") > "/dev/stderr"
 }' $FILE

@@ -1,0 +1,40 @@
+# This is a comment
+dirs = {
+	E	= East
+	N	= North
+	S	= South
+	W	= West
+}
+
+st_abbrevs = {
+	Ave	= Avenue
+	Ave.	= Avenue
+	Ct	= Court
+	Ct.	= Court
+	Dr	= Drive
+	Dr.	= Drive
+	Rd	= Road
+	Rd.	= Road
+	St	= Street
+	St.	= Street
+}
+
+st_quals = {
+	apt	= 1
+	bldg	= 1
+	class	= 1
+	floor	= 1
+	no	= 1
+	rm	= 1
+	ste	= 1	
+	unit	= 1
+}
+
+towns = {
+	East PA	= East Palo Alto
+	LAH	= Los Altos Hills
+	MP	= Menlo Park
+	MV	= Mountain View
+	PA	= Palo Alto
+	RWC	= Redwood City
+}
