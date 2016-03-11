@@ -74,23 +74,66 @@ awk -F'\t' 'BEGIN {
 }
 NR > 1 {
 	date = $1
-
-	atype = ""
-	astat = "G"
-
 	dst = $3
-	nf = split(dst, ary, ",")
+
+	fix_address(dst, result, dirs, st_abbrevs, st_quals, towns)
+	printf("%s", result["status"])
+	if(result["status"] == "B")
+		printf(", %s", result["emsg"])
+	printf("\t%s", date)
+	if(result["status"] == "B"){
+		printf("\t\t")
+	}else{
+		printf("\t%s\t%s, %s, %s", result["name"], result["street"], result["town"], result["state"])
+	}
+	printf("\t%s\n", dst)
+
+}
+function fix_address(addr, result, dirs, st_abbrevs, st_quals, towns,   nf, ary, i, f_st, f_town, name) {
+
+	result["status"] = "B"
+	result["emsg"  ] = ""
+	result["name"  ] = ""
+	result["street"] = ""
+	result["town"  ] = ""
+	result["state" ] = ""
+
+	nf = split(addr, ary, ",")
 	for(i = 1; i <= nf; i++){
 		gsub(/^  */, "", ary[i])
 		gsub(/  *$/, "", ary[i])
 	}
+	f_st = fix_street(nf, ary, result, dirs, st_abbrevs)
+	if(f_st == 0)
+		return 1
+
+	f_town = fix_town(nf, ary, result, f_st, st_quals, towns)
+	if(f_town == 0)
+		return 1
+
+	# If we get here, addr is good, set the type
+	result["status"] = "G"
+	if(f_st == 1)
+		result["name"] = "Residence"
+	else{
+		name = ary[1]
+		for(i = 2; i < f_st; i++){
+			name = name ", " ary[i]
+		}
+		result["name"] = name
+	}
+	return 0
+}
+function fix_street(nf, ary, result, dirs, st_abbrevs,    f_st, i, street, l_street, ab, l_ab, ix, nf2, ary2, work) {
 
 	# find the street part of the address
 	f_st = 0
 	if(nf == 1){	# minimum address is street, town
-		astat = "B, nf=1"
+		result["status"] = "B"
+		result["emsg"] = "no town"
+		return 0
 	}else{
-		# street if the first field that matches one of these patterns
+		# street is the first field that matches one of these patterns
 		for(i = 1; i < nf; i++){
 			if(ary[i] ~ /^[1-9][0-9]* /){	# Simple number prefix
 				f_st = i
@@ -103,21 +146,19 @@ NR > 1 {
 				break
 			}
 		}
-		if(f_st == 0)
-			astat = "B, f_st=0"
+		# ERROR: No street found
+		if(f_st == 0){
+			result["status"] = "B"
+			result["emsg"] = "street?"
+			return 0
+		}
 	}
 
-	# Oops! No street, print the input, leaving fixed field blank
-	if(f_st == 0){
-		printf("%s\t%s\t%s\t%s\t%s\n", astat, date, atype, "", dst)
-		next
-	}
-
-	# Oops! f_st is last field, no town
+	# ERROR: f_st is last field: no town
 	if(f_st == nf){
-		astat = "B, f_st=$"
-		printf("%s\t%s\t%s\t%s\t%s\n", astat, date, atype, "", dst)
-		next
+		result["status"] = "B"
+		result["emsg"] = "f_st=$"
+		return 0
 	}
 
 	# replace str abbrev with their long forms
@@ -138,10 +179,13 @@ NR > 1 {
 	nf2 = split(ary[f_st], ary2, /  */)
 	work = ""
 	for(i = 1; i <= nf2; i++){
-		w2 = ary2[i] in dirs ? dirs[ary2[i]] : ary2[i]
-		work = work == "" ? w2 : work " " w2
+		ary2[i] = ary2[i] in dirs ? dirs[ary2[i]] : ary2[i]
+		work = work == "" ? ary2[i] : work " " ary2[i]
 	}
-	ary[f_st] = work
+	result["street"] = ary[f_st] = work
+	return f_st
+}
+function fix_town(nf, ary, result, f_st, st_quals, towns,   i, f_town) {
 
 	# find the town:
 	# 1. Set any street qualifiers (Apt 8, Bldg 2, etc) to ""
@@ -152,7 +196,7 @@ NR > 1 {
 	# 4. If town is 2d from last field and last is CA zip, zip = 1, good to go
 	# 5. err
 	for(i = f_st + 1; i <= nf; i++){
-		ary[i] = remove_st_qual(ary[i])
+		ary[i] = remove_st_qual(ary[i], st_quals)
 	}
 	f_town = 0
 	for(i = f_st + 1; i <= nf; i++){
@@ -164,18 +208,18 @@ NR > 1 {
 
 	# Oops! No town
 	if(f_town == 0){
-		astat = "B, ?Town"
-		printf("%s\t%s\t%s\t%s\t%s\n", astat, date, atype, "", dst)
-		next
+		result["status"] = "B"
+		result["emsg"  ] = "town?"
+		return 0
 	}
 
 	if(f_town == nf){			# town is last field, look closer
 		if(ary[f_town] == "CA 94305"){	# Stanford is special
 			ary[f_town] = "Stanford"
 		}else if(ary[f_town] ~ /^CA 9/){	# town cannot be a a zip code
-			astat = "B, twn=zip"
-			printf("%s\t%s\t%s\t%s\t%s\n", astat, date, atype, "", dst)
-			next
+			result["status"] = "B"
+			result["emsg"  ] = "town=zip"
+			return 0
 		}
 	}else if(f_town == nf - 1){		# town followed by 1 more field, look closer
 		if(ary[nf] ~ /^CA [0-9]/){	# town followed by state zip, drop it
@@ -183,39 +227,24 @@ NR > 1 {
 		}else if(ary[nf] == "CA"){	# town followed by state, drop it
 			ary[nf] = ""
 		}else{				# no idea
-			astat = "B, ?Town2"
-			printf("%s\t%s\t%s\t%s\t%s\n", astat, date, atype, "", dst)
-			next
+			result["status"] = "B"
+			result["emsg"  ] = "town2?"
+			return 0
 		}
 	}else{ 					# town followed by at least 2 fields, who knows?
-		astat = "B, ?Town3"
-		printf("%s\t%s\t%s\t%s\t%s\n", astat, date, atype, "", dst)
-		next
+		result["status"] = "B"
+		result["emsg"  ] = "town3?"
+		return 0
 	}
 
-	# Replace abbreviated towns w/full name and add suffix ", CA"
-	ary[f_town] = (ary[f_town] in towns ? towns[ary[f_town]] : ary[f_town]) ", CA"
+	# Replace abbreviated town w/full name
+	ary[f_town] = (ary[f_town] in towns ? towns[ary[f_town]] : ary[f_town])
+	result["town"] = ary[f_town]
+	result["state"] = "CA"	# for now
 
-	# If we get here, addr is good, set the type
-	if(f_st == 1)
-		atype = "Residence"
-	else{
-		atype = ary[1]
-		for(i = 2; i < f_st; i++){
-			atype = atype ", " ary[i]
-		}
-	}
-
-	if(!bopt){
-		printf("%s\t%s\t%s\t%s", astat, date, atype, ary[f_st])
-		for(i = f_st + 1; i <= nf; i++){
-			if(ary[i] != "")
-				printf(", %s", ary[i])
-		}
-		printf("\t%s\n", dst)
-	}
+	return f_town
 }
-function remove_st_qual(str,  lc_str) {
+function remove_st_qual(str, st_quals,   l_str, lc_str, u) {
 
 	if(str ~ /^[#1-9]/)
 		return ""
