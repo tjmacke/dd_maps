@@ -72,9 +72,10 @@ awk -F'\t' 'BEGIN {
 	towns["PA"      ] = "Palo Alto"
 	towns["RWC"     ] = "Redwood City"
 }
-NR > 1 {
+$5 == "Job" {
 	date = $1
-	dst = $3
+	src = $6
+	dst = $7
 
 	fix_address(dst, result, dirs, st_abbrevs, st_quals, towns)
 	printf("%s", result["status"])
