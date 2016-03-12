@@ -4,7 +4,16 @@
 
 U_MSG="usage: $0 [ -help ] [ -b ] [ runs-file ]"
 
-CFILE=$DM_HOME/etc/address.info
+if [ -z "$DM_HOME" ] ; then
+	LOG ERROR "DM_HOME is not defined"
+	exit 1
+fi
+DM_ETC=$DM_HOME/etc
+DM_LIB=$DM_HOME/lib
+DM_SCRIPTS=$DM_HOME/scripts
+
+CFILE=$DM_ETC/address.info
+
 FILE=
 BOPT=
 
@@ -38,8 +47,8 @@ if [ $# -ne 0 ] ; then
 fi
 
 awk -F'\t' '
-@include "'"$DM_HOME"'/lib/rd_config.awk"
-@include "'"$DM_HOME"'/lib/parse_address.awk"
+@include "'"$DM_LIB"'/rd_config.awk"
+@include "'"$DM_LIB"'/parse_address.awk"
 BEGIN {
 	cfile = "'"$CFILE"'"
 	if(rd_config(cfile, config)){
