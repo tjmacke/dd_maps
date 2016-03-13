@@ -12,6 +12,18 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
+# awk v3 does not support include
+AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
+if [ "$AWK_VERSION" == "3" ] ; then
+	AWK=igawk
+	RD_CONFIG="$DM_LIB/rd_config.awk"
+	PARSE_ADDRESS="$DM_LIB/parse_address.awk"
+else
+	AWK=awk
+	RD_CONFIG="\"$DM_LIB/rd_config.awk\""
+	PARSE_ADDRESS="\"$DM_LIB/parse_address.awk\""
+fi
+
 CFILE=$DM_ETC/address.info
 
 FILE=
@@ -46,9 +58,9 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
-awk -F'\t' '
-@include "'"$DM_LIB"'/rd_config.awk"
-@include "'"$DM_LIB"'/parse_address.awk"
+$AWK -F'\t' '
+@include '"$RD_CONFIG"'
+@include '"$PARSE_ADDRESS"'
 BEGIN {
 	cfile = "'"$CFILE"'"
 	if(rd_config(cfile, config)){
