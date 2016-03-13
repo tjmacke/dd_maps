@@ -52,8 +52,8 @@ awk -F'\t' 'BEGIN {
 		max_date = $1
 	src[n_dashes] = $2
 	dst[n_dashes] = $3
-	lat[n_dashes] = $4
-	lng[n_dashes] = $5
+	lat[n_dashes] = $5
+	lng[n_dashes] = $4
 }
 END {
 	work = min_date
