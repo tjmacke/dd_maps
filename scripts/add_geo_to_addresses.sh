@@ -65,7 +65,7 @@ while read line ; do
 	qDst="$(echo "$line" | awk -F'\t' '{ print $5 }')"
 	dName="$(echo "$line" | awk -F'\t' '{ print $6 }')"
 	if [ -z "$qDst" ] ; then
-		echo "ERROR: dst: $dst: qDst is empty" 1>&2
+		echo "ERROR: $date: dst: $dst: queryDst is empty" 1>&2
 		continue
 	fi
 	ll="$($DM_SCRIPTS/get_latlong.sh "$qDst")"
@@ -128,7 +128,7 @@ while read line ; do
 				}
 				if(r_st == 0){
 					err = 1
-					emsg = "no street in rDst"
+					emsg = "no street in replyDst"
 				}else if(r_st + 2 > nrf){
 					err = 1
 					emsg = "not enough rDst after street"
@@ -143,7 +143,7 @@ while read line ; do
 					l_rState = length(rAry[r_st+2])
 					if(l_rState < l_qState){
 						err = 1
-						emsg = "rState is too short"
+						emsg = "replyState is too short"
 					}else if(substr(rAry[r_st+2], 1, l_qState) != qAry[3]){
 						err = 1
 						emsg = "states do not match"
@@ -151,7 +151,7 @@ while read line ; do
 				}
 			}
 			if(err){
-				printf("ERROR: dst: %s: not found:\n", dst) > "/dev/stderr"
+				printf("ERROR: %s: dst: %s: not found:\n", date, dst) > "/dev/stderr"
 				printf("{\n") > "/dev/stderr"
 				printf("\temsg  = %s\n", emsg) > "/dev/stderr"
 				printf("\tquery = %s\n", qDst) > "/dev/stderr"

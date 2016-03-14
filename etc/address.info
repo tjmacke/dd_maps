@@ -9,12 +9,18 @@ dirs = {
 st_abbrevs = {
 	Ave	= Avenue
 	Ave.	= Avenue
+	Blvd	= Boulevard
+	Blvd.	= Boulevard
 	Ct	= Court
 	Ct.	= Court
 	Dr	= Drive
 	Dr.	= Drive
+	Ln	= Lane
+	Ln.	= Lane
 	Rd	= Road
 	Rd.	= Road
+	Sq	= Square
+	Sq.	= Square
 	St	= Street
 	St.	= Street
 }
@@ -31,10 +37,11 @@ st_quals = {
 }
 
 towns = {
-	East PA	= East Palo Alto
-	LAH	= Los Altos Hills
-	MP	= Menlo Park
-	MV	= Mountain View
-	PA	= Palo Alto
-	RWC	= Redwood City
+	East PA	 = East Palo Alto
+	LAH	 = Los Altos Hills
+	MP	 = Menlo Park
+	MV	 = Mountain View
+	PA	 = Palo Alto
+	RWC	 = Redwood City
+	Stanford = Stanford University
 }
