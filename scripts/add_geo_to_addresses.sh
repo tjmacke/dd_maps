@@ -12,10 +12,13 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
+# TODO: get_latlong.sh will eventually return > 1 addresss, as even the top rated can be wrong, so put the results in a file
+LL_FILE=/tmp/ll.$$.json
+
+
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
-	AWK=igawk
 	RD_CONFIG="$DM_LIB/rd_config.awk"
 else
 	AWK=awk
@@ -68,12 +71,12 @@ while read line ; do
 		echo "ERROR: $date: dst: $dst: queryDst is empty" 1>&2
 		continue
 	fi
-	ll="$($DM_SCRIPTS/get_latlong.sh "$qDst")"
-	if [ -z "$ll" ] ; then
+	#ll="$($DM_SCRIPTS/get_latlong.sh "$qDst")"
+	$DM_SCRIPTS/get_latlong.sh "$qDst" > $LL_FILE
+	if [ ! -s $LL_FILE ] ; then
 		LOG ERROR "get_latlong.sh failed for $qDst"
 	else
 		# validate what came back
-		echo -e "$date\t$src\t$dst\t$qDst\t$dName\t$ll"	|\
 		$AWK -F'\t' '
 		@include '"$RD_CONFIG"'
 		BEGIN {
@@ -86,17 +89,21 @@ while read line ; do
 				split(k, keys, SUBSEP)
 				if(keys[1] == "st_abbrevs")
 					st_abbrevs[keys[2]] = config[k]
+				else if(keys[1] == "dirs")
+					dirs[keys[2]] = config[k]
 			}
 		}
 		{
-			date = $1
-			src = $2
-			dst = $3
-			qDst = $4
-			dName = $5
-			long = $7
-			lat = $6
-			rDst = $8
+			date = "'"$date"'"
+			src = "'"$src"'"
+			dst = "'"$dst"'"
+			qDst = "'"$qDst"'"
+			dName = "'"$dName"'"
+
+			conf = $1
+			rDst = $2
+			lat = $3
+			long = $4
 
 			nqf = split(qDst, qAry, ",")
 			for(i = 1; i <= nqf; i++){
@@ -116,13 +123,12 @@ while read line ; do
 				emsg = "rDst is shorter that qDst"
 			}else{
 				# qAry[1,2,3] are the street, town and st (w/o zip)
-
 				# find the street, expand any abbrevs, then start matching
 				r_st = 0
 				for(i = 1; i <= nrf; i++){
 					if(substr(rAry[i], 1, 1) ~ /[1-9]/){
 						r_st = i
-						rAry[r_st] = fix_street(rAry[r_st], st_abbrevs)
+						rAry[r_st] = fix_street(rAry[r_st], st_abbrevs, dirs)
 						break
 					}
 				}
@@ -147,9 +153,17 @@ while read line ; do
 					}else if(substr(rAry[r_st+2], 1, l_qState) != qAry[3]){
 						err = 1
 						emsg = "states do not match"
+					}else{
+						# if we get here, we matched the reply to query
 					}
 				}
 			}
+			if(!err){
+				printf("%s\t%s\t%s\t%s\t%s\t%s\n", date, src, qDst, long, lat, rDst)
+				exit 0
+			}
+		}
+		END {
 			if(err){
 				printf("ERROR: %s: dst: %s: not found:\n", date, dst) > "/dev/stderr"
 				printf("{\n") > "/dev/stderr"
@@ -157,19 +171,25 @@ while read line ; do
 				printf("\tquery = %s\n", qDst) > "/dev/stderr"
 				printf("\treply = %s\n", rDst) > "/dev/stderr"
 				printf("}\n") > "/dev/stderr"
-			}else
-				printf("%s\t%s\t%s\t%s\t%s\t%s\n", date, src, qDst, long, lat, rDst)
+			}
 		}
-		function fix_street(str, st_abbrevs,    nw, words, i, work, w) {
-
+		function fix_street(str, st_abbrevs, dirs,    nw, words, i, work, w) {
 			nw = split(str, words, " ")
 			work = ""
 			for(i = 1; i <= nw; i++){
-				w = words[i] in st_abbrevs ? st_abbrevs[words[i]] : words[i]
+#				w = words[i] in st_abbrevs ? st_abbrevs[words[i]] : words[i]
+				if(words[i] in dirs)
+					w = dirs[words[i]]
+				else if(words[i] in st_abbrevs)
+					w = st_abbrevs[words[i]]
+				else
+					w = words[i]
 				work = work == "" ? w : work " " w
 			}
 			return work
-		}'
+		}' $LL_FILE
 	fi
 	sleep 5
 done
+
+rm -f $LL_FILE

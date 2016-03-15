@@ -64,6 +64,7 @@ if [ -z "$E_ADDR" ] ; then
 fi
 PARMS="query=$E_ADDR&key=$KEY"
 
-curl -s -S https://api.opencagedata.com/geocode/v1/json?"$PARMS"	|\
-$JU_BIN/json_get -g '{results}[1]{geometry}{lat, lng},{results}[1]{formatted}'
+curl -s -S https://api.opencagedata.com/geocode/v1/json?"$PARMS"		|\
+$JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng}'	|\
+sort -k 1rn,1
 exit 0
