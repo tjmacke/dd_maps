@@ -177,11 +177,12 @@ while read line ; do
 			nw = split(str, words, " ")
 			work = ""
 			for(i = 1; i <= nw; i++){
-#				w = words[i] in st_abbrevs ? st_abbrevs[words[i]] : words[i]
 				if(words[i] in dirs)
 					w = dirs[words[i]]
 				else if(words[i] in st_abbrevs)
 					w = st_abbrevs[words[i]]
+				else if(words[i] == "el")
+					w = "El"
 				else
 					w = words[i]
 				work = work == "" ? w : work " " w
