@@ -4,6 +4,7 @@
 
 U_MSG="usage: $0 [ -help ] canonical-address"
 
+# TODO: fix this evil dependency
 JU_HOME=~
 JU_BIN=$JU_HOME/bin
 

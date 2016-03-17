@@ -85,7 +85,7 @@ BEGIN {
 	}
 
 	bopt = "'"$BOPT"'" == "yes"
-	printf("status\tdate\tsrc\tdst\tqDst\tdName\n")
+	pr_hdr = 1
 }
 $5 == "Job" {
 	date = $1
@@ -93,6 +93,10 @@ $5 == "Job" {
 	dst = $7
 
 	parse_address(dst, result, dirs, st_abbrevs, st_quals, towns)
+	if(pr_hdr){
+		pr_hdr = 0
+		printf("status\tdate\tsrc\tdst\tqDst\tdName\n")
+	}
 	printf("%s", result["status"])
 	if(result["status"] == "B")
 		printf(", %s", result["emsg"])
