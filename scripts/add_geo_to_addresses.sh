@@ -19,10 +19,14 @@ LL_FILE=/tmp/ll.$$.json
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
+	AWK=igawk
 	RD_CONFIG="$DM_LIB/rd_config.awk"
-else
+elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
 	RD_CONFIG="\"$DM_LIB/rd_config.awk\""
+else
+	LOG ERROR "bad AWK_VERSION: \"$AWK_VERSION\": must be 3 or 4"
+	exit 1
 fi
 
 CFILE=$DM_ETC/address.info
