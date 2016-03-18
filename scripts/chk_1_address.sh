@@ -89,11 +89,13 @@ if [ -z "$A_LINE" ] ; then
 	exit 1
 fi
 
-echo -e "addr\t$ADDR"
+Q_ADDR="$(echo "$A_LINE" | awk -F'\t' '{ print $5 }')"
+
 echo -e "job\t$J_LINE"
+echo -e "addr\t$ADDR"
+echo -e "qaddr\t$Q_ADDR"
 echo -e "candidates\t{"
 echo -e "\tscore\taddress"
-Q_ADDR="$(echo "$A_LINE" | awk -F'\t' '{ print $5 }')"
 $DM_SCRIPTS/get_latlong.sh "$Q_ADDR"	|\
 awk '{ printf("\t%s\n", $0) }'
 echo "}"

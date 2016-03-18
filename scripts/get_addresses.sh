@@ -18,10 +18,13 @@ if [ "$AWK_VERSION" == "3" ] ; then
 	AWK=igawk
 	RD_CONFIG="$DM_LIB/rd_config.awk"
 	PARSE_ADDRESS="$DM_LIB/parse_address.awk"
-else
+elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
 	RD_CONFIG="\"$DM_LIB/rd_config.awk\""
 	PARSE_ADDRESS="\"$DM_LIB/parse_address.awk\""
+else
+	LOG ERROR "bad AWK_VERSION: \"$AWK_VERSION\": must be 3 or 4"
+	exit 1
 fi
 
 CFILE=$DM_ETC/address.info

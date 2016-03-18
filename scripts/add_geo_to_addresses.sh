@@ -75,7 +75,6 @@ while read line ; do
 		echo "ERROR: $date: dst: $dst: queryDst is empty" 1>&2
 		continue
 	fi
-	#ll="$($DM_SCRIPTS/get_latlong.sh "$qDst")"
 	$DM_SCRIPTS/get_latlong.sh "$qDst" > $LL_FILE
 	if [ ! -s $LL_FILE ] ; then
 		LOG ERROR "get_latlong.sh failed for $qDst"
