@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ - help ] [ -dh doordash-home ] -m month addr"
+U_MSG="usage: $0 [ - help ] [ -dh doordash-home ] -at { src | dst } -m month addr"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined."
@@ -11,6 +11,7 @@ fi
 DM_SCRIPTS=$DM_HOME/scripts
 
 DD_HOME=
+ATYPE=
 MONTH=
 ADDR=
 
@@ -28,6 +29,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		DD_HOME=$1
+		shift
+		;;
+	-at)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-at requires address-type argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		ATYPE=$1
 		shift
 		;;
 	-m)
@@ -65,6 +76,16 @@ if [ -z "$DD_HOME" ] ; then
 	exit 1
 fi
 
+if [ -z "$ATYPE" ] ; then
+	LOG ERROR "missing -at address-type argument"
+	echo "$U_MSG" 1>&2
+	exit 1
+elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
+	LOG ERROR "unknown address type $ATYPE, must src or dst"
+	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
 if [ -z "$MONTH" ] ; then
 	LOG ERROR "missing -m month argument"
 	echo "$U_MSG" 1>&2
@@ -72,20 +93,22 @@ if [ -z "$MONTH" ] ; then
 fi
 
 J_LINE="$(awk -F'\t' 'BEGIN {
+	atype = "'"$ATYPE"'"
 	addr = "'"$ADDR"'"
 }
 $5 == "Job" {
-	if($7 == addr){
+	fld = atype == "src" ? 6 : 7
+	if($fld == addr){
 		print $0
 		exit 0
 	}
 }' $DD_HOME/data/runs.$MONTH.tsv)"
 
-A_LINE="$(echo "$J_LINE" | $DM_SCRIPTS/get_addresses.sh		|\
+A_LINE="$(echo "$J_LINE" | $DM_SCRIPTS/get_addresses.sh -at $ATYPE	|\
 tail -1)"
 
 if [ -z "$A_LINE" ] ; then
-	LOG ERROR "no address '$ADDR' in runs.$MONTH.tsv"
+	LOG ERROR "no $ATYPE address \"$ADDR\" in runs.$MONTH.tsv"
 	exit 1
 fi
 

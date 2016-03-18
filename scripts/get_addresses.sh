@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -b ] [ runs-file ]"
+U_MSG="usage: $0 [ -help ] -at { src | dst } [ runs-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -29,8 +29,8 @@ fi
 
 CFILE=$DM_ETC/address.info
 
+ATYPE=
 FILE=
-BOPT=
 
 while [ $# -gt 0 ] ; do
 	case $1 in
@@ -38,8 +38,14 @@ while [ $# -gt 0 ] ; do
 		echo "$U_MSG"
 		exit 0
 		;;
-	-b)
-		BOPT="yes"
+	-at)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-at requires address-type argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		ATYPE=$1
 		shift
 		;;
 	-*)
@@ -61,10 +67,21 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
+if [ -z "$ATYPE" ] ; then
+	LOG ERROR "missing -at address-type argument"
+	echo "$U_MSG" 1>&2
+	exit 1
+elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
+	LOG ERROR "unkonwn address type $ATYPE, must either src or dst"
+	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
 $AWK -F'\t' '
 @include '"$RD_CONFIG"'
 @include '"$PARSE_ADDRESS"'
 BEGIN {
+	atype = "'"$ATYPE"'"
 	cfile = "'"$CFILE"'"
 	if(rd_config(cfile, config)){
 		err = 1
@@ -87,7 +104,6 @@ BEGIN {
 		}
 	}
 
-	bopt = "'"$BOPT"'" == "yes"
 	pr_hdr = 1
 }
 $5 == "Job" {
@@ -95,10 +111,13 @@ $5 == "Job" {
 	src = $6
 	dst = $7
 
-	parse_address(dst, result, dirs, st_abbrevs, st_quals, towns)
+	parse_address(atype == "src" ? src : dst, result, dirs, st_abbrevs, st_quals, towns)
 	if(pr_hdr){
 		pr_hdr = 0
-		printf("status\tdate\tsrc\tdst\tqDst\tdName\n")
+		if(atype == "src")
+			printf("status\tdate\tsrc\tdst\tqSrc\tsName\n")
+		else
+			printf("status\tdate\tsrc\tdst\tqDst\tdName\n")
 	}
 	printf("%s", result["status"])
 	if(result["status"] == "B")

@@ -1,9 +1,13 @@
 # This is a comment
 dirs = {
 	E	= East
+	E.	= East
 	N	= North
+	N.	= North
 	S	= South
+	S.	= South
 	W	= West
+	W.	= West
 }
 
 st_abbrevs = {

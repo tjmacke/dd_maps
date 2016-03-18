@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ extracted-address-file ]"
+U_MSG="usage: $0 [ -help ] -at { src | dst } [ extracted-address-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -31,6 +31,7 @@ fi
 
 CFILE=$DM_ETC/address.info
 
+ATYPE=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -38,6 +39,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-at)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-at requires address-type argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		ATYPE=$1
+		shift
 		;;
 	-*)
 		LOG ERROR "unknown option $1"
@@ -58,6 +69,16 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
+if [ -z "$ATYPE" ] ; then
+	LOG ERROR "missing -at address-type argument"
+	echo "$U_MSG" 1>&2
+	exit 1
+elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
+	LOG ERROR "unknown address type $ATYPE, must be src or dst"
+	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
 lcnt=0
 cat $FILE	|\
 while read line ; do
@@ -69,15 +90,19 @@ while read line ; do
 	date="$(echo "$line" | awk -F'\t' '{ print $2 }')"
 	src="$(echo "$line" | awk -F'\t' '{ print $3 }')"
 	dst="$(echo "$line" | awk -F'\t' '{ print $4 }')"
-	qDst="$(echo "$line" | awk -F'\t' '{ print $5 }')"
-	dName="$(echo "$line" | awk -F'\t' '{ print $6 }')"
-	if [ -z "$qDst" ] ; then
-		echo "ERROR: $date: dst: $dst: queryDst is empty" 1>&2
+	query="$(echo "$line" | awk -F'\t' '{ print $5 }')"
+	qName="$(echo "$line" | awk -F'\t' '{ print $6 }')"
+	if [ -z "$query" ] ; then
+		if [ "$ATYPE" == "src" ] ; then
+			echo "ERROR: $date: src: $src: querySrc is empty" 1>&2
+		else
+			echo "ERROR: $date: dst: $dst: queryDst is empty" 1>&2
+		fi
 		continue
 	fi
-	$DM_SCRIPTS/get_latlong.sh "$qDst" > $LL_FILE
+	$DM_SCRIPTS/get_latlong.sh "$query" > $LL_FILE
 	if [ ! -s $LL_FILE ] ; then
-		LOG ERROR "get_latlong.sh failed for $qDst"
+		LOG ERROR "get_latlong.sh failed for $query"
 	else
 		# validate what came back
 		$AWK -F'\t' '
@@ -97,24 +122,25 @@ while read line ; do
 			}
 		}
 		{
+			atype = "'"$ATYPE"'"
 			date = "'"$date"'"
 			src = "'"$src"'"
 			dst = "'"$dst"'"
-			qDst = "'"$qDst"'"
-			dName = "'"$dName"'"
+			query = "'"$query"'"
+			qName = "'"$qName"'"
 
 			conf = $1
-			rDst = $2
+			reply = $2
 			lat = $3
 			long = $4
 
-			nqf = split(qDst, qAry, ",")
+			nqf = split(query, qAry, ",")
 			for(i = 1; i <= nqf; i++){
 				sub(/^  */, "", qAry[i])
 				sub(/  *$/, "", aQry[i])
 			}
 
-			nrf = split(rDst, rAry, ",")
+			nrf = split(reply, rAry, ",")
 			for(i = 1; i <= nrf; i++){
 				sub(/^  */, "", rAry[i])
 				sub(/  *$/, "", rAry[i])
@@ -123,7 +149,7 @@ while read line ; do
 			err = 0
 			if(nrf < nqf){
 				err = 1
-				emsg = "rDst is shorter that qDst"
+				emsg = "reply is shorter that query"
 			}else{
 				# qAry[1,2,3] are the street, town and st (w/o zip)
 				# find the street, expand any abbrevs, then start matching
@@ -137,10 +163,10 @@ while read line ; do
 				}
 				if(r_st == 0){
 					err = 1
-					emsg = "no street in replyDst"
+					emsg = "no street in reply"
 				}else if(r_st + 2 > nrf){
 					err = 1
-					emsg = "not enough rDst after street"
+					emsg = "not enough reply after street"
 				}else if(rAry[r_st] != qAry[1]){
 					err = 1
 					emsg = "streets do not match"
@@ -152,7 +178,7 @@ while read line ; do
 					l_rState = length(rAry[r_st+2])
 					if(l_rState < l_qState){
 						err = 1
-						emsg = "replyState is too short"
+						emsg = "reply state is too short"
 					}else if(substr(rAry[r_st+2], 1, l_qState) != qAry[3]){
 						err = 1
 						emsg = "states do not match"
@@ -162,17 +188,22 @@ while read line ; do
 				}
 			}
 			if(!err){
-				printf("%s\t%s\t%s\t%s\t%s\t%s\n", date, src, qDst, long, lat, rDst)
+				# do something here to deal w/atype
+				printf("%s\t%s\t%s\t%s\t%s\t%s\n", date, src, dst, long, lat, reply)
 				exit 0
 			}
 		}
 		END {
 			if(err){
-				printf("ERROR: %s: dst: %s: not found:\n", date, dst) > "/dev/stderr"
+				# deal w/atype here
+				if( atype == "src" )
+					printf("ERROR: %s: src: %s: not found:\n", date, src) > "/dev/stderr"
+				else
+					printf("ERROR: %s: dst: %s: not found:\n", date, dst) > "/dev/stderr"
 				printf("{\n") > "/dev/stderr"
 				printf("\temsg  = %s\n", emsg) > "/dev/stderr"
-				printf("\tquery = %s\n", qDst) > "/dev/stderr"
-				printf("\treply = %s\n", rDst) > "/dev/stderr"
+				printf("\tquery = %s\n", query) > "/dev/stderr"
+				printf("\treply = %s\n", reply) > "/dev/stderr"
 				printf("}\n") > "/dev/stderr"
 			}
 		}

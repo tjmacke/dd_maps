@@ -81,7 +81,7 @@ fi
 
 cat $EFILE	|\
 while read line ; do
-	dst="$(echo "$line"	|\
+	qry="$(echo "$line"	|\
 		awk '{
 			if($0 ~ /^ERROR/){
 				nf = split($0, ary, ":")
@@ -94,10 +94,11 @@ while read line ; do
 				print ""
 		}'
 	)"
-	if [ -z "$dst" ] ; then
+	if [ -z "$qry" ] ; then
 		continue
 	fi
-	$DM_SCRIPTS/chk_1_address.sh -dh $DD_HOME -m $MONTH "$dst"
+	atype="$(echo "$line" | awk -F: '{ print $3 }')"
+	$DM_SCRIPTS/chk_1_address.sh -dh $DD_HOME -at $atype -m $MONTH "$qry"
 	echo ""
 	if [ $t_sleep -gt 0 ] ; then
 		sleep $t_sleep
