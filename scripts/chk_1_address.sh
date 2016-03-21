@@ -81,7 +81,7 @@ if [ -z "$ATYPE" ] ; then
 	echo "$U_MSG" 1>&2
 	exit 1
 elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
-	LOG ERROR "unknown address type $ATYPE, must src or dst"
+	LOG ERROR "unknown address type $ATYPE, must be src or dst"
 	echo "$U_MSG" 1>&2
 	exit 1
 fi
