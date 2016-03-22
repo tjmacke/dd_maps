@@ -1,4 +1,5 @@
 function init_crange(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B, rgb, hsv) {
+
 	nf = split(crange, ary, ":")
 	if(nf != 2){
 		printf("ERROR: bad color range: %s, must be r,g,b:r,g,b r,g,b in [0,1]\n", crange) > "/dev/stderr"
@@ -31,10 +32,6 @@ function init_crange(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B, rgb, hsv)
 	rgb["B"] = B
 	rgb2hsv(rgb, hsv)
 
-#	colorInfo["R_start"] = R
-#	colorInfo["G_start"] = G
-#	colorInfo["B_start"] = B
-
 	colorInfo["H_start"] = hsv["H"]
 	colorInfo["S_start"] = hsv["S"]
 	colorInfo["V_start"] = hsv["V"]
@@ -65,10 +62,6 @@ function init_crange(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B, rgb, hsv)
 	rgb["B"] = B
 	rgb2hsv(rgb, hsv)
 
-#	colorInfo["R_end"] = R
-#	colorInfo["G_end"] = G
-#	colorInfo["B_end"] = B
-
 	colorInfo["H_end"] = hsv["H"]
 	colorInfo["S_end"] = hsv["S"]
 	colorInfo["V_end"] = hsv["V"]
@@ -76,12 +69,6 @@ function init_crange(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B, rgb, hsv)
 	return 0
 }
 function set_4bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
-
-	# RGB gradient is really not all that nice, hsv is better
-#	r_max_cval = 1.0/15
-#	R = int((frac * colorInfo["R_end"] + (1.0 - frac) * colorInfo["R_start"]) / r_max_cval)
-#	G = int((frac * colorInfo["G_end"] + (1.0 - frac) * colorInfo["G_start"]) / r_max_cval)
-#	B = int((frac * colorInfo["B_end"] + (1.0 - frac) * colorInfo["B_start"]) / r_max_cval)
 
 	hsv["H"] = frac * colorInfo["H_end"] + (1.0 - frac) * colorInfo["H_start"]
 	hsv["S"] = frac * colorInfo["S_end"] + (1.0 - frac) * colorInfo["S_start"]

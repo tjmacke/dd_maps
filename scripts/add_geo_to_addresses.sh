@@ -25,7 +25,7 @@ elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
 	RD_CONFIG="\"$DM_LIB/rd_config.awk\""
 else
-	LOG ERROR "bad AWK_VERSION: \"$AWK_VERSION\": must be 3 or 4"
+	LOG ERROR "unsupported AWK_VERSION: \"$AWK_VERSION\": must be 3 or 4"
 	exit 1
 fi
 

@@ -21,7 +21,7 @@ elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
 	READ_ADDRESSES="\"$DM_LIB/read_addresses.awk\""
 else
-	LOG ERROR "bad AWK_VERSION: \"$AWK_VERSION\": must be 3 or 4"
+	LOG ERROR "unsupported AWK_VERSION: \"$AWK_VERSION\": must be 3 or 4"
 	exit 1
 fi
 
