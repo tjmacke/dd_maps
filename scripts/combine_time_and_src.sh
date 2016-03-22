@@ -69,7 +69,7 @@ if [ -z "$DD_HOME" ] ; then
 	exit 1
 fi
 
-awk -F'\t' '
+$AWK -F'\t' '
 @include '"$READ_ADDRESSES"'
 BEGIN {
 	# read the src addresses

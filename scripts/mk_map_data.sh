@@ -80,7 +80,7 @@ if [ -z "$PNAME" ] ; then
 	exit 1
 fi
 
-awk -F'\t' '
+$AWK -F'\t' '
 @include '"$COLOR_FUNCS"'
 BEGIN {
 	pname = "'"$PNAME"'"
