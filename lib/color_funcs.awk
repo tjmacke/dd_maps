@@ -1,4 +1,4 @@
-function init_crange(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B) {
+function init_crange(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B, rgb, hsv) {
 	nf = split(crange, ary, ":")
 	if(nf != 2){
 		printf("ERROR: bad color range: %s, must be r,g,b:r,g,b r,g,b in [0,1]\n", crange) > "/dev/stderr"
@@ -26,9 +26,18 @@ function init_crange(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B) {
 		printf("ERROR: bad start B value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[3]) > "/dev/stderr"
 		return 1
 	}
-	colorInfo["R_start"] = R
-	colorInfo["G_start"] = G
-	colorInfo["B_start"] = B
+	rgb["R"] = R
+	rgb["G"] = G
+	rgb["B"] = B
+	rgb2hsv(rgb, hsv)
+
+#	colorInfo["R_start"] = R
+#	colorInfo["G_start"] = G
+#	colorInfo["B_start"] = B
+
+	colorInfo["H_start"] = hsv["H"]
+	colorInfo["S_start"] = hsv["S"]
+	colorInfo["V_start"] = hsv["V"]
 
 	# get end color
 	nf2 = split(ary[2], ary2, ",")
@@ -51,18 +60,118 @@ function init_crange(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B) {
 		printf("ERROR: bad end B value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[3]) > "/dev/stderr"
 		return 1
 	}
-	colorInfo["R_end"] = R
-	colorInfo["G_end"] = G
-	colorInfo["B_end"] = B
+	rgb["R"] = R
+	rgb["G"] = G
+	rgb["B"] = B
+	rgb2hsv(rgb, hsv)
+
+#	colorInfo["R_end"] = R
+#	colorInfo["G_end"] = G
+#	colorInfo["B_end"] = B
+
+	colorInfo["H_end"] = hsv["H"]
+	colorInfo["S_end"] = hsv["S"]
+	colorInfo["V_end"] = hsv["V"]
 
 	return 0
 }
-function set_4bit_color(frac, colorInfo,    r_max_cval, R, G, B) {
+function set_4bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
+
+	# RGB gradient is really not all that nice, hsv is better
+#	r_max_cval = 1.0/15
+#	R = int((frac * colorInfo["R_end"] + (1.0 - frac) * colorInfo["R_start"]) / r_max_cval)
+#	G = int((frac * colorInfo["G_end"] + (1.0 - frac) * colorInfo["G_start"]) / r_max_cval)
+#	B = int((frac * colorInfo["B_end"] + (1.0 - frac) * colorInfo["B_start"]) / r_max_cval)
+
+	hsv["H"] = frac * colorInfo["H_end"] + (1.0 - frac) * colorInfo["H_start"]
+	hsv["S"] = frac * colorInfo["S_end"] + (1.0 - frac) * colorInfo["S_start"]
+	hsv["V"] = frac * colorInfo["V_end"] + (1.0 - frac) * colorInfo["V_start"]
+	hsv2rgb(hsv, rgb)
 
 	r_max_cval = 1.0/15
-	R = int((frac * colorInfo["R_end"] + (1.0 - frac) * colorInfo["R_start"]) / r_max_cval)
-	G = int((frac * colorInfo["G_end"] + (1.0 - frac) * colorInfo["G_start"]) / r_max_cval)
-	B = int((frac * colorInfo["B_end"] + (1.0 - frac) * colorInfo["B_start"]) / r_max_cval)
+	R = rgb["R"] / r_max_cval
+	G = rgb["G"] / r_max_cval
+	B = rgb["B"] / r_max_cval
 
 	return sprintf("%x%x%x", R, G, B)
+}
+function rgb2hsv(rgb, hsv,   min, max, delta) {
+
+	min = rgb["R"] < rgb["G"] ? rgb["R"] : rgb["G"]
+	min = min      < rgb["B"] ? min      : rgb["B"]
+
+	max = rgb["R"] > rgb["G"] ? rgb["R"] : rgb["G"]
+	max = max      > rgb["B"] ? max      : rgb["B"]
+
+	hsv["V"] = max
+
+	delta = max - min
+	if(delta < 0.00001){
+		hsv["S"] = 0
+		hsv["H"] = 0
+		return
+	}
+
+	if(max > 0)
+		hsv["S"] = (delta/max)
+	else{
+		hsv["S"] = 0
+		hsv["H"] = 0	# V is 0, s H doesn't matter, so use 0
+		return
+	}
+	if(rgb["R"] >= max)
+		hsv["H"] = (rgb["G"] - rgb["B"])/delta		# between magenta & yellow
+	else if(rgb["G"] >= max)
+		hsv["H"] = 2.0 + (rgb["B"] - rgb["R"])/delta	# between yellow & cyan
+	else
+		hsv["H"] = 4.0 + (rgb["R"] - rgb["G"])/delta	# between cyan & magenta
+	hsv["H"] *= 60
+	if(hsv["H"] < 0)
+		hsv["H"] += 360
+	return
+}
+function hsv2rgb(hsv, rgb,    hh, p, q, t, ff, i) {
+
+	if(hsv["S"] <= 0){
+		rgb["R"] = hsv["V"]
+		rgb["G"] = hsv["V"]
+		rgb["B"] = hsv["V"]
+		return
+	}
+	hh = hsv["H"]
+	if(hh >= 360)
+		hh = 0
+	hh /= 60
+	i = int(hh)
+	ff = hh - i
+	p = hsv["V"] * (1.0 - hsv["S"])
+	q = hsv["V"] * (1.0 - (hsv["S"] * ff))
+	t = hsv["V"] * (1.0 - (hsv["S"] * (1 - ff)))
+
+	if(i == 0){
+		rgb["R"] = hsv["V"]
+		rgb["G"] = t
+		rgb["B"] = p
+	}else if(i == 1){
+		rgb["R"] = q
+		rgb["G"] = hsv["V"]
+		rgb["B"] = p
+	}else if(i == 2){
+		rgb["R"] = p
+		rgb["G"] = hsv["V"]
+		rgb["B"] = t
+	}else if(i == 3){
+		rgb["R"] = p
+		rgb["G"] = q
+		rgb["B"] = hsv["V"]
+	}else if(i == 4){
+		rgb["R"] = t
+		rgb["G"] = p
+		rgb["B"] = hsv["V"]
+	}else{	# must be 5
+		rgb["R"] = hsv["V"]
+		rgb["G"] = p
+		rgb["B"] = q
+	}
+	return
 }
