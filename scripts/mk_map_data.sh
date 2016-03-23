@@ -116,7 +116,7 @@ END {
 	for(i = 1; i <= n_addr; i++){
 		frac = pval[i]/max_pval
 		color = set_4bit_color(frac, colorInfo)
-		title = sprintf("src: %s\\n%s: %d, %.1f", addr[i], pname, pcnt[i], pval[i])
+		title = sprintf("addr: %s\\n%s: %d, %.1f", addr[i], pname, pcnt[i], pval[i])
 		if(i == 1)
 			printf("[\n")
 		printf("{\n")
