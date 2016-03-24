@@ -21,7 +21,7 @@ elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
 	COLOR_FUNCS="\"$DM_LIB/color_funcs.awk\""
 else
-	LOG ERROR "unsupported AWK_VERSION: \"$AWK_VERSION\": must be 3 or 4"
+	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
 	exit 1
 fi
 
@@ -114,7 +114,7 @@ END {
 		exit err
 
 	for(i = 1; i <= n_addr; i++){
-		frac = pval[i]/max_pval
+		frac = (pval[i] - min_pval)/(max_pval - min_pval)
 		color = set_4bit_color(frac, colorInfo)
 		title = sprintf("addr: %s\\n%s: %d, %.1f", addr[i], pname, pcnt[i], pval[i])
 		if(i == 1)

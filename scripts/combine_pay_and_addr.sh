@@ -12,14 +12,16 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
-# awk v3 does not support include
+# awk v3 does not support includes
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
 	AWK=igawk
 	READ_ADDRESSES="$DM_LIB/read_addresses.awk"
+	PB_UTILS="$DM_LIB/pb_utils.awk"
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
 	READ_ADDRESSES="\"$DM_LIB/read_addresses.awk\""
+	PB_UTILS="\"$DM_LIB/pb_utils.awk\""
 else
 	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
 	exit 1
@@ -38,7 +40,7 @@ while [ $# -gt 0 ] ; do
 	-dh)
 		shift
 		if [ $# -eq 0 ] ; then
-			LOG ERROR "-dh requires doordash-home argument"
+			LOG ERROR "-dh requires doordash-hom argument"
 			echo "$U_MSG" 1>&2
 			exit 1
 		fi
@@ -85,13 +87,14 @@ if [ -z "$ATYPE" ] ; then
 	echo "$U_MSG" 1>&2
 	exit 1
 elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
-	LOG ERROR "unknown address type $ATYPE, must src or dst"
+	LOG ERROR "unknown address type $ATYPE, must be src or dst"
 	echo "$U_MSG" 1>&2
 	exit 1
 fi
 
 $AWK -F'\t' '
 @include '"$READ_ADDRESSES"'
+@include '"$PB_UTILS"'
 BEGIN {
 	atype = "'"$ATYPE"'"
 	if(atype == "src"){
@@ -101,38 +104,82 @@ BEGIN {
 		afield = 7
 		afile = "'"$DD_HOME"'/maps/dst.addrs"
 	}
+
 	# read the addresses
 	n_a2idx = read_addresses(afile, a2idx, acnt, along, alat)
 	if(n_a2idx == 0){
 		printf("ERROR: no addresses in %s\n", afile) > "/dev/stderr"
-		exit 1
+		err = 1
+		exit err
 	}
 	printf("INFO: %s: %d %s addresses\n", afile, n_a2idx, atype) > "/dev/stderr"
-}
-$5 == "Job" {
-	if($2 == "."){
-		printf("ERROR: no start time for %s\n", $afield) > "/dev/stderr"
-		next
-	}else
-		t_start = 60*substr($2, 1, 2) + substr($2, 4, 2)
-	if($3 == "."){
-		printf("ERROR: no end time for %s\n", $afield) > "/dev/stderr"
-		next
-	}else
-		t_end = 60*substr($3, 1, 2) + substr($3, 4, 2)
-	if(!($afield in a2idx)){
-		printf("ERROR: no %s address for \"%s\"\n", atype, $afield) > "/dev/stderr"
-		next
+
+	# read pay breakdown data
+	pb_file = "'"$DD_HOME"'/data/breakdownofpay.20150904.tsv"
+	n_pb_keys = read_pay_breakdown(pb_file, pb_keys, pb_vals, pb_fields, pb_sizes)
+	if(n_pb_keys == 0){
+		printf("ERROR: pay breakdown file %s has no data\n", pb_file)
+		err = 1
+		exit err
 	}
-	# compute elapsed time
-	tr_time[$afield] += t_end - t_start
-	tr_cnt[$afield]++
+	printf("INFO: %s: %d pay breakdown entries\n", pb_file, n_pb_keys) > "/dev/stderr"
+#	printf("pb_fields:\n")
+#	for(f in pb_fields)
+#		printf("%-12s -> %2d\n", f, pb_fields[f]) 
+}
+{
+	if($5 == "BEGIN"){
+		in_rec = 1
+		date = $1
+		b_time = $2
+	}else if($5 == "END"){
+		in_rec = 0
+		e_time = $3
+		if(!find_pay_data(date, n_pb_keys, pb_keys, k_idx)){
+			printf("WARN: no pay breakdown data for date %s\n", date)
+			err = 1
+			next
+		}
+		fnd = 0
+		for(i = k_idx["start"]; i <= k_idx["end"]; i++){
+			nf = split(pb_vals[i], ary, "\t")
+			if(pb_dashes_overlap(b_time, e_time, ary[pb_fields["tstart"]], ary[pb_fields["tend"]])){
+				fnd = 1
+				drate = ary[pb_fields["drate"]]
+				break
+			}
+		}
+		if(!fnd){
+			printf("ERROR: no pay breakdown date for date, start, end = %s, %s, %s\n", date, b_time, e_time) > "/dev/stderr"
+		}else{
+
+printf("DEBUG: %d jobs\n", n_jobs) > "/dev/stderr"
+
+			for(j in jobs){
+
+printf("DEBUG: %s\n", j) > "/dev/stderr"
+
+				j_amount[j] += drate
+				j_count[j]++
+			}
+			delete jobs
+			n_jobs = 0
+		}
+	}else if(in_rec){
+		n_jobs++
+		jobs[$afield] = 1
+	}
 }
 END {
 	if(err)
 		exit err
-	for(addr in tr_time){
-		idx = a2idx[addr]
-		printf("%d\t%.1f\t%s\t%s\t%s\n", tr_cnt[addr], tr_time[addr]/tr_cnt[addr], addr, along[idx], alat[idx])
+
+	for(j in j_amount){
+		if(!(j in a2idx)){
+			printf("WARN: no geo for %s\n", j) > "/dev/stderr"
+			continue
+		}
+		idx = a2idx[j]
+		printf("%d\t%.2f\t%s\t%s\t%s\n", j_count[j], j_amount[j]/j_count[j], j, along[idx], alat[idx])
 	}
 }' $FILE
