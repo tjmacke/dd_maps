@@ -68,7 +68,7 @@ function init_crange(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B, rgb, hsv)
 
 	return 0
 }
-function set_4bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
+function set_12bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
 
 	hsv["H"] = frac * colorInfo["H_end"] + (1.0 - frac) * colorInfo["H_start"]
 	hsv["S"] = frac * colorInfo["S_end"] + (1.0 - frac) * colorInfo["S_start"]
@@ -161,4 +161,32 @@ function hsv2rgb(hsv, rgb,    hh, p, q, t, ff, i) {
 		rgb["B"] = q
 	}
 	return
+}
+function desat_12bit_color(color, count,   r_max_cval, R, G, B, rgb, hsv) {
+
+	r_max_cval = 1.0/15
+
+	R = (index("0123456789abcdef", tolower(substr(color, 1, 1))) - 1)/15.0
+	G = (index("0123456789abcdef", tolower(substr(color, 2, 1))) - 1)/15.0
+	B = (index("0123456789abcdef", tolower(substr(color, 3, 1))) - 1)/15.0
+
+	rgb["R"] = R
+	rgb["G"] = G
+	rgb["B"] = B
+
+	rgb2hsv(rgb, hsv)
+	# This should be a parameter, but ...
+	if(count == 1)
+		hsv["S"] *= 0.2
+	else if(count == 2)
+		hsv["S"] *= 0.3
+	else if(count < 5)
+		hsv["S"] *= 0.5
+	else if(count < 10)
+		hsv["S"] *= 0.7
+	else
+		hsv["S"] *= 0.9
+
+	hsv2rgb(hsv, rgb)
+	return sprintf("%x%x%x", rgb["R"]/r_max_cval, rgb["G"]/r_max_cval, rgb["B"]/r_max_cval)
 }

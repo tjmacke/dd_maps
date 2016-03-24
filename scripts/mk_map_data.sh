@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] -pn prop-name [ -pcr prop-color-range (as r,g,b:r,g,b r,g,b in [0,1]) ] [ address-data-file ]"
+U_MSG="usage: $0 [ -help ] -pn prop-name [ -pcr prop-color-range (as r,g,b:r,g,b r,g,b in [0,1]) ] [ -desat ] [ address-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -27,6 +27,7 @@ fi
 
 PNAME=
 PCRANGE="1,0.8,0.8:1,0,0"
+DESAT=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -53,6 +54,10 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		PCRANGE="$1"
+		shift
+		;;
+	-desat)
+		DESAT="yes"
 		shift
 		;;
 	-*)
@@ -89,6 +94,7 @@ BEGIN {
 		err = 1
 		exit 
 	}
+	desat = "'"$DESAT"'" == "yes"
 }
 {
 	n_addr++
@@ -115,7 +121,9 @@ END {
 
 	for(i = 1; i <= n_addr; i++){
 		frac = (pval[i] - min_pval)/(max_pval - min_pval)
-		color = set_4bit_color(frac, colorInfo)
+		color = set_12bit_color(frac, colorInfo)
+		if(desat)
+			color = desat_12bit_color(color, pcnt[i])
 		title = sprintf("addr: %s\\n%s: %d, %.1f", addr[i], pname, pcnt[i], pval[i])
 		if(i == 1)
 			printf("[\n")
