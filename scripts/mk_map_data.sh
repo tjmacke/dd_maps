@@ -95,6 +95,14 @@ BEGIN {
 		exit 
 	}
 	desat = "'"$DESAT"'" == "yes"
+	# set this up from the cmd line?
+	stab[1, "level"] =  1 ; stab[1, "value"] = 0.2
+	stab[2, "level"] =  2 ; stab[2, "value"] = 0.3
+	stab[3, "level"] =  5 ; stab[3, "value"] = 0.5
+	stab[4, "level"] = 10 ; stab[4, "value"] = 0.7
+	# past the last level use
+	stab[5, "level"] = -1 ; stab[5, "value"] = 0.9
+	n_stab = 5
 }
 {
 	n_addr++
@@ -123,7 +131,7 @@ END {
 		frac = (pval[i] - min_pval)/(max_pval - min_pval)
 		color = set_12bit_color(frac, colorInfo)
 		if(desat)
-			color = desat_12bit_color(color, pcnt[i])
+			color = desat_12bit_color(color, pcnt[i], n_stab, stab)
 		title = sprintf("addr: %s\\n%s: %d, %.1f", addr[i], pname, pcnt[i], pval[i])
 		if(i == 1)
 			printf("[\n")

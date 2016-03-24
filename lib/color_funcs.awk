@@ -162,7 +162,7 @@ function hsv2rgb(hsv, rgb,    hh, p, q, t, ff, i) {
 	}
 	return
 }
-function desat_12bit_color(color, count,   r_max_cval, R, G, B, rgb, hsv) {
+function desat_12bit_color(color, count, n_stab, stab,   r_max_cval, i, sval, R, G, B, rgb, hsv) {
 
 	r_max_cval = 1.0/15
 
@@ -175,18 +175,16 @@ function desat_12bit_color(color, count,   r_max_cval, R, G, B, rgb, hsv) {
 	rgb["B"] = B
 
 	rgb2hsv(rgb, hsv)
-	# This should be a parameter, but ...
-	if(count == 1)
-		hsv["S"] *= 0.2
-	else if(count == 2)
-		hsv["S"] *= 0.3
-	else if(count < 5)
-		hsv["S"] *= 0.5
-	else if(count < 10)
-		hsv["S"] *= 0.7
-	else
-		hsv["S"] *= 0.9
-
+	sval = -1
+	for(i = 0; i < n_stab; i++){ 
+		if(count <= stab[i, "level"]){
+			sval = stab[i, "value"]	
+			break
+		}
+	}
+	if(sval == -1)
+		sval = stab[n_stab, "value"]
+	hsv["S"] *= sval
 	hsv2rgb(hsv, rgb)
 	return sprintf("%x%x%x", rgb["R"]/r_max_cval, rgb["G"]/r_max_cval, rgb["B"]/r_max_cval)
 }
