@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] -at { src | dst } [ extracted-address-file ]"
+U_MSG="usage: $0 [ -help ] [ -c conf-file ] -at { src | dst } [ extracted-address-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -30,7 +30,6 @@ else
 fi
 
 CFILE=$DM_ETC/address.info
-
 ATYPE=
 FILE=
 
@@ -39,6 +38,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-c)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-c requires conf-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		CFILE=$1
+		shift
 		;;
 	-at)
 		shift

@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] -pn prop-name [ -pcr prop-color-range (as r,g,b:r,g,b r,g,b in [0,1]) ] [ -desat ] [ address-data-file ]"
+U_MSG="usage: $0 [ -help ] [ -c conf-file ] -pn prop-name [ -desat ] [ address-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -16,17 +16,19 @@ DM_SCRIPTS=$DM_HOME/scripts
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
 	AWK=igawk
+	RD_CONFIG="$DM_LIB/rd_config.awk"
 	COLOR_FUNCS="$DM_LIB/color_funcs.awk"
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
+	RD_CONFIG="\"$DM_LIB/rd_config.awk\""
 	COLOR_FUNCS="\"$DM_LIB/color_funcs.awk\""
 else
 	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
 	exit 1
 fi
 
+CFILE=$DM_ETC/color.info
 PNAME=
-PCRANGE="1,0.8,0.8:1,0,0"
 DESAT=
 FILE=
 
@@ -36,6 +38,16 @@ while [ $# -gt 0 ] ; do
 		echo "$U_MSG"
 		exit 0
 		;;
+	-c)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-c requires conf-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		CFILE=$1
+		shift
+		;;
 	-pn)
 		shift
 		if [ $# -eq 0 ] ; then
@@ -44,16 +56,6 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		PNAME=$1
-		shift
-		;;
-	-pcr)
-		shift
-		if [ $# -eq 0 ] ; then
-			LOG ERROR "-pcr requires color-range argument"
-			echo "$U_MSG" 1>&2
-			exit 1
-		fi
-		PCRANGE="$1"
 		shift
 		;;
 	-desat)
@@ -86,23 +88,40 @@ if [ -z "$PNAME" ] ; then
 fi
 
 $AWK -F'\t' '
+@include '"$RD_CONFIG"'
 @include '"$COLOR_FUNCS"'
 BEGIN {
+	cfile = "'"$CFILE"'"
+	if(rd_config(cfile, config)){
+		err = 1
+		exit err
+	}
+	for(k in config){
+		split(k, keys, SUBSEP)
+		if(keys[1] == "pcrange")
+			pcrange[keys[2]] = config[k]
+		else if(keys[1] == "stab")
+			st_src[keys[2]] = config[k]
+		else{
+			printf("ERROR: unknown table in config file %s\n", keys[1], cfile) > "/dev/stderr"
+			err = 1
+			exit err
+		}
+	}
+
 	pname = "'"$PNAME"'"
-	pcrange = "'"$PCRANGE"'"
-	if(init_crange(pcrange, colorInfo)){
+	if(init_crange((pcrange["start"] ":" pcrange["end"]), colorInfo)){
 		err = 1
 		exit 
 	}
 	desat = "'"$DESAT"'" == "yes"
-	# set this up from the cmd line?
-	stab[1, "level"] =  1 ; stab[1, "value"] = 0.2
-	stab[2, "level"] =  2 ; stab[2, "value"] = 0.3
-	stab[3, "level"] =  5 ; stab[3, "value"] = 0.5
-	stab[4, "level"] = 10 ; stab[4, "value"] = 0.7
-	# past the last level use
-	stab[5, "level"] = -1 ; stab[5, "value"] = 0.9
-	n_stab = 5
+	n_stab = asorti(st_src, st_dst, "cmp_levels")
+	for(i = 1; i <= n_stab; i++){
+		stab[i, "level"] = st_dst[i]
+		stab[i, "value"] = st_src[st_dst[i]]
+	}
+	delete st_src
+	delete st_dst
 }
 {
 	n_addr++
@@ -149,4 +168,12 @@ END {
 		if(i == n_addr)
 			printf("]\n")
 	}
+}
+function cmp_levels(i1, v1, i2, v2) {
+	if(i1 == "rest")
+		return 1
+	else if(i2 == "rest")
+		return -1
+	else
+		return (i1 - i2)
 }' $FILE
