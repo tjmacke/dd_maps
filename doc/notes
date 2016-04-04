@@ -1,0 +1,98 @@
+All files are in $DM_HOME.  if DM_HOME is not defined, the script logs a message to stderr that DM_HOME is not define
+and exits with status = 1.
+
+scripts/add_geo_addresses.sh:
+
+	Attempts to add lat/lng to either the src or dst addresses in a canonicalized address file.  If the lat/lng
+	for the address was found, the result is written to stdout; if not the error and possibly some context is 
+	written to stderr.
+
+	usage:
+
+		./add_geo_to_addresses.sh [ -help ] [ -c conf-file ] -at { src | dst } [ extracted-address-file ]
+
+	arguments:
+
+		-help		-- print the usage message. Default: false.
+		-c conf-file	-- This file contains several tables that are used to canonicalize addresses.  Tables
+				-- include mappings like St -> Street and PA -> Palo Alto.  Default: $DM_HOME/etc/street.info.
+		-at { src | dst	}
+				-- Select the address type. The input file contains both the source and destination addresses
+				-- for each dash.  Use -at src to work on source addresses or -at dst to work on destination
+				-- addresses.  Default: none.
+		extracted-address-file
+				-- A file containing canonicalized addresses.  Default: stdin.  To resvolve addresses in
+				-- more than one file use: cat file-1 ... | add_geo_to_addresses.sh ...
+
+	example:
+
+		If the file addrs.nogeo.20160301.tsv contains canonicalized addresses intended for adding lat/lng to the
+		destination address, use this bash command:
+
+			add_geo_to_addresses.sh -at dst addrs.nogeo.20160301.tsv > addrs.geo.20160301.tsv 2> addrs.geo.20160301.errs
+
+scripts/chk_1_address.sh:
+
+	Submit one address from a specified "runs-file" to opencagedata.com to get its lat/lng.  The output is opencagedata.com's
+	top N "matching" addresses.  Each return address is preceded by its score and the list is sorted in descending order.  This
+	script is intended for use in trying to figure out why a query address was not found.  Possible causes include things like
+	an unhandled street abbreviation or an incorrect town.
+
+	usage:
+
+		./chk_1_address.sh [ - help ] [ -dh doordash-home ] -at { src | dst } -m month addr
+
+	arguments:
+
+		-help		-- print the usage message. Default: false.
+		-dh doordash-home
+				-- The base doordash directory.  Data to be check must be in a "runs-file in $DD_HOME/data.
+				-- Default: the value of $DD_HOME. If $DD_HOME is not defined, you must set this value on the
+				-- command line.
+		-at { src | dst }
+				-- Select the address type to check. Use -at src to indicate that the addr argument is a 
+				-- source address or -at dst to indicate it's a destination address. Default: none.
+		-m month	-- The month of the "runs-file" that contains this address.  The format of month is YYYYMMDD.
+		addr		-- the address to check. Since the address will contain spaces, it must be quoted.
+
+	example:
+
+scripts/chk_all_addresses.sh:
+
+scripts/collect_addresses.sh:
+
+scripts/combine_pay_and_addr.sh:
+
+scripts/combine_time_and_addr.sh:
+
+scripts/fmt_geo_errors.sh:
+
+scripts/get_actual_hours.sh:
+
+scripts/get_addresses.sh:
+
+scripts/get_job_times.sh:
+
+scripts/get_latlong.sh:
+
+scripts/get_new_sources.sh:
+
+scripts/get_pay_data.sh:
+
+scripts/get_src_times.sh:
+
+scripts/mk_dash_summary.sh:
+
+scripts/mk_dash_totals.sh:
+
+scripts/mk_geojson.sh:
+
+scripts/mk_map.sh:
+
+scripts/mk_map_data.sh:
+
+scripts/mk_pay_summary.sh:
+
+scripts/plot_pay_rates.sh:
+
+scripts/plot_src_info.sh:
