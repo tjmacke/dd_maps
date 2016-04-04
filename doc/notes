@@ -3,9 +3,9 @@ and exits with status = 1.
 
 scripts/add_geo_addresses.sh:
 
-	Attempts to add lat/lng to either the src or dst addresses in a canonicalized address file.  If the lat/lng
-	for the address was found, the result is written to stdout; if not the error and possibly some context is 
-	written to stderr.
+	This script is used to add lat/lng (if possible) to either the src or dst addresses in a canonicalized address file.
+	If the lat/lng for the address was found, the result is written to stdout; if not the error and possibly some context
+	is written to stderr.
 
 	usage:
 
@@ -31,12 +31,13 @@ scripts/add_geo_addresses.sh:
 
 			add_geo_to_addresses.sh -at dst addrs.nogeo.20160301.tsv > addrs.geo.20160301.tsv 2> addrs.geo.20160301.errs
 
-scripts/chk_1_address.sh:
+scripts/chk_1_address.sh:	(called by chk_all_addresses.sh)
 
-	Submit one address from a specified "runs-file" to opencagedata.com to get its lat/lng.  The output is opencagedata.com's
-	top N "matching" addresses.  Each return address is preceded by its score and the list is sorted in descending order.  This
-	script is intended for use in trying to figure out why a query address was not found.  Possible causes include things like
-	an unhandled street abbreviation or an incorrect town.
+	This script is used to investigate why an address was not found.  The suspect address, as a command line argument is
+	submitted to opencagedata.com to get its lat/lng.  opencagedata.com returns a list of its best matches to the query with
+	each match preceded by its score.  This script prints this list after first printing information that shows the origin
+	of the suspect address: the actual dash line from a "run file" that used this address, the suspect address and the query
+	address, ie the address sent to opencagedata.com.
 
 	usage:
 
@@ -46,20 +47,65 @@ scripts/chk_1_address.sh:
 
 		-help		-- print the usage message. Default: false.
 		-dh doordash-home
-				-- The base doordash directory.  Data to be check must be in a "runs-file in $DD_HOME/data.
-				-- Default: the value of $DD_HOME. If $DD_HOME is not defined, you must set this value on the
+				-- The base doordash directory.  Data to be checked must be in a "runs-file" in $DD_HOME/data.
+				-- Default: the value of $DD_HOME. If DD_HOME is not defined, you must set this value on the
 				-- command line.
 		-at { src | dst }
 				-- Select the address type to check. Use -at src to indicate that the addr argument is a 
 				-- source address or -at dst to indicate it's a destination address. Default: none.
 		-m month	-- The month of the "runs-file" that contains this address.  The format of month is YYYYMMDD.
+				-- This is needed so the original dash can be examined and in some cases fixed.
 		addr		-- the address to check. Since the address will contain spaces, it must be quoted.
 
 	example:
 
+		./chk_1_address.sh -dh ~/doordash -m 20160301 -at src "Tommy Thai, 1482 West El Camino Real, MV"
+
 scripts/chk_all_addresses.sh:
 
+	This script is used to check the addresses in an "errs" file (addrs.geo.YYYYMMDD.errs) that was created by a call to
+	add_geo_to_addresses.sh.  This script parses the entries in the errs file and for each address that opencagedata.com
+	could not find a lat/lng, parses the error report for the information required to call ./chk_1_address.sh to get 
+	detailed information of why the call to opencagedata.com failed.
+	
+	usage:
+
+		./chk_all_addresses.sh [ -help ] [ -dh doordash-home ] error-file
+
+	arguments
+
+		-help		-- print the usage message.  Default: false.
+		-dh doordash-home
+				-- The base doordash directory.  Data to be checked must be in a "runs-file" in $DD_HOME/data.
+				-- Default: the value of $DD_HOME.  If DD_HOME is not defined, you must set thie value on the
+				-- command line.
+		error-file	-- The error file created by add_geo_to_addresses.sh to check.
+
+	example:
+
+		./chk_all_addresses.sh -dh ~/doordash addrs.geo.20160301.errs
+
 scripts/collect_addresses.sh:
+
+	This script is used collect and count the number of addresses in geo file (addrs.geo.YYYYMMDD.tsv) and write the results
+	to stdout.  At some point, the addresses from the individual sourse and destination addresses will be used to check if
+	an address in a runs-file needs to be submitted to opencagedata.com to get its lat/lng.
+
+	usage:
+
+		./collect_addrs.sh [ -help ] -at { src | dst } [ addr-geo-file ]
+
+	arguments:
+		-help		-- print the usage message.  Default: false.
+		-at { src | dst }
+				-- Select the address type to collect. Use -at src to collect and count source addresses or
+				-- -at dst to collect and count destination addresses.  Default: none.
+		addr-geo-file	-- A file containing the addresses w/latlng to collect.  To collect addresses from more than
+				-- one geo file, cat them together and then pipe the result into ./collect_addrs.sh
+
+	example:
+
+		cat addrs.geo.*.tsv | ./collect_addrs -at src > out-file
 
 scripts/combine_pay_and_addr.sh:
 
