@@ -152,13 +152,7 @@ BEGIN {
 		if(!fnd){
 			printf("ERROR: no pay breakdown date for date, start, end = %s, %s, %s\n", date, b_time, e_time) > "/dev/stderr"
 		}else{
-
-printf("DEBUG: %d jobs\n", n_jobs) > "/dev/stderr"
-
 			for(j in jobs){
-
-printf("DEBUG: %s\n", j) > "/dev/stderr"
-
 				j_amount[j] += drate
 				j_count[j]++
 			}
