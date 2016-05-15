@@ -18,7 +18,7 @@ plotPayRates <- function(df, pfn='') {
 	dl <- makeDateLabels(df$date)
 	plot(
 		c(as.Date(dl$tk[1], '%Y-%m-%d'), as.Date(dl$tk[length(dl$tk)], '%Y-%m-%d')),
-		c(0, 25),
+		c(0, 35),
 		type='n',
 		xlab='Date',
 		xaxt='n',
