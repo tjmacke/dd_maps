@@ -109,7 +109,39 @@ scripts/collect_addresses.sh:
 
 scripts/combine_pay_and_addr.sh:
 
+	This script combines pay data and location lat/lng info.  The data can be colored by average pay/location and
+	displayed on a map, possibly revealing dash source/destinations that pay well/poorly.
+
+	Adding lat/lng to addresses is slow, so addresses with lat/lng are collected into two files.  The file src.addrs
+	holds resolved source addresses and the file dst.addrs holds destination addresses. These files are located in
+	$DD_HOME/maps, where DD_HOME is a symbol that points to the root of the doordash file hierarchy.  The command
+	argument -at { src | dst } is used to select whether source (-at src) or destination (-at dst) locations will be
+	used.
+
+	Pay information is taken from $DD_HOME/data/breakdownofpay.20150904.tsv.  Pay information is on a per shift not 
+	per dash basis and include the number of dashes/shift and the pay/shift.  These are combined as
+
+		dash-rate = (pay/shift) / (dashes/shift)
+
+	which is the average rate for all dashes in a shift.
+
+	usage:
+
+		./combine_pay_and_addr.sh [ -help ] [ -dh doordash-home ] -at { src | dst } [ runs-file ]
+
+	arguments:
+		-help		-- print the usage message.  Default: false.
+		-dh doordash-home
+				-- The base doordash directory.  Data to be checked must be in a "runs-file" in $DD_HOME/data.
+				-- Default: the value of $DD_HOME.  If DD_HOME is not defined, you must set thie value on the
+				-- command line.
+		-at { src | dst }
+				-- Select the address type to analyze.
+		runs-file	--
+
 scripts/combine_time_and_addr.sh:
+
+	This script combines delivery time and location lat/lng info.
 
 scripts/fmt_geo_errors.sh:
 
