@@ -23,6 +23,7 @@ plotPayRates <- function(df, pfn='') {
 		xlab='Date',
 		xaxt='n',
 		ylab='Rates ($/hr)')
+	grid(col='black')
 	lines(as.Date(df$date, '%Y-%m-%d'), df$hrate, col='red')
 	abline(m_hrate, col='red', lty=2)
 	lines(as.Date(df$date, '%Y-%m-%d'), df$drate, col='green')
@@ -31,7 +32,7 @@ plotPayRates <- function(df, pfn='') {
 	abline(m_dph, col='blue', lty=2)
 	title('Doordash Rates')
 	axis(1, at=dl$tk, labels=dl$lb)
-	legend('bottomleft', inset=c(0.05, 0.2), legend=c('$/Hour', '$/Dash', 'Dashes/Hour'), col=c('red', 'green', 'blue'), lty=1)
+	legend('topleft', inset=c(0.05, 0.05), bg='gray96', legend=c('$/Hour', '$/Dash', 'Dashes/Hour'), col=c('red', 'green', 'blue'), lty=1)
 	if (pfn != '') {
 		ign <- dev.off()
 	}
