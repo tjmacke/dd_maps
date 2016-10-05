@@ -1,7 +1,7 @@
 All files are in $DM_HOME.  if DM_HOME is not defined, the script logs a message to stderr that DM_HOME is not define
 and exits with status = 1.
 
-scripts/add_geo_addresses.sh:
+scripts/add_geo_to_addresses.sh:
 
 	This script is used to add lat/lng (if possible) to either the src or dst addresses in a canonicalized address file.
 	If the lat/lng for the address was found, the result is written to stdout; if not the error and possibly some context
@@ -137,7 +137,7 @@ scripts/combine_pay_and_addr.sh:
 				-- command line.
 		-at { src | dst }
 				-- Select the address type to analyze.
-		runs-file	--
+		runs-file	-- input data.  Use stdin if missing.
 
 scripts/combine_time_and_addr.sh:
 
@@ -169,13 +169,27 @@ scripts/combine_time_and_addr.sh:
 				-- command line.
 		-at { src | dst }
 				-- Select the address type to analyze.
-		runs-file	--
+		runs-file	- input data.  Use stdin if missing.
 
 scripts/fmt_geo_errors.sh:
+
+	This script is used to convert the variable line error messages produced by add_geo_to_addresses.sh to single tsv file
+	with column headers suitable for display as a table in a web browser.
+
+        usage:
+
+		./fmt_geo_errors.sh [ -help ] geo-error-file
+
+	arguments:
+		-help		-- print the usage message.  Default: false.
+		geo-error-file	-- error data to format.  Use stdin if mmissing.
 
 scripts/get_actual_hours.sh:
 
 scripts/get_addresses.sh:
+
+	This script is used to extract addresses from runs files and cononicalize so they can be submitted to opencagedata.com
+	to get their latitudes and longitudes.
 
 scripts/get_job_times.sh:
 
