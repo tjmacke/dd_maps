@@ -14,5 +14,6 @@ makeDateLabels <- function(dv) {
 
 	lb <- c(u, sprintf("%04d-%02d-01", y_end, m_end))
 	tk <- as.Date(lb, '%Y-%m-%d')
+	lb <- substr(lb, 1, 7)
 	return(data.frame(tk, lb))
 }
