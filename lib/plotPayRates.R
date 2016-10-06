@@ -6,7 +6,6 @@ plotPayRates <- function(df, pfn='') {
 	sfn <- paste(dm_home, 'lib', 'makeDateLabels.R', sep='/')
 	source(sfn, chdir=T)
 
-	# TODO: Use this if #pts is >= 3
 	if(length(df$date) >=2) {
 		if(length(df$date) >=3 ){
 			m_hrate <- lm(df$hrate ~ as.Date(df$date, '%Y-%m-%d'))
@@ -18,12 +17,11 @@ plotPayRates <- function(df, pfn='') {
 			m_dph <- lm(df$dph ~ as.Date(df$date, '%Y-%m-%d'))
 			s_dph <- summary(m_dph)$coefficients[2,1]
 		} else {
-			# All I can about is the sign, so ...
+			# All I care about is the sign, so ...
 			s_hrate <- df$hrate[2] - df$hrate[1]		
-			s_drate <- df$drate[2] - df$hdate[1]		
+			s_drate <- df$drate[2] - df$drate[1]		
 			s_dph <- df$dph[2] - df$dph[1]		
 		}
-
 		d_hrate <- ifelse(s_hrate > 0, 'Up', ifelse(s_hrate == 0, 'Flat', 'Down'))
 		d_drate <- ifelse(s_drate > 0, 'Up', ifelse(s_drate == 0, 'Flat', 'Down'))
 		d_dph <- ifelse(s_dph > 0, 'Up', ifelse(s_dph == 0, 'Flat', 'Down'))
@@ -36,6 +34,7 @@ plotPayRates <- function(df, pfn='') {
 	}
 	dl <- makeDateLabels(df$date)
 
+	# TODO: replace c(0, 35) with a properly scaled Y-Axis
 	plot(
 		c(as.Date(dl$tk[1], '%Y-%m-%d'), as.Date(dl$tk[length(dl$tk)], '%Y-%m-%d')),
 		c(0, 35),
@@ -46,16 +45,14 @@ plotPayRates <- function(df, pfn='') {
 		ylab='Rates ($/hr)')
 
 	axis(1, at=dl$tk, labels=F)
-	x_adj = 0.5 * (as.Date('1970-01-31', '%Y-%m-%d') - as.Date('1970-01-01', '%Y-%m-%d'))
-	y_adj = 3.1
-	text(dl$tk - x_adj, y = 0 - y_adj, labels=dl$lb, srt=45, pos=1, xpd=T, cex=0.8)
+	y_adj <- 2.7
+	text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.8)
 	axis(2, at=seq(from=0, to=35, by=5), labels=T, las=1)
 
 	# draw a nice grid
 	abline(h=seq(from=0, to=35, by=5), lty=3, col='black')
 	abline(v=dl$tk, lty=3, col='black')
 
-	# Use this if #pts >= 2
 	if(length(df$date) >= 2) {
 		lines(as.Date(df$date, '%Y-%m-%d'), df$hrate, col='red')
 		lines(as.Date(df$date, '%Y-%m-%d'), df$drate, col='green')
@@ -75,7 +72,6 @@ plotPayRates <- function(df, pfn='') {
 	l_date <- df[length(df$date), 1]
 	title(paste('Doordash Rates', l_date, sep=' through '))
 
-	# Use this legend if #pts >= 2
 	if(length(df$date) >= 2) {
 		lgnd <- c(paste('$/Hour', d_hrate, sep=', '), paste('$/Dash', d_drate, sep=', '), paste('Dashes/Hour', d_dph, sep=', '))
 	} else {
