@@ -1,8 +1,12 @@
+# A color range: [0,1] -> [start,end].  start, end are RGB.  
+# start, end are converted to HSV so range maps to continuous region on the HSV color wheel
 pcrange = {
 	start	= 1,0,0
 	end	= 0,0,1
 }
 
+# A saturation table for showing a 2d variable on the pin color,
+# with lower 2d values resulting in a desaturated pin color. 
 stab = {
 	1	= 0.2
 	2	= 0.3

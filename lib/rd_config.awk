@@ -3,6 +3,8 @@ function rd_config(cfile, config,    err, n_cflines, cfline, nf, ary, i, tkey) {
 	err = 0
 	for(n_cflines = 0; (getline cfline < cfile) > 0; ){
 		n_cflines++
+		if(substr(cfline, 1, 1) == "#")
+			continue;
 		nf = split(cfline, ary, "=")
 		for(i = 1; i <= nf; i++){
 			gsub(/^[\t  ]*/, "", ary[i])
