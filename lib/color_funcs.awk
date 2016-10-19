@@ -162,7 +162,7 @@ function hsv2rgb(hsv, rgb,    hh, p, q, t, ff, i) {
 	}
 	return
 }
-function desat_12bit_color(color, count, n_stab, stab,   r_max_cval, i, sval, R, G, B, rgb, hsv) {
+function desat_12bit_color(color, val,   r_max_cval, R, G, B, rgb, hsv) {
 
 	r_max_cval = 1.0/15
 
@@ -175,16 +175,18 @@ function desat_12bit_color(color, count, n_stab, stab,   r_max_cval, i, sval, R,
 	rgb["B"] = B
 
 	rgb2hsv(rgb, hsv)
-	sval = -1
-	for(i = 0; i < n_stab; i++){ 
-		if(count <= stab[i, "level"]){
-			sval = stab[i, "value"]	
-			break
-		}
-	}
-	if(sval == -1)
-		sval = stab[n_stab, "value"]
-	hsv["S"] *= sval
+	hsv["S"] *= sigmoid(val, 0.4, 8)
 	hsv2rgb(hsv, rgb)
 	return sprintf("%x%x%x", rgb["R"]/r_max_cval, rgb["G"]/r_max_cval, rgb["B"]/r_max_cval)
+}
+function sigmoid(x, s_min, alpha,    x_min, x_max, f_min, f_max, f_range, f_val) {
+	x_min = 0 - 0.5
+	x_max = 1 - 0.5
+	f_min = 1 / (1 + exp(-alpha*x_min))
+	f_max = 1 / (1 + exp(-alpha*x_max))
+	f_range = f_max - f_min
+	f_val = 1 / (1 + exp(-alpha*(x-0.5)))
+	f_val = (f_val - f_min)/f_range		# now f has range [0,1]
+	f_val = (1 - s_min) * f_val + s_min
+	return f_val
 }

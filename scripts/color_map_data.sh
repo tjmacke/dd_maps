@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -c conf-file ] -pn prop-name [ -desat ] [ map-data-file ]"
+U_MSG="usage: $0 [ -help ] [ -c conf-file ] [ -desat ] [ map-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -28,7 +28,6 @@ else
 fi
 
 CFILE=$DM_ETC/color.info
-PNAME=
 DESAT=
 FILE=
 
@@ -46,16 +45,6 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		CFILE=$1
-		shift
-		;;
-	-pn)
-		shift
-		if [ $# -eq 0 ] ; then
-			LOG ERROR "-pn requires prop-name argument"
-			echo "$U_MSG" 1>&2
-			exit 1
-		fi
-		PNAME=$1
 		shift
 		;;
 	-desat)
@@ -77,12 +66,6 @@ done
 
 if [ $# -ne 0 ] ; then
 	LOG ERROR "extra arguments $*"
-	echo "$U_MSG" 1>&2
-	exit 1
-fi
-
-if [ -z "$PNAME" ] ; then
-	LOG ERROR "missing -pn prop-name argument"
 	echo "$U_MSG" 1>&2
 	exit 1
 fi
@@ -112,20 +95,20 @@ BEGIN {
 		err = 1;
 		exit err
 	}
-	pname = "'"$PNAME"'"
 	desat = "'"$DESAT"'" == "yes"
-	n_stab = asorti(st_src, st_dst, "cmp_levels")
-	for(i = 1; i <= n_stab; i++){
-		stab[i, "level"] = st_dst[i]
-		stab[i, "value"] = st_src[st_dst[i]]
-	}
-	delete st_src
-	delete st_dst
+# Using sigmoid function desaturator
+#	n_stab = asorti(st_src, st_dst, "cmp_levels")
+#	for(i = 1; i <= n_stab; i++){
+#		stab[i, "level"] = st_dst[i]
+#		stab[i, "value"] = st_src[st_dst[i]]
+#	}
+#	delete st_src
+#	delete st_dst
 }
 {
 	n_points++
-	dv4hue[n_points] = $1
 
+	dv4hue[n_points] = $1
 	if(n_points == 1){
 		dv4hue_min = $1
 		dv4hue_max = $1
@@ -134,18 +117,35 @@ BEGIN {
 	else if($1 > dv4hue_max)
 		dv4hue_max = $1
 
-	title[n_points] = $2
-	long[n_points] = $3
-	lat[n_points] = $4
+	if(desat){
+		dv4sat[n_points] = $2
+		if(n_points == 1){
+			dv4sat_min = $2
+			dv4sat_max = $2
+		}else if($2 < dv4sat_min)
+			dv4sat_min = $2
+		else if($2 > dv4sat_max)
+			dv4sat_max = $2
+	}
+
+	label[n_points] = $(desat + 2)
+	title[n_points] = $(desat + 3)
+	long[n_points] = $(desat + 4)
+	lat[n_points] = $(desat + 5)
 }
 END {
 	# Check that that we of data values; if not use the start value
 	h_dv_range = dv4hue_max > dv4hue_min
+	if(desat)
+		h_ds_range = dv4sat_max > dv4sat_min
 	for(i = 1; i <= n_points; i++){
 		frac = !h_dv_range ? 0 : (dv4hue[i] - dv4hue_min)/(dv4hue_max - dv4hue_min) 
 		color = set_12bit_color(frac, colorInfo)
-		pval = sprintf("%s=%s", pname, dv4hue[i])
-		printf("#%s\t%s, %s\t%s\t%s\n", color, title[i], pval, long[i], lat[i])
+		if(desat){
+			s_frac = !h_ds_range ? 1 : (dv4sat[i] - dv4sat_min)/(dv4sat_max - dv4sat_min)
+			color = desat_12bit_color(color, s_frac)
+		}
+		printf("#%s\t%s:<br>%s\t%s\t%s\n", color, title[i], label[i], long[i], lat[i])
 	}
 }
 function cmp_levels(i1, v1, i2, v2) {

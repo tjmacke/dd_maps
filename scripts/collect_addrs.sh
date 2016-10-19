@@ -2,9 +2,10 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] -at { src | dst } [ addr-geo-file ]"
+U_MSG="usage: $0 [ -help ] -at { src | dst } [ -cnt ] [ addr-geo-file ]"
 
 ATYPE=
+CNT=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -21,6 +22,10 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		ATYPE=$1
+		shift
+		;;
+	-cnt)
+		CNT="yes"
 		shift
 		;;
 	-*)
@@ -55,6 +60,7 @@ fi
 awk -F'\t' 'BEGIN {
 	atype = "'"$ATYPE"'"
 	f_addr = atype == "src" ? 2 : 3
+	cnt = "'"$CNT"'" == "yes"
 }
 {
 	addr = $f_addr
@@ -73,6 +79,8 @@ awk -F'\t' 'BEGIN {
 END {
 	for(addr in a2idx){
 		idx = a2idx[addr]
-		printf("%d\t%s\t%s\t%s\n", acnt[idx], addr, long[idx], lat[idx])
+		if(cnt)
+			printf("%d\t", acnt[idx])
+		printf("%s\t%s\t%s\n", addr, long[idx], lat[idx])
 	}
 }' $FILE
