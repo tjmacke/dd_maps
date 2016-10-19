@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>My Doordashes</title>
+  <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script src="https://api.mapbox.com/mapbox.js/v2.2.2/mapbox.js"></script>
+  <link href="https://api.mapbox.com/mapbox.js/v2.2.2/mapbox.css" rel="stylesheet"/>
+  <style>
+    body { margin: 0; padding: 0; }
+    .controls { position: absolute; width: 100%; height: 5%; top: 0; border: 2px solid black; }
+    #map { position: absolute; width: 100%; height: 95%; top: 5%; border: 2px solid black; }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    File:  <input type="file" id="fileinput" onchange="loadGeoJson(event)"/>
+  </div>
+  <div id="map" class="map">Map</div>
+  <script type="text/javascript">
+    function loadGeoJson(evt) {
+      var f = evt.target.files[0];
+  
+      if (f) {
+        var r = new FileReader();
+        r.onload = function(e) {
+          var contents = e.target.result;
+          var geoJson = JSON.parse(contents);
+          makeMap(geoJson);
+        };
+        r.readAsText(f);
+  
+      } else {
+        alert("Failed to load file");
+      }
+    }
+  </script>
+  <script type="text/javascript">
+    // This code sets up  the map
+    L.mapbox.accessToken = "pk.eyJ1IjoidGptYWNrZSIsImEiOiJjaWZlZndqMmw2dXdycnlseHllc3hhaWxhIn0.BdoeGKCUMnGifNEsnzoOfg";
+    var map = L.mapbox.map("map", "mapbox.streets").setView([37.4377, -122.1603], 14);
+    var myLayer = L.mapbox.featureLayer().addTo(map);
+    // This function, called by the data-is-loaded callback passed to d3.json() draws the geoJson features
+    function makeMap(geoJson) {
+      myLayer.setGeoJSON(geoJson);
+    }
+  </script>
+</body>
+</html>

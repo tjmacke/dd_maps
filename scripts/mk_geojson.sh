@@ -15,7 +15,7 @@ DM_SCRIPTS=$DM_HOME/scripts
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
-	awk=igawk
+	AWK=igawk
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
 else

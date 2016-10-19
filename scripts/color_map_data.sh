@@ -145,7 +145,7 @@ END {
 			s_frac = !h_ds_range ? 1 : (dv4sat[i] - dv4sat_min)/(dv4sat_max - dv4sat_min)
 			color = desat_12bit_color(color, s_frac)
 		}
-		printf("#%s\t%s:<br>%s\t%s\t%s\n", color, title[i], label[i], long[i], lat[i])
+		printf("#%s\t%s:<br/>%s\t%s\t%s\n", color, title[i], label[i], long[i], lat[i])
 	}
 }
 function cmp_levels(i1, v1, i2, v2) {
