@@ -50,7 +50,7 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
-sort -t $'\t' -k 3,3 -k 4,4 $FILE |\
+sort -t $'\t' -k 4,4 -k 5,5 $FILE |\
 $AWK -F'\t' 'BEGIN {
 	PI = 4 * atan2(1, 1)
 	RAD = 0.0001
@@ -58,9 +58,10 @@ $AWK -F'\t' 'BEGIN {
 {
 	n_points++
 	colors[n_points] = $1
-	titles[n_points] = $2
-	long[n_points] = $3
-	lat[n_points] = $4
+	styles[n_points] = $2
+	titles[n_points] = $3
+	longs[n_points] = $4
+	lats[n_points] = $5
 }
 END {
 	if(n_points == 0)
@@ -70,11 +71,11 @@ END {
 	n_pgroups = 1
 	pg_starts[n_pgroups] = 1
 	pg_counts[n_pgroups] = 1
-	l_geo[1] = long[1]
-	l_geo[2] = lat[1]
+	l_geo[1] = longs[1]
+	l_geo[2] = lats[1]
 	for(i = 2; i <= n_points; i++){
-		geo[1] = long[i]
-		geo[2] = lat[i]
+		geo[1] = longs[i]
+		geo[2] = lats[i]
 		if(geo_equal(geo, l_geo)){
 			pg_counts[n_pgroups]++
 		}else{
@@ -88,17 +89,20 @@ END {
 
 	printf("[\n")
 	for(i = 1; i <= n_pgroups; i++){
-		geo_adjust(long[pg_starts[i]], lat[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
+		geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
 		for(j = 0; j < pg_counts[i]; j++){
+			h_style = styles[pg_starts[i] + j] != "."
 			printf("{\n")
 			printf("  \"type\": \"Feature\",\n")
 			printf("  \"geometry\": {")
 			printf("\"type\": \"Point\", ")
-			printf("\"coordinates\": [%.5f, %.5f]", long[pg_starts[i] + j] + long_adj[j+1], lat[pg_starts[i] + j] + lat_adj[j+1])
+			printf("\"coordinates\": [%.5f, %.5f]", longs[pg_starts[i] + j] + long_adj[j+1], lats[pg_starts[i] + j] + lat_adj[j+1])
 			printf("},\n")
 			printf("  \"properties\": {\n")
 			printf("    \"title\": \"%s\",\n", titles[pg_starts[i] + j])
-			printf("    \"marker-color\": \"%s\"\n", colors[pg_starts[i] + j])
+			printf("    \"marker-color\": \"%s\"%s\n", colors[pg_starts[i] + j], h_style ? "," : "")
+			if(h_style)
+				printf("    %s\n", styles[pg_starts[i] + j])
 			printf("  }\n")
 			printf("}%s\n", (pg_starts[i] + j < n_points) ? "," : "")
 		}

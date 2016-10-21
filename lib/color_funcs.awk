@@ -82,6 +82,20 @@ function set_12bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
 
 	return sprintf("%x%x%x", R, G, B)
 }
+function set_24bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
+
+	hsv["H"] = frac * colorInfo["H_end"] + (1.0 - frac) * colorInfo["H_start"]
+	hsv["S"] = frac * colorInfo["S_end"] + (1.0 - frac) * colorInfo["S_start"]
+	hsv["V"] = frac * colorInfo["V_end"] + (1.0 - frac) * colorInfo["V_start"]
+	hsv2rgb(hsv, rgb)
+
+	r_max_cval = 1.0/255
+	R = rgb["R"] / r_max_cval
+	G = rgb["G"] / r_max_cval
+	B = rgb["B"] / r_max_cval
+
+	return sprintf("%02x%02x%02x", R, G, B)
+}
 function rgb2hsv(rgb, hsv,   min, max, delta) {
 
 	min = rgb["R"] < rgb["G"] ? rgb["R"] : rgb["G"]
@@ -178,6 +192,29 @@ function desat_12bit_color(color, val,   r_max_cval, R, G, B, rgb, hsv) {
 	hsv["S"] *= sigmoid(val, 0.4, 8)
 	hsv2rgb(hsv, rgb)
 	return sprintf("%x%x%x", rgb["R"]/r_max_cval, rgb["G"]/r_max_cval, rgb["B"]/r_max_cval)
+}
+function desat_24bit_color(color, val,   r_max_cval, d1, d2, R, G, B, rgb, hsv) {
+
+	r_max_cval = 1.0/255
+
+	d1 = index("0123456789abcdef", tolower(substr(color, 1, 1))) - 1
+	d2 = index("0123456789abcdef", tolower(substr(color, 2, 1))) - 1
+	R = (16*d1 + d2)/255.0
+	d1 = index("0123456789abcdef", tolower(substr(color, 3, 1))) - 1
+	d2 = index("0123456789abcdef", tolower(substr(color, 4, 1))) - 1
+	G = (16*d1 + d2)/255.0
+	d1 = index("0123456789abcdef", tolower(substr(color, 5, 1))) - 1
+	d2 = index("0123456789abcdef", tolower(substr(color, 6, 1))) - 1
+	B = (16*d1 + d2)/255.0
+
+	rgb["R"] = R
+	rgb["G"] = G
+	rgb["B"] = B
+
+	rgb2hsv(rgb, hsv)
+	hsv["S"] *= sigmoid(val, 0.4, 8)
+	hsv2rgb(hsv, rgb)
+	return sprintf("%02x%02x%02x", rgb["R"]/r_max_cval, rgb["G"]/r_max_cval, rgb["B"]/r_max_cval)
 }
 function sigmoid(x, s_min, alpha,    x_min, x_max, f_min, f_max, f_range, f_val) {
 	x_min = 0 - 0.5

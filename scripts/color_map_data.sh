@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -c conf-file ] [ -desat ] [ map-data-file ]"
+U_MSG="usage: $0 [ -help ] [ -c conf-file ] [ -v2 { desat | size } ] [ map-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -28,7 +28,7 @@ else
 fi
 
 CFILE=$DM_ETC/color.info
-DESAT=
+V2=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -47,8 +47,14 @@ while [ $# -gt 0 ] ; do
 		CFILE=$1
 		shift
 		;;
-	-desat)
-		DESAT="yes"
+	-v2)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-v2 requires an argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		V2=$1
 		shift
 		;;
 	-*)
@@ -70,42 +76,53 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
+if [ ! -z "$V2" ] ; then
+	if [ "$V2" != "desat" ] && [ "$V2" != "size" ] ; then
+		LOG ERROR "unknown -v2 value $V2"
+		echo "$U_MSG" 1>&2
+		exit 1
+	fi
+fi 
+
 $AWK -F'\t' '
 @include '"$RD_CONFIG"'
 @include '"$COLOR_FUNCS"'
 BEGIN {
-	cfile = "'"$CFILE"'"
-	if(rd_config(cfile, config)){
+ 	cfile = "'"$CFILE"'"
+ 	if(rd_config(cfile, config)){
+ 		err = 1
+ 		exit err
+ 	}
+ 	for(k in config){
+ 		split(k, keys, SUBSEP)
+ 		if(keys[1] == "pcrange")
+ 			pcrange[keys[2]] = config[k]
+ 		else if(keys[1] == "stab")
+ 			st_src[keys[2]] = config[k]
+ 		else{
+ 			printf("ERROR: unknown table in config file %s\n", keys[1], cfile) > "/dev/stderr"
+ 			err = 1
+ 			exit err
+ 		}
+ 	}
+ 	if(init_crange((pcrange["start"] ":" pcrange["end"]), colorInfo)){
+ 		err = 1;
+ 		exit err
+ 	}
+ 	v2 = "'"$V2"'"
+ 	if(v2 != ""){
+ 		have_v2 = 1
+ 		desat = v2 == "desat"
+ 		size = v2 == "size"
+ 	}else
+ 		have_v2 = size = desat = 0
+}
+{
+	if(NF == 5 && have_v2){
+		printf("ERROR: line %d: wrong number of fields %d: need %d\n", NR, NF, 6) > "/dev/stderr"
 		err = 1
 		exit err
 	}
-	for(k in config){
-		split(k, keys, SUBSEP)
-		if(keys[1] == "pcrange")
-			pcrange[keys[2]] = config[k]
-		else if(keys[1] == "stab")
-			st_src[keys[2]] = config[k]
-		else{
-			printf("ERROR: unknown table in config file %s\n", keys[1], cfile) > "/dev/stderr"
-			err = 1
-			exit err
-		}
-	}
-	if(init_crange((pcrange["start"] ":" pcrange["end"]), colorInfo)){
-		err = 1;
-		exit err
-	}
-	desat = "'"$DESAT"'" == "yes"
-# Using sigmoid function desaturator
-#	n_stab = asorti(st_src, st_dst, "cmp_levels")
-#	for(i = 1; i <= n_stab; i++){
-#		stab[i, "level"] = st_dst[i]
-#		stab[i, "value"] = st_src[st_dst[i]]
-#	}
-#	delete st_src
-#	delete st_dst
-}
-{
 	n_points++
 
 	dv4hue[n_points] = $1
@@ -117,42 +134,75 @@ BEGIN {
 	else if($1 > dv4hue_max)
 		dv4hue_max = $1
 
-	if(desat){
-		dv4sat[n_points] = $2
-		if(n_points == 1){
-			dv4sat_min = $2
-			dv4sat_max = $2
-		}else if($2 < dv4sat_min)
-			dv4sat_min = $2
-		else if($2 > dv4sat_max)
-			dv4sat_max = $2
+	if(have_v2){
+		v2_data[n_points] = $2
 	}
 
-	label[n_points] = $(desat + 2)
-	title[n_points] = $(desat + 3)
-	long[n_points] = $(desat + 4)
-	lat[n_points] = $(desat + 5)
+	labels[n_points] = $(have_v2 + 2)
+	titles[n_points] = $(have_v2 + 3)
+	longs[n_points] = $(have_v2 + 4)
+	lats[n_points] = $(have_v2 + 5)
 }
 END {
+	if(err)
+		exit err
+
 	# Check that that we of data values; if not use the start value
 	h_dv_range = dv4hue_max > dv4hue_min
-	if(desat)
+	if(desat){
+		dv4sat_min = v2_data[1]
+		dv4sat_max = v2_data[1]
+		for(i = 2; i <= n_points; i++){
+			if(v2_data[i] < dv4sat_min)
+				dv4sat_min = v2_data[i]
+			else if(v2_data[i] > dv4sat_max)
+				dv4sat_max = v2_data[i]
+		}
 		h_ds_range = dv4sat_max > dv4sat_min
+	}else if(size){
+		t_counts = 0
+		v2 = v2_data[1]
+		v2_counts[v2] = 1
+		v2_max = v2
+		for(i = 2; i <= n_points; i++){
+			v2 = v2_data[i]
+			t_counts += v2
+			v2_counts[v2]++
+			if(v2 > v2_max)
+				v2_max = v2
+		}
+
+		l_50 = l_80 = 0
+		r_counts = 0
+		for(i = 1; i <= v2_max; i++){
+			r_counts += v2_counts[i]
+			if(l_50 == 0){
+				if(1.*r_counts/n_points >= .5)
+					l_50 = i
+			}
+			if(l_80 == 0){
+				if(1.*r_counts/n_points >= .8)
+					l_80 = i
+			}
+		}
+	}
 	for(i = 1; i <= n_points; i++){
 		frac = !h_dv_range ? 0 : (dv4hue[i] - dv4hue_min)/(dv4hue_max - dv4hue_min) 
-		color = set_12bit_color(frac, colorInfo)
+#		color = set_12bit_color(frac, colorInfo)
+		color = set_24bit_color(frac, colorInfo)
+		style_msg = "."
 		if(desat){
-			s_frac = !h_ds_range ? 1 : (dv4sat[i] - dv4sat_min)/(dv4sat_max - dv4sat_min)
-			color = desat_12bit_color(color, s_frac)
+			s_frac = !h_ds_range ? 1 : (v2_data[i] - dv4sat_min)/(dv4sat_max - dv4sat_min)
+#			color = desat_12bit_color(color, s_frac)
+			color = desat_24bit_color(color, s_frac)
+		}else if(size){
+			if(v2_data[i] <= l_50)
+				style_msg = "\"marker-size\": \"small\""
+			else if(v2_data[i] <= l_80)
+				style_msg = "\"marker-size\": \"medium\""
+			else
+				style_msg = "\"marker-size\": \"large\""
 		}
-		printf("#%s\t%s:<br/>%s\t%s\t%s\n", color, title[i], label[i], long[i], lat[i])
+		printf("#%s\t%s\t%s:<br/>%s\t%s\t%s\n", color, style_msg, titles[i], labels[i], longs[i], lats[i])
 	}
-}
-function cmp_levels(i1, v1, i2, v2) {
-	if(i1 == "rest")
-		return 1
-	else if(i2 == "rest")
-		return -1
-	else
-		return (i1 - i2)
 }' $FILE
