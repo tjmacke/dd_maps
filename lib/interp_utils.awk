@@ -11,7 +11,7 @@ function IU_init(config, interp, name, is_cont, k_values, k_breaks,    work, n_a
 	interp["nvalues"] = n_ary
 	for(i = 1; i <= n_ary; i++)
 		interp["values", i] = ary[i]
-	work = config["_globals", k_breaks]
+	work = k_breaks != "" ? config["_globals", k_breaks] : ""
 	if(work == ""){
 		for(i = 1; i < nv; i++){
 			interp["breaks", i] = i/(1.0*nv)
@@ -56,8 +56,13 @@ function IU_dump(file, interp,   i, keys, nk) {
 function IU_interpolate(interp, v, vmin, vmax,   v_idx, i, f, work, start, end, l_rvec, rvec, fb, bmin, bmax) {
 
 	# all values are the same, return the first value
-	if(vmin == vmax)
-		return interp["values", 1]
+	if(vmin == vmax){
+		if(interp["continuous"]){
+			split(interp["values", 1], work, ":")
+			return work[1]
+		}else
+			return interp["values", 1]
+	}
 
 	v_idx = interp["nvalues"]
 	for(i = 1; i < interp["nvalues"]; i++){

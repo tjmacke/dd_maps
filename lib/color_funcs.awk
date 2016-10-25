@@ -227,3 +227,22 @@ function sigmoid(x, s_min, alpha,    x_min, x_max, f_min, f_max, f_range, f_val)
 	f_val = (1 - s_min) * f_val + s_min
 	return f_val
 }
+function rgb_to_12bit_color(rgb,   work, r_max_cval, R, G, B) {
+
+	split(rgb, work, ",")
+	r_max_cval = 1.0/15
+	R = work[1] / r_max_cval
+	G = work[2] / r_max_cval
+	B = work[3] / r_max_cval
+	return sprintf("%x%x%x", R, G, B)
+}
+function rgb_to_24bit_color(rgb,   work, r_max_cval, R, G, B) {
+
+	split(rgb, work, ",")
+	r_max_cval = 1.0/255
+	R = work[1] / r_max_cval
+	G = work[2] / r_max_cval
+	B = work[3] / r_max_cval
+
+	return sprintf("%02x%02x%02x", R, G, B)
+}
