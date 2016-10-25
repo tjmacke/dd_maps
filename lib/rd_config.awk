@@ -5,6 +5,7 @@ function rd_config(cfile, config,    err, n_cflines, cfline, nf, ary, i, tkey) {
 		n_cflines++
 		if(substr(cfline, 1, 1) == "#")
 			continue;
+		# TODO: redo to split on the first eq sign
 		nf = split(cfline, ary, "=")
 		for(i = 1; i <= nf; i++){
 			gsub(/^[\t  ]*/, "", ary[i])
@@ -28,9 +29,7 @@ function rd_config(cfile, config,    err, n_cflines, cfline, nf, ary, i, tkey) {
 		}else if(ary[2] == "{"){
 			tkey = ary[1]
 		}else if(tkey == ""){
-			printf("ERROR: line %7d: sym def not in table\n", n_cflines) > "/dev/stderr"
-			err = 1
-			break
+			config["_globals", ary[1]] = ary[2]
 		}else{
 			config[tkey, ary[1]] = ary[2]
 		}
