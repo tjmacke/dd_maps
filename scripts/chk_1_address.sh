@@ -10,7 +10,6 @@ if [ -z "$DM_HOME" ] ; then
 fi
 DM_SCRIPTS=$DM_HOME/scripts
 
-DD_HOME=
 ATYPE=
 MONTH=
 ADDR=
@@ -104,7 +103,7 @@ $5 == "Job" {
 	}
 }' $DD_HOME/data/runs.$MONTH.tsv)"
 
-A_LINE="$(echo "$J_LINE" | $DM_SCRIPTS/get_addresses.sh -at $ATYPE	|\
+A_LINE="$(echo "$J_LINE" | $DM_SCRIPTS/get_addrs_from_runs.sh -at $ATYPE	|\
 tail -1)"
 
 if [ -z "$A_LINE" ] ; then

@@ -10,8 +10,6 @@ if [ -z "$DM_HOME" ] ; then
 fi
 DM_SCRIPTS=$DM_HOME/scripts
 
-DD_HOME=
-
 EFILE=
 
 while [ $# -gt 0 ] ; do
