@@ -17,12 +17,12 @@ AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1]
 if [ "$AWK_VERSION" == "3" ] ; then
 	AWK=igawk
 	RD_CONFIG="$DM_LIB/rd_config.awk"
-	COLOR_FUNCS="$DM_LIB/color_funcs.awk"
+	COLOR_UTILS="$DM_LIB/color_utils.awk"
 	INTERP_UTILS="$DM_LIB/interp_utils.awk"
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
 	RD_CONFIG="\"$DM_LIB/rd_config.awk\""
-	COLOR_FUNCS="\"$DM_LIB/color_funcs.awk\""
+	COLOR_UTILS="\"$DM_LIB/color_utils.awk\""
 	INTERP_UTILS="\"$DM_LIB/interp_utils.awk\""
 else
 	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
@@ -88,7 +88,7 @@ fi
 
 $AWK -F'\t' '
 @include '"$RD_CONFIG"'
-@include '"$COLOR_FUNCS"'
+@include '"$COLOR_UTILS"'
 @include '"$INTERP_UTILS"'
 BEGIN {
  	cfile = "'"$CFILE"'"
