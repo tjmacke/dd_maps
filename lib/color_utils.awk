@@ -1,102 +1,26 @@
-function init_crange(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B, rgb, hsv) {
+# convert rgb color to HHH or HHHHHH color strings that can be used as HTML color values
+function CU_rgb_to_12bit_color(rgb,   work, r_max_cval, R, G, B) {
 
-	nf = split(crange, ary, ":")
-	if(nf != 2){
-		printf("ERROR: bad color range: %s, must be r,g,b:r,g,b r,g,b in [0,1]\n", crange) > "/dev/stderr"
-		return 1
-	}
-
-	# get start color
-	nf2 = split(ary[1], ary2, ",")
-	if(nf2 != 3){
-		printf("ERROR: bad start color: %s, must be r,g,b r,g,b in [0,1]\n", ary[1]) > "/dev/stderr"
-		return 1
-	}
-	R = ary2[1]
-	if(R < 0 || R > 1){
-		printf("ERROR: bad start R value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[1]) > "/dev/stderr"
-		return 1
-	}
-	G = ary2[2]
-	if(G < 0 || G > 1){
-		printf("ERROR: bad start G value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[2]) > "/dev/stderr"
-		return 1
-	}
-	B = ary2[3]
-	if(B < 0 || B > 1){
-		printf("ERROR: bad start B value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[3]) > "/dev/stderr"
-		return 1
-	}
-	rgb["R"] = R
-	rgb["G"] = G
-	rgb["B"] = B
-	rgb2hsv(rgb, hsv)
-
-	colorInfo["H_start"] = hsv["H"]
-	colorInfo["S_start"] = hsv["S"]
-	colorInfo["V_start"] = hsv["V"]
-
-	# get end color
-	nf2 = split(ary[2], ary2, ",")
-	if(nf2 != 3){
-		printf("ERROR: bad end color: %s, must be r,g,b r,g,b in [0,1]\n", ary[2]) > "/dev/stderr"
-		return 1
-	}
-	R = ary2[1]
-	if(R < 0 || R > 1){
-		printf("ERROR: bad end R value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[1]) > "/dev/stderr"
-		return 1
-	}
-	G = ary2[2]
-	if(G < 0 || G > 1){
-		printf("ERROR: bad end G value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[2]) > "/dev/stderr"
-		return 1
-	}
-	B = ary2[3]
-	if(B < 0 || B > 1){
-		printf("ERROR: bad end B value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[3]) > "/dev/stderr"
-		return 1
-	}
-	rgb["R"] = R
-	rgb["G"] = G
-	rgb["B"] = B
-	rgb2hsv(rgb, hsv)
-
-	colorInfo["H_end"] = hsv["H"]
-	colorInfo["S_end"] = hsv["S"]
-	colorInfo["V_end"] = hsv["V"]
-
-	return 0
-}
-function set_12bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
-
-	hsv["H"] = frac * colorInfo["H_end"] + (1.0 - frac) * colorInfo["H_start"]
-	hsv["S"] = frac * colorInfo["S_end"] + (1.0 - frac) * colorInfo["S_start"]
-	hsv["V"] = frac * colorInfo["V_end"] + (1.0 - frac) * colorInfo["V_start"]
-	hsv2rgb(hsv, rgb)
-
+	split(rgb, work, ",")
 	r_max_cval = 1.0/15
-	R = rgb["R"] / r_max_cval
-	G = rgb["G"] / r_max_cval
-	B = rgb["B"] / r_max_cval
-
+	R = work[1] / r_max_cval
+	G = work[2] / r_max_cval
+	B = work[3] / r_max_cval
 	return sprintf("%x%x%x", R, G, B)
 }
-function set_24bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
+function CU_rgb_to_24bit_color(rgb,   work, r_max_cval, R, G, B) {
 
-	hsv["H"] = frac * colorInfo["H_end"] + (1.0 - frac) * colorInfo["H_start"]
-	hsv["S"] = frac * colorInfo["S_end"] + (1.0 - frac) * colorInfo["S_start"]
-	hsv["V"] = frac * colorInfo["V_end"] + (1.0 - frac) * colorInfo["V_start"]
-	hsv2rgb(hsv, rgb)
-
+	split(rgb, work, ",")
 	r_max_cval = 1.0/255
-	R = rgb["R"] / r_max_cval
-	G = rgb["G"] / r_max_cval
-	B = rgb["B"] / r_max_cval
+	R = work[1] / r_max_cval
+	G = work[2] / r_max_cval
+	B = work[3] / r_max_cval
 
 	return sprintf("%02x%02x%02x", R, G, B)
 }
-function rgb2hsv(rgb, hsv,   min, max, delta) {
+
+# rgb <-> hsv converstion functions
+function CU_rgb2hsv(rgb, hsv,   min, max, delta) {
 
 	min = rgb["R"] < rgb["G"] ? rgb["R"] : rgb["G"]
 	min = min      < rgb["B"] ? min      : rgb["B"]
@@ -131,7 +55,7 @@ function rgb2hsv(rgb, hsv,   min, max, delta) {
 		hsv["H"] += 360
 	return
 }
-function hsv2rgb(hsv, rgb,    hh, p, q, t, ff, i) {
+function CU_hsv2rgb(hsv, rgb,    hh, p, q, t, ff, i) {
 
 	if(hsv["S"] <= 0){
 		rgb["R"] = hsv["V"]
@@ -176,7 +100,10 @@ function hsv2rgb(hsv, rgb,    hh, p, q, t, ff, i) {
 	}
 	return
 }
-function desat_12bit_color(color, val,   r_max_cval, R, G, B, rgb, hsv) {
+
+# continuous desaturation via a logistic function in CU_sigmoid(). Needs to be parameterized
+# not sure if I'll ever use this, but took a few hours to make it sort of useful so ...
+function CU_desat_12bit_color(color, val,   r_max_cval, R, G, B, rgb, hsv) {
 
 	r_max_cval = 1.0/15
 
@@ -188,12 +115,12 @@ function desat_12bit_color(color, val,   r_max_cval, R, G, B, rgb, hsv) {
 	rgb["G"] = G
 	rgb["B"] = B
 
-	rgb2hsv(rgb, hsv)
-	hsv["S"] *= sigmoid(val, 0.4, 8)
-	hsv2rgb(hsv, rgb)
+	CU_rgb2hsv(rgb, hsv)
+	hsv["S"] *= CU_sigmoid(val, 0.4, 8)
+	CU_hsv2rgb(hsv, rgb)
 	return sprintf("%x%x%x", rgb["R"]/r_max_cval, rgb["G"]/r_max_cval, rgb["B"]/r_max_cval)
 }
-function desat_24bit_color(color, val,   r_max_cval, d1, d2, R, G, B, rgb, hsv) {
+function CU_desat_24bit_color(color, val,   r_max_cval, d1, d2, R, G, B, rgb, hsv) {
 
 	r_max_cval = 1.0/255
 
@@ -211,12 +138,12 @@ function desat_24bit_color(color, val,   r_max_cval, d1, d2, R, G, B, rgb, hsv) 
 	rgb["G"] = G
 	rgb["B"] = B
 
-	rgb2hsv(rgb, hsv)
-	hsv["S"] *= sigmoid(val, 0.4, 8)
-	hsv2rgb(hsv, rgb)
+	CU_rgb2hsv(rgb, hsv)
+	hsv["S"] *= CU_sigmoid(val, 0.4, 8)
+	CU_hsv2rgb(hsv, rgb)
 	return sprintf("%02x%02x%02x", rgb["R"]/r_max_cval, rgb["G"]/r_max_cval, rgb["B"]/r_max_cval)
 }
-function sigmoid(x, s_min, alpha,    x_min, x_max, f_min, f_max, f_range, f_val) {
+function CU_sigmoid(x, s_min, alpha,    x_min, x_max, f_min, f_max, f_range, f_val) {
 	x_min = 0 - 0.5
 	x_max = 1 - 0.5
 	f_min = 1 / (1 + exp(-alpha*x_min))
@@ -227,22 +154,105 @@ function sigmoid(x, s_min, alpha,    x_min, x_max, f_min, f_max, f_range, f_val)
 	f_val = (1 - s_min) * f_val + s_min
 	return f_val
 }
-function rgb_to_12bit_color(rgb,   work, r_max_cval, R, G, B) {
 
-	split(rgb, work, ",")
+# OBSOLETE?
+# Initial implementation when I could only use 1 color range, which was interpolated via the HSV wheel.  Probably will never use a again ...
+function CU_init_colorInfo(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B, rgb, hsv) {
+
+	nf = split(crange, ary, ":")
+	if(nf != 2){
+		printf("ERROR: bad color range: %s, must be r,g,b:r,g,b r,g,b in [0,1]\n", crange) > "/dev/stderr"
+		return 1
+	}
+
+	# get start color
+	nf2 = split(ary[1], ary2, ",")
+	if(nf2 != 3){
+		printf("ERROR: bad start color: %s, must be r,g,b r,g,b in [0,1]\n", ary[1]) > "/dev/stderr"
+		return 1
+	}
+	R = ary2[1]
+	if(R < 0 || R > 1){
+		printf("ERROR: bad start R value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[1]) > "/dev/stderr"
+		return 1
+	}
+	G = ary2[2]
+	if(G < 0 || G > 1){
+		printf("ERROR: bad start G value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[2]) > "/dev/stderr"
+		return 1
+	}
+	B = ary2[3]
+	if(B < 0 || B > 1){
+		printf("ERROR: bad start B value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[3]) > "/dev/stderr"
+		return 1
+	}
+	rgb["R"] = R
+	rgb["G"] = G
+	rgb["B"] = B
+	CU_rgb2hsv(rgb, hsv)
+
+	colorInfo["H_start"] = hsv["H"]
+	colorInfo["S_start"] = hsv["S"]
+	colorInfo["V_start"] = hsv["V"]
+
+	# get end color
+	nf2 = split(ary[2], ary2, ",")
+	if(nf2 != 3){
+		printf("ERROR: bad end color: %s, must be r,g,b r,g,b in [0,1]\n", ary[2]) > "/dev/stderr"
+		return 1
+	}
+	R = ary2[1]
+	if(R < 0 || R > 1){
+		printf("ERROR: bad end R value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[1]) > "/dev/stderr"
+		return 1
+	}
+	G = ary2[2]
+	if(G < 0 || G > 1){
+		printf("ERROR: bad end G value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[2]) > "/dev/stderr"
+		return 1
+	}
+	B = ary2[3]
+	if(B < 0 || B > 1){
+		printf("ERROR: bad end B value: %s, must be r,g,b r,g,b in [0,1]\n", ary2[3]) > "/dev/stderr"
+		return 1
+	}
+	rgb["R"] = R
+	rgb["G"] = G
+	rgb["B"] = B
+	CU_rgb2hsv(rgb, hsv)
+
+	colorInfo["H_end"] = hsv["H"]
+	colorInfo["S_end"] = hsv["S"]
+	colorInfo["V_end"] = hsv["V"]
+
+	return 0
+}
+function CU_set_12bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
+
+	hsv["H"] = frac * colorInfo["H_end"] + (1.0 - frac) * colorInfo["H_start"]
+	hsv["S"] = frac * colorInfo["S_end"] + (1.0 - frac) * colorInfo["S_start"]
+	hsv["V"] = frac * colorInfo["V_end"] + (1.0 - frac) * colorInfo["V_start"]
+	CU_hsv2rgb(hsv, rgb)
+
 	r_max_cval = 1.0/15
-	R = work[1] / r_max_cval
-	G = work[2] / r_max_cval
-	B = work[3] / r_max_cval
+	R = rgb["R"] / r_max_cval
+	G = rgb["G"] / r_max_cval
+	B = rgb["B"] / r_max_cval
+
 	return sprintf("%x%x%x", R, G, B)
 }
-function rgb_to_24bit_color(rgb,   work, r_max_cval, R, G, B) {
+function CU_set_24bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
 
-	split(rgb, work, ",")
+	hsv["H"] = frac * colorInfo["H_end"] + (1.0 - frac) * colorInfo["H_start"]
+	hsv["S"] = frac * colorInfo["S_end"] + (1.0 - frac) * colorInfo["S_start"]
+	hsv["V"] = frac * colorInfo["V_end"] + (1.0 - frac) * colorInfo["V_start"]
+	CU_hsv2rgb(hsv, rgb)
+
 	r_max_cval = 1.0/255
-	R = work[1] / r_max_cval
-	G = work[2] / r_max_cval
-	B = work[3] / r_max_cval
+	R = rgb["R"] / r_max_cval
+	G = rgb["G"] / r_max_cval
+	B = rgb["B"] / r_max_cval
 
 	return sprintf("%02x%02x%02x", R, G, B)
 }
+

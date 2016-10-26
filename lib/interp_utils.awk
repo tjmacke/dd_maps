@@ -1,4 +1,4 @@
-function IU_init(config, interp, name, is_cont, k_values, k_breaks,    work, n_ary, ary, i, nv) {
+function IU_init(config, interp, name, k_values, k_breaks,    work, n_ary, ary, c_cnt, i, nv) {
 
 	work = config["_globals", k_values]
 	if(work == ""){
@@ -6,11 +6,25 @@ function IU_init(config, interp, name, is_cont, k_values, k_breaks,    work, n_a
 		return 1
 	}
         interp["name"] = name
-        interp["continuous"] = is_cont
 	nv = n_ary = split(work, ary, "|")
 	interp["nvalues"] = n_ary
-	for(i = 1; i <= n_ary; i++)
-		interp["values", i] = ary[i]
+	c_cnt = 0
+	for(i = 1; i <= n_ary; i++){
+		work = ary[i]
+		if(index(work, ":") != 0)	# continuous ranges have 2 values separated by a colon: start:end
+			c_cnt++
+		sub(/^[ \t]*/, "", work)
+		sub(/[ \t]*$/, "", work)
+		interp["values", i] = work
+	}
+	if(c_cnt == 0)
+		interp["continuous"] = 0
+	else if(c_cnt == n_ary)
+		interp["continuous"] = 1
+	else{
+		printf("ERROR: mixed interpolator: %d continuous, %d discrete not allowed", c_cnt, n_ary - c_cnt) > "/dev/stderr"
+		return 1
+	}
 	work = k_breaks != "" ? config["_globals", k_breaks] : ""
 	if(work == ""){
 		for(i = 1; i < nv; i++){
@@ -24,7 +38,10 @@ function IU_init(config, interp, name, is_cont, k_values, k_breaks,    work, n_a
 			return 1
 		}
 		for(i = 1; i <= n_ary; i++){
-			interp["breaks", i] = ary[i]
+			work = ary[i]
+			sub(/^[ \t]*/, "", work)
+			sub(/[ \t]*$/, "", work)
+			interp["breaks", i] = work + 0	# force to number
 			interp["types", i] = index(ary[i], ".") != 0 ? "frac" : "count"
 		}
 	}
@@ -33,7 +50,7 @@ function IU_init(config, interp, name, is_cont, k_values, k_breaks,    work, n_a
 
 function IU_dump(file, interp,   i, keys, nk) {
 
-	printf("interp = {\n")
+	printf("interp = {\n") > file
 	printf("\tname      = %s\n", interp["name"]) > file
 	printf("\tcontinous = %d\n", interp["continuous"]) > file
 	printf("\tnvalues   = %d\n", interp["nvalues"]) > file
@@ -72,6 +89,7 @@ function IU_interpolate(interp, v, vmin, vmax,   v_idx, i, f, work, start, end, 
 			break
 		}
 	}
+
 	if(!interp["continuous"])
 		return interp["values", v_idx]
 

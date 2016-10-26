@@ -97,7 +97,7 @@ BEGIN {
  		exit err
  	}
 
-	if(IU_init(config, color, "color", 1, "color", "cbreaks")){
+	if(IU_init(config, color, "color", "color", "cbreaks")){
 		err = 1;
 		exit err
 	}
@@ -111,7 +111,7 @@ BEGIN {
  		have_v2 = size = desat = 0
 
 	if(size){
-		if(IU_init(config, v2size, "v2size", 0, "v2size_values", "v2size_breaks")){
+		if(IU_init(config, v2size, "v2size", "v2size_values", "v2size_breaks")){
 			err = 1
 			exit err
 		}
@@ -119,7 +119,7 @@ BEGIN {
 
 # TODO: figure out if I am going to keep this
 #	if(desat){
-#		if(IU_init(config, size, "size", 0, "v2size_values", "v2size_breaks")){
+#		if(IU_init(config, size, "size", "v2size_values", "v2size_breaks")){
 #			err = 1
 #			exit err
 #		}
@@ -170,14 +170,14 @@ END {
 
 	for(i = 1; i <= n_points; i++){
 		rgb = IU_interpolate(color, dv4hue[i], dv4hue_min, dv4hue_max)
-		hex_color = rgb_to_24bit_color(rgb)
+		hex_color = CU_rgb_to_24bit_color(rgb)
 		style_msg = "."
 
 # TODO: rework this
 		if(desat){
 			s_frac = !h_ds_range ? 1 : (v2_data[i] - v2_data_min)/(v2_data_max - v2_data_min)
-#			hex_color = desat_12bit_color(hex_color, s_frac)
-			hex_color = desat_24bit_color(hex_color, s_frac)
+#			hex_color = CU_desat_12bit_color(hex_color, s_frac)
+			hex_color = CU_desat_24bit_color(hex_color, s_frac)
 		}else if(size){
 			mrkr_size = IU_interpolate(v2size, v2_data[i], v2_data_min, v2_data_max)
 			style_msg = sprintf("\"marker-size\": \"%s\"", mrkr_size)
