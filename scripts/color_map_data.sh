@@ -97,7 +97,7 @@ BEGIN {
  		exit err
  	}
 
-	if(IU_init(config, color, "color", "color", "cbreaks")){
+	if(IU_init(config, color, "color", "color_values", "color_breaks")){
 		err = 1;
 		exit err
 	}

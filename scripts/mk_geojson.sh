@@ -67,6 +67,13 @@ END {
 	if(n_points == 0)
 		exit 0
 
+	printf("{\n")
+
+	# add the configuation
+	printf("\"config\": {\n")
+	printf("},\n")
+	
+
 	# points have been sorted on geo so points w/same geo are consecutive
 	n_pgroups = 1
 	pg_starts[n_pgroups] = 1
@@ -87,7 +94,7 @@ END {
 		l_geo[2] = geo[2]
 	}
 
-	printf("[\n")
+	printf("\"points\": [\n")
 	for(i = 1; i <= n_pgroups; i++){
 		geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
 		for(j = 0; j < pg_counts[i]; j++){
@@ -108,6 +115,8 @@ END {
 		}
 	}
 	printf("]\n")
+
+	printf("}\n")
 }
 function geo_equal(g1, g2) {
 	return g1[1] == g2[1] && g1[2] == g2[2]

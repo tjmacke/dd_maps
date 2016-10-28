@@ -27,7 +27,7 @@
         r.onload = function(e) {
           var contents = e.target.result;
           var geoJson = JSON.parse(contents);
-          makeMap(geoJson);
+          makeMap(geoJson.points);
         };
         r.readAsText(f);
   
