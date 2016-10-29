@@ -11,11 +11,13 @@
     body { margin: 0; padding: 0; }
     div.controls { position: absolute; width: 100%; height: 50px; top: 0; border: 2px solid black; }
     #fileReader {float: left; width: 25%; height: 100%; }
+
     #colorScaleBox { float: left; width: 45%; height: 100%; border: 1px solid black; }
-    #colorLegend { float: left; width: 20%; height: 100%; }
+    #colorInfo { float: left; width: 20%; height: 100%; }
     #colorScale { float: right; width: 79%; height: 100%; }
 
     #v2Scale { float: left; width: 29%; height: 100%; border: 1px solid black; }
+
     #map { position: absolute; width: 100%; height: 100%; top: 50px; border: 2px solid black; }
   </style>
 </head>
@@ -25,12 +27,14 @@
       File:  <input type="file" id="fileinput" onchange="loadMapData(event)"/>
     </div>
     <div id="colorScaleBox">
-    <div id="colorLegend">
-      Pin Color:
-    </div>
-    <div id="colorScale">
-      <svg id="svgColorScale" height="50" width="350"/>
-    </div>
+      <div id="colorInfo">
+        Pin Color:
+      </div>
+      <div id="colorScale">
+<!-- this works
+        <svg id="svgColorScale" height="50" width="350"/>
+-->
+      </div>
     </div>
     <div id="v2Scale">v2 scale goes here</div>
   </div>
@@ -67,6 +71,13 @@
       var cb_tick_text_yoff = cb_tick_yoff + cb_tick_len + cb_xHeight;
 
       // TODO: Add checks
+
+      // Add the svg 
+      d3.select("#colorScale")
+        .append("svg")
+        .attr("id", "svgColorScale")
+        .attr("height", 50)
+        .attr("width", config.color_values.length * cb_width + 2 * cb_xoff);
 
       // Draw the colored boxes
       d3.select("#svgColorScale")
@@ -110,10 +121,11 @@
         .attr("text-anchor", "middle")
         .text(function(d) { return d; });
 
-      // Draw the scale title: TODO: get the data from the config file
+      // Draw the scale title
+      var color_title = ("color_title" in config) ? config.color_title : ["Pin Colors"];
       d3.select("#svgColorScale")
         .selectAll("text.title")
-        .data(["Weeks Since Last Pickup"])
+        .data(color_title)
         .enter()
         .append("text")
         .attr("class", "title")
