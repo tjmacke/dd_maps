@@ -16,7 +16,9 @@
     #colorInfo { float: left; width: 20%; height: 100%; }
     #colorScale { float: right; width: 79%; height: 100%; }
 
-    #v2Scale { float: left; width: 29%; height: 100%; border: 1px solid black; }
+    #v2ScaleBox { float: left; width: 29.5%; height: 100%; border: 1px solid black; }
+    #v2Info { float: left; width: 20%; height: 100%; }
+    #v2Scale { float: right; width: 80%; height: 100%; }
 
     #map { position: absolute; width: 100%; height: 100%; top: 50px; border: 2px solid black; }
   </style>
@@ -31,12 +33,15 @@
         Pin Color:
       </div>
       <div id="colorScale">
-<!-- this works
-        <svg id="svgColorScale" height="50" width="350"/>
--->
       </div>
     </div>
-    <div id="v2Scale">v2 scale goes here</div>
+    <div id="v2ScaleBox">
+      <div id="v2Info">
+        Pin Size:
+      </div>
+      <div id="v2Scale">
+      </div>
+    </div>
   </div>
   <div id="map" class="map">Map</div>
   <script type="text/javascript">
@@ -60,24 +65,26 @@
     function makeScales(config) {
 
       // get everything parameterized.
-      var cb_tick_font_size = 12;
-      var cb_xoff = 5;
-      var cb_width = 40;
-      var cb_height = 15;
-      var cb_tick_len = 5
-      var cb_xHeight = Math.round(0.7 * cb_tick_font_size);
-      var cb_yoff = cb_tick_font_size + 2;
-      var cb_tick_yoff = cb_yoff + cb_height
-      var cb_tick_text_yoff = cb_tick_yoff + cb_tick_len + cb_xHeight;
+      // color values
+      var cv_tick_font_size = 12;
+      var cv_xoff = 5;
+      var cv_width = 40;
+      var cv_height = 15;
+      var cv_tick_len = 5
+      var cv_xHeight = Math.round(0.7 * cv_tick_font_size);
+      var cv_yoff = cv_tick_font_size + 2;
+      var cv_tick_yoff = cv_yoff + cv_height
+      var cv_tick_text_yoff = cv_tick_yoff + cv_tick_len + cv_xHeight;
 
       // TODO: Add checks
 
+      // BEGIN Pin color scale
       // Add the svg 
       d3.select("#colorScale")
         .append("svg")
         .attr("id", "svgColorScale")
         .attr("height", 50)
-        .attr("width", config.color_values.length * cb_width + 2 * cb_xoff);
+        .attr("width", config.color_values.length * cv_width + 2 * cv_xoff);
 
       // Draw the colored boxes
       d3.select("#svgColorScale")
@@ -85,10 +92,10 @@
         .data(config.color_values)
         .enter()
         .append("rect")
-        .attr("width", cb_width)
-        .attr("height", cb_height)
-        .attr("x", function(d, i) { return i * cb_width + cb_xoff; })
-        .attr("y", cb_yoff)
+        .attr("width", cv_width)
+        .attr("height", cv_height)
+        .attr("x", function(d, i) { return i * cv_width + cv_xoff; })
+        .attr("y", cv_yoff)
         .style("fill", function(d) {
           return "rgb(" + Math.round(d[0]*255) + "," + Math.round(d[1]*255) + "," + Math.round(d[2]*255) + ")";
         })
@@ -101,10 +108,10 @@
         .data(config.color_breaks)
         .enter()
         .append("line")
-        .attr("x1", function(d, i) { return (i+1) * cb_width + cb_xoff; })
-        .attr("y1", cb_tick_yoff)
-        .attr("x2", function(d, i) { return (i+1) * cb_width + cb_xoff; })
-        .attr("y2", cb_yoff + cb_tick_len)
+        .attr("x1", function(d, i) { return (i+1) * cv_width + cv_xoff; })
+        .attr("y1", cv_tick_yoff)
+        .attr("x2", function(d, i) { return (i+1) * cv_width + cv_xoff; })
+        .attr("y2", cv_tick_yoff + cv_tick_len)
         .style("stroke", "black")
         .style("stroke-width", "1px");
 
@@ -115,9 +122,9 @@
         .enter()
         .append("text")
         .attr("class", "tick")
-        .attr("x", function(d, i) { return (i+1) * cb_width + cb_xoff; } )
-        .attr("y", cb_tick_text_yoff)
-        .attr("font-size", cb_tick_font_size)
+        .attr("x", function(d, i) { return (i+1) * cv_width + cv_xoff; } )
+        .attr("y", cv_tick_text_yoff)
+        .attr("font-size", cv_tick_font_size)
         .attr("text-anchor", "middle")
         .text(function(d) { return d; });
 
@@ -129,11 +136,99 @@
         .enter()
         .append("text")
         .attr("class", "title")
-        .attr("x", 0.5 * (config.color_values.length * cb_width) + cb_xoff)
+        .attr("x", 0.5 * (config.color_values.length * cv_width) + cv_xoff)
+        .attr("y", cv_xHeight + 2)
+        .attr("font-size", cv_tick_font_size)
+        .attr("text-anchor", "middle")
+        .text(function(d) { return d; });
+      // END Pin color scale
+
+      // TODO: merge this with cv_*
+      var cb_tick_font_size = 12;
+      var cb_xoff = 5;
+      var cb_width = 70;
+      var cb_height = 15;
+      var cb_tick_len = 5;
+      var cb_xHeight = Math.round(0.7 * cb_tick_font_size);
+      var cb_yoff = cb_tick_font_size + 2;
+      var cb_tick_yoff = cb_yoff + cb_height;
+      var cb_tick_text_yoff = cb_tick_yoff + cb_tick_len + cb_xHeight;
+
+      // BEGIN Pin size scale
+      d3.select("#v2Scale")
+        .append("svg")
+        .attr("id", "svgV2Scale")
+        .attr("height", 50)
+        .attr("width", config.v2size_values.length * cb_width + 2 * cb_xoff);
+
+      // Draw white boxes
+      d3.select("#svgV2Scale")
+        .selectAll("rect")
+        .data(config.v2size_values)
+        .enter()
+        .append("rect")
+        .attr("width", cb_width)
+        .attr("height", cb_height)
+        .attr("x", function(d, i) { return i * cb_width + cb_xoff; })
+        .attr("y", cb_yoff)
+        .style("fill", "white")
+        .style("stroke", "black")
+        .style("stroke-width", "1px");
+
+      // Put the size values in the boxes
+      d3.select("#svgV2Scale")
+        .selectAll("text.label")
+        .data(config.v2size_values)
+        .enter()
+        .append("text")
+        .attr("class", "label")
+        .attr("x", function(d, i) { return (i + 0.5) * cb_width + cb_xoff; })
+        .attr("y", cb_tick_yoff - 4)
+        .attr("font-size", cb_tick_font_size)
+        .attr("text-anchor", "middle")
+        .text(function(d) { return d; });
+
+      // Draw the ticks
+      d3.select("#svgV2Scale")
+        .selectAll("line")
+        .data(config.v2size_breaks)
+        .enter()
+        .append("line")
+        .attr("x1", function(d, i) { return (i+1) * cb_width + cb_xoff; })
+        .attr("y1", cb_tick_yoff)
+        .attr("x2", function(d, i) { return (i+1) * cb_width + cb_xoff; })
+        .attr("y2", cb_tick_yoff + cb_tick_len)
+        .style("stroke", "black")
+        .style("stroke-width", "1px");
+
+      // Draw the tick labels
+      d3.select("#svgV2Scale")
+        .selectAll("text.tick")
+        .data(config.v2size_breaks)
+        .enter()
+        .append("text")
+        .attr("class", "tick")
+        .attr("x", function(d, i) { return (i+1) * cb_width + cb_xoff; })
+        .attr("y", cb_tick_text_yoff)
+        .attr("font-size", cb_tick_font_size)
+        .attr("text-anchor", "middle")
+        .text(function(d) { return d; });
+
+      var v2size_title = ("v2size_title" in config) ? config.v2size_title : ["Pin Sizes"];
+      d3.select("#svgV2Scale")
+        .selectAll("text.title")
+        .data(v2size_title)
+        .enter()
+        .append("text")
+        .attr("class", "title")
+        .attr("x", 0.5 * (config.v2size_values.length * cb_width) + cb_xoff)
         .attr("y", cb_xHeight + 2)
         .attr("font-size", cb_tick_font_size)
         .attr("text-anchor", "middle")
         .text(function(d) { return d; });
+
+      // END Pin size scale
+
     }
   </script>
   <script type="text/javascript">
