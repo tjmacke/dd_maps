@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ address-data-file ]"
+U_MSG="usage: $0 [ -help ] -c conf-file [ address-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -23,6 +23,7 @@ else
 	exit 1
 fi
 
+CFILE=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -30,6 +31,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-c)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-c requires conf-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		CFILE=$1
+		shift
 		;;
 	-*)
 		LOG ERROR "unknown option $1"
@@ -50,10 +61,17 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
+if [ -z "$CFILE" ] ; then
+	LOG ERROR "missing -c conf-file argument"
+	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
 sort -t $'\t' -k 4,4 -k 5,5 $FILE |\
 $AWK -F'\t' 'BEGIN {
 	PI = 4 * atan2(1, 1)
 	RAD = 0.0001
+	cfile = "'"$CFILE"'"
 }
 {
 	n_points++
@@ -70,9 +88,11 @@ END {
 	printf("{\n")
 
 	# add the configuation
-	printf("\"config\": {\n")
-	printf("},\n")
-	
+	printf("\"config\": ")
+	for( ; (getline cline < cfile) > 0; )
+		printf("%s\n", cline)
+	printf(",\n")
+	close(cfile)
 
 	# points have been sorted on geo so points w/same geo are consecutive
 	n_pgroups = 1
