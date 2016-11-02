@@ -103,9 +103,9 @@ while read line ; do
 	qName="$(echo "$line" | awk -F'\t' '{ print $6 }')"
 	if [ -z "$query" ] ; then
 		if [ "$ATYPE" == "src" ] ; then
-			echo "ERROR: $date: src: $src: querySrc is empty" 1>&2
+			echo "ERROR: $date: src: $src: bad source address" 1>&2
 		else
-			echo "ERROR: $date: dst: $dst: queryDst is empty" 1>&2
+			echo "ERROR: $date: dst: $dst: bad destination address" 1>&2
 		fi
 		continue
 	fi

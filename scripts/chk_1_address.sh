@@ -112,6 +112,10 @@ if [ -z "$A_LINE" ] ; then
 fi
 
 Q_ADDR="$(echo "$A_LINE" | awk -F'\t' '{ print $5 }')"
+if [ -z "$Q_ADDR" ] ; then
+	LOG ERROR "bad address: $ADDR"
+	exit 1
+fi
 
 echo -e "job\t$J_LINE"
 echo -e "addr\t$ADDR"
