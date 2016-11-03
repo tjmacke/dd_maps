@@ -103,8 +103,7 @@ $5 == "Job" {
 	}
 }' $DD_HOME/data/runs.$MONTH.tsv)"
 
-A_LINE="$(echo "$J_LINE" | $DM_SCRIPTS/get_addrs_from_runs.sh -at $ATYPE	|\
-tail -1)"
+A_LINE="$(echo "$J_LINE" | $DM_SCRIPTS/get_addrs_from_runs.sh -at $ATYPE| tail -1)"
 
 if [ -z "$A_LINE" ] ; then
 	LOG ERROR "no $ATYPE address \"$ADDR\" in runs.$MONTH.tsv"
