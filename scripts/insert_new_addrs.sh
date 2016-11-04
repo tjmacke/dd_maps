@@ -6,7 +6,7 @@ export LC_ALL=C
 U_MSG="usage: $0 [ -help ] -at { src | dst } [ addr-nogeo-file ]"
 
 if [ -z "$DM_HOME" ] ; then
-	LOG ERROR "$DM_HOME not defined"
+	LOG ERROR "DM_HOME not defined"
 	exit 1
 fi
 DM_ADDRS=$DM_HOME/addrs
@@ -83,10 +83,16 @@ while read line ; do
 		apos = sprintf("%c", 39)
 	}
 	{
+		n_ary = split($1, ary, ",")
+		for(i = 1; i <= n_ary; i++){
+			sub(/^ */, "", ary[i])
+			sub(/ *$/, "", ary[i])
+		} 
 		printf(".log stderr\\n")
-		printf("INSERT INTO addresses (a_stat, address, a_type, qry_address) VALUES ")
+		printf("INSERT INTO addresses (a_stat, as_reason, address, a_type, qry_address) VALUES ")
 		printf("(")
-		printf("%s", esc_string($1))
+		printf("%s", esc_string(ary[1]))
+		printf(", %s", esc_string(ary[2]))
 		printf(", %s", esc_string($2))
 		printf(", %s", esc_string($4))
 		printf(", %s", esc_string($3))
