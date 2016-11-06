@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] addr-geo-error-file ]"
+U_MSG="usage: $0 [ -help ] [ addr-geo-error-file ]"
 
 if [ -z $DM_HOME ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -14,7 +14,7 @@ DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 DM_DB=$DM_ADDRS/dd_maps.db
 
-FILE=$1
+FILE=
 
 while [ $# -gt 0 ] ; do
 	case $1 in
