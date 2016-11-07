@@ -95,12 +95,12 @@ function makeScales(config) {
     .append("svg")
     .attr("id", "svgV2Scale")
     .attr("height", 50)
-    .attr("width", config.v2size_values.length * cb_width + 2 * cb_xoff);
+    .attr("width", config.v2_values.length * cb_width + 2 * cb_xoff);
 
   // Draw white boxes
   d3.select("#svgV2Scale")
     .selectAll("rect")
-    .data(config.v2size_values)
+    .data(config.v2_values)
     .enter()
     .append("rect")
     .attr("width", cb_width)
@@ -114,7 +114,7 @@ function makeScales(config) {
   // Put the size values in the boxes
   d3.select("#svgV2Scale")
     .selectAll("text.label")
-    .data(config.v2size_values)
+    .data(config.v2_values)
     .enter()
     .append("text")
     .attr("class", "label")
@@ -127,7 +127,7 @@ function makeScales(config) {
   // Draw the ticks
   d3.select("#svgV2Scale")
     .selectAll("line")
-    .data(config.v2size_breaks)
+    .data(config.v2_breaks)
     .enter()
     .append("line")
     .attr("x1", function(d, i) { return (i+1) * cb_width + cb_xoff; })
@@ -140,7 +140,7 @@ function makeScales(config) {
   // Draw the tick labels
   d3.select("#svgV2Scale")
     .selectAll("text.tick")
-    .data(config.v2size_breaks)
+    .data(config.v2_breaks)
     .enter()
     .append("text")
     .attr("class", "tick")
@@ -150,14 +150,14 @@ function makeScales(config) {
     .attr("text-anchor", "middle")
     .text(function(d) { return d; });
 
-  var v2size_title = ("v2size_title" in config) ? config.v2size_title : ["Pin Sizes"];
+  var v2_title = ("v2_title" in config) ? config.v2_title : ["Pin Sizes"];
   d3.select("#svgV2Scale")
     .selectAll("text.title")
-    .data(v2size_title)
+    .data(v2_title)
     .enter()
     .append("text")
     .attr("class", "title")
-    .attr("x", 0.5 * (config.v2size_values.length * cb_width) + cb_xoff)
+    .attr("x", 0.5 * (config.v2_values.length * cb_width) + cb_xoff)
     .attr("y", cb_xHeight + 2)
     .attr("font-size", cb_tick_font_size)
     .attr("text-anchor", "middle")

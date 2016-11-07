@@ -102,23 +102,18 @@ BEGIN {
 		exit err
 	}
 
- 	v2 = "'"$V2"'"
- 	if(v2 != ""){
- 		have_v2 = 1
- 		desat = v2 == "desat"
- 		size = v2 == "size"
- 	}else
- 		have_v2 = size = desat = 0
+ 	v2_is = "'"$V2"'"
+	use_v2 = v2_is != ""
 
-	if(size){
-		if(IU_init(config, v2size, "v2size", "v2size_values", "v2size_breaks")){
+	if(v2_is == "size"){
+		if(IU_init(config, v2, "v2", "v2_values", "v2_breaks")){
 			err = 1
 			exit err
 		}
 	}
 
 # TODO: figure out if I am going to keep this
-#	if(desat){
+#	if(v2 == "desat"){
 #		if(IU_init(config, size, "size", "v2size_values", "v2size_breaks")){
 #			err = 1
 #			exit err
@@ -127,7 +122,7 @@ BEGIN {
 
 }
 {
-	if(NF == 5 && have_v2){
+	if(NF == 5 && use_v2){
 		printf("ERROR: line %d: wrong number of fields %d: need %d\n", NR, NF, 6) > "/dev/stderr"
 		err = 1
 		exit err
@@ -143,20 +138,20 @@ BEGIN {
 	else if($1 > dv4hue_max)
 		dv4hue_max = $1
 
-	if(have_v2){
+	if(use_v2){
 		v2_data[n_points] = $2
 	}
 
-	labels[n_points] = $(have_v2 + 2)
-	titles[n_points] = $(have_v2 + 3)
-	longs[n_points] = $(have_v2 + 4)
-	lats[n_points] = $(have_v2 + 5)
+	labels[n_points] = $(use_v2 + 2)
+	titles[n_points] = $(use_v2 + 3)
+	longs[n_points] = $(use_v2 + 4)
+	lats[n_points] = $(use_v2 + 5)
 }
 END {
 	if(err)
 		exit err
 
-	if(desat || size){
+	if(use_v2){
 		v2_data_min = v2_data[1]
 		v2_data_max = v2_data[1]
 		for(i = 2; i <= n_points; i++){
@@ -174,12 +169,12 @@ END {
 		style_msg = "."
 
 # TODO: rework this
-		if(desat){
+		if(v2_is == "desat"){
 			s_frac = !h_ds_range ? 1 : (v2_data[i] - v2_data_min)/(v2_data_max - v2_data_min)
 #			hex_color = CU_desat_12bit_color(hex_color, s_frac)
 			hex_color = CU_desat_24bit_color(hex_color, s_frac)
-		}else if(size){
-			mrkr_size = IU_interpolate(v2size, v2_data[i], v2_data_min, v2_data_max)
+		}else if(v2_is == "size"){
+			mrkr_size = IU_interpolate(v2, v2_data[i], v2_data_min, v2_data_max)
 			style_msg = sprintf("\"marker-size\": \"%s\"", mrkr_size)
 		}
 
