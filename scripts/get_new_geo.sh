@@ -56,5 +56,5 @@ awk -F'\t' 'BEGIN {
 		pr_hdr = 0
 		printf("%s\t%s\t%s\t%s\t%s\t%s\n", "status", "date", "src", "dst", "qSrc", "sName")
 	}
-	printf("%s\t%s\t%s\t%s\t%s\t%s\n", $1, ".", $3, ".", $5, $4)
+	printf("%s\t%s\t%s\t%s\t%s\t%s\n", $2, ".", $4, ".", $6, $5)
 }'	| $DM_SCRIPTS/add_geo_to_addresses.sh -at src > $GEO_DIR/addrs.$NOW.tsv 2> $GEO_DIR/addrs.$NOW.err
