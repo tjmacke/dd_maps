@@ -127,7 +127,7 @@ awk -F'\t' 'BEGIN {
 		fspecs[ 2, "type"] = "time"
 		fspecs[ 3, "type"] = "time"
 		fspecs[ 4, "type"] = "str"   ; fspecs[ 4, "value"] = "."
-		fspecs[ 5, "type"] = "str"   ; fspecs[ 5, "value"] = "Job"
+		fspecs[ 5, "type"] = "str"   ; fspecs[ 5, "value"] = "Reject"
 		fspecs[ 6, "type"] = "str"
 		fspecs[ 7, "type"] = "str"
 		fspecs[ 8, "type"] = "real"
