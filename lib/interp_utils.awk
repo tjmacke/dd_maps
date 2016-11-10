@@ -45,6 +45,7 @@ function IU_init(config, interp, name, k_values, k_breaks,    work, n_ary, ary, 
 			interp["types", i] = index(ary[i], ".") != 0 ? "frac" : "count"
 		}
 	}
+	interp["tcounts"] = 0
 	return 0
 }
 
@@ -67,13 +68,23 @@ function IU_dump(file, interp,   i, keys, nk) {
 			printf(" | %s:%s", interp["breaks", i], interp["types", i]) > file
 	}
 	printf("\n") > file
+	printf("\ttcounts   = %d\n", interp["tcounts"]) > file
+	if(interp["tcounts"] > 0){
+		printf("\tcounts    = %d", interp["counts", 1]) > file
+		for(i = 2; i <= interp["nvalues"]; i++)
+			printf(" | %d", interp["counts", i]) > file
+		printf("\n") > file
+	}
 	printf("}\n") > file
 }
 
 function IU_interpolate(interp, v, vmin, vmax,   v_idx, i, f, work, start, end, l_rvec, rvec, fb, bmin, bmax) {
 
+	interp["tcounts"]++
+
 	# all values are the same, return the first value
 	if(vmin == vmax){
+		interp["counts", 1]++
 		if(interp["continuous"]){
 			split(interp["values", 1], work, ":")
 			return work[1]
@@ -89,6 +100,7 @@ function IU_interpolate(interp, v, vmin, vmax,   v_idx, i, f, work, start, end, 
 			break
 		}
 	}
+	interp["counts", v_idx]++
 
 	if(!interp["continuous"])
 		return interp["values", v_idx]

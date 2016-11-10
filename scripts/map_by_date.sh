@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -a addr-file -at { src | dst } [ -cnt ] [ -rev ] [ -unit { day | week | month } ] [ runs-file ]"
+U_MSG="usage: $0 [ -help ] -a addr-file -at { src | dst } [ -cnt ] [ -rev ] [ -unit { day | week | month } ] [ -stats stats-file ] [ runs-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -19,6 +19,7 @@ ATYPE==
 CNT=
 REV=
 UNIT=
+SFILE=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -63,6 +64,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		UNIT=$1
+		shift
+		;;
+	-stats)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-stats requires stats-file argument"
+			echo "$U_MSG"
+			exit 1
+		fi
+		SFILE=$1
 		shift
 		;;
 	-*)
@@ -166,6 +177,7 @@ awk -F'\t' 'BEGIN {
 		err = 1
 		exit err
 	}
+	sfile = "'"$SFILE"'"
 }
 {
 	n_addrs++
@@ -181,12 +193,16 @@ END {
 
 	if(rev){
 		date_max = dates[1]
+		date_min = dates[1]
 		for(i = 2; i <= n_addrs; i++){
-			if(dates[i] > date_max)
+			if(dates[i] < date_min)
+				date_min = dates[i]
+			else if(dates[i] > date_max)
 				date_max = dates[i]
 		}
-		gsub(/-/, " ", date_max)
-		t_max = mktime(date_max " 00 00 00")
+		work = date_max
+		gsub(/-/, " ", work)
+		t_max = mktime(work " 00 00 00")
 	}
 
 	for(i = 1; i <= n_addrs; i++){
@@ -207,5 +223,10 @@ END {
 			printf("\t%s", label)
 		}
 		printf("\t%s\t%s\t%s\n", addrs[i], lngs[i], lats[i])
+	}
+	if(sfile){
+		printf("date_first_str = \"%s\"\n", rev ? date_max : date_min) >> sfile
+		printf("date_last_str = \"%s\"\n", rev ? date_min : date_max) >> sfile
+		close(sfile)
 	}
 }'

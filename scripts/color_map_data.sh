@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -c conf-file ] [ -v2 { desat | size } ] [ map-data-file ]"
+U_MSG="usage: $0 [ -help ] [ -c conf-file ] [ -v2 { desat | size } ] [ -stats stats-file ] [ map-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -30,6 +30,7 @@ else
 fi
 
 CFILE=$DM_ETC/color.info
+SFILE=
 V2=
 FILE=
 
@@ -57,6 +58,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		V2=$1
+		shift
+		;;
+	-stats)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-stats requires stats-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		SFILE=$1
 		shift
 		;;
 	-*)
@@ -112,14 +123,7 @@ BEGIN {
 		}
 	}
 
-# TODO: figure out if I am going to keep this
-#	if(v2 == "desat"){
-#		if(IU_init(config, size, "size", "v2size_values", "v2size_breaks")){
-#			err = 1
-#			exit err
-#		}
-#	}
-
+	sfile = "'"$SFILE"'"
 }
 {
 	if(NF == 5 && use_v2){
@@ -180,4 +184,24 @@ END {
 
 		printf("#%s\t%s\t%s:<br/>%s\t%s\t%s\n", hex_color, style_msg, titles[i], labels[i], longs[i], lats[i])
 	}
+
+	if(sfile != ""){
+		printf("color_min_value = %g\n", dv4hue_min) >> sfile
+		printf("color_max_value = %g\n", dv4hue_max) >> sfile
+		printf("color_stats = %d,%.1f", color["counts", 1], 100.0*color["counts", 1]/color["tcounts"]) >> sfile
+		for(i = 2; i <= color["nvalues"]; i++)
+			printf(" | %d,%.1f", color["counts", i], 100.0*color["counts", i]/color["tcounts"]) >> sfile
+		printf("\n") >> sfile
+		if(use_v2){
+			printf("v2_min_value = %g\n", v2_data_min) >> sfile
+			printf("v2_max_value = %g\n", v2_data_max) >> sfile
+			printf("v2_stats = %d,%.1f", v2["counts", 1], 100.0*v2["counts", 1]/v2["tcounts"]) >> sfile
+			for(i = 2; i <= v2["nvalues"]; i++)
+				printf(" | %d,%.1f", v2["counts", i], 100.0*v2["counts", i]/v2["tcounts"]) >> sfile
+			printf("\n") >> sfile
+		}
+		close(sfile)
+	}
+
+	exit 0
 }' $FILE
