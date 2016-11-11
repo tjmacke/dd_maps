@@ -18,6 +18,10 @@ function makeScales(scaleData) {
   colorScaleProps.sp_values = scaleData.color_values;
   colorScaleProps.sp_breaks = scaleData.color_breaks;
   colorScaleProps.sp_title = ("color_title" in scaleData) ? scaleData.color_title : ["Pin Colors"];
+  colorScaleProps.sp_fill_boxes_func = function(d, i) {
+    return "rgb(" + Math.round(d[0]*255) + "," + Math.round(d[1]*255) + "," + Math.round(d[2]*255) + ")";
+  };
+  colorScaleProps.sp_box_text = null;
 
   makeColorScale(colorScaleProps);
 
@@ -39,6 +43,10 @@ function makeScales(scaleData) {
   v2ScaleProps.sp_values = scaleData.v2_values;
   v2ScaleProps.sp_breaks = scaleData.v2_breaks;
   v2ScaleProps.sp_title = ("v2_title" in scaleData) ? scaleData.v2_title : ["Pin Sizes"];
+  v2ScaleProps.sp_fill_boxes_func = function(d, i) {
+    return "white";
+  }
+  v2ScaleProps.sp_box_text = scaleData.v2_values;
 
   makeV2Scale(v2ScaleProps);
 }

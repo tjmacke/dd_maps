@@ -17,24 +17,24 @@ function makeV2Scale(scaleProps) {
     .attr("height", scaleProps.sp_height)
     .attr("x", function(d, i) { return i * scaleProps.sp_width + scaleProps.sp_xoff; })
     .attr("y", scaleProps.sp_yoff)
-    .style("fill", "white")	// uses a function for color
-
-
+    .style("fill", scaleProps.sp_fill_boxes_func)
     .style("stroke", "black")
     .style("stroke-width", "1px");
 
-  // Put the size values in the boxes
-  d3.select(scaleProps.sp_svgId)
-    .selectAll("text.label")
-    .data(scaleProps.sp_values)
-    .enter()
-    .append("text")
-    .attr("class", "label")
-    .attr("x", function(d, i) { return (i + 0.5) * scaleProps.sp_width + scaleProps.sp_xoff; })
-    .attr("y", scaleProps.sp_tick_yoff - 4)
-    .attr("font-size", scaleProps.sp_tick_font_size)
-    .attr("text-anchor", "middle")
-    .text(function(d) { return d; });
+  // Add any box text
+  if(scaleProps.sp_box_text != null){
+    d3.select(scaleProps.sp_svgId)
+      .selectAll("text.label")
+      .data(scaleProps.sp_box_text)
+      .enter()
+      .append("text")
+      .attr("class", "label")
+      .attr("x", function(d, i) { return (i + 0.5) * scaleProps.sp_width + scaleProps.sp_xoff; })
+      .attr("y", scaleProps.sp_tick_yoff - 4)
+      .attr("font-size", scaleProps.sp_tick_font_size)
+      .attr("text-anchor", "middle")
+      .text(function(d) { return d; });
+  }
 
   // Draw the ticks
   d3.select(scaleProps.sp_svgId)

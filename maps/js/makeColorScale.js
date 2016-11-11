@@ -17,24 +17,24 @@ function makeColorScale(scaleProps) {
     .attr("height", scaleProps.sp_height)
     .attr("x", function(d, i) { return i * scaleProps.sp_width + scaleProps.sp_xoff; })
     .attr("y", scaleProps.sp_yoff)
-    .style("fill", function(d) {
-      return "rgb(" + Math.round(d[0]*255) + "," + Math.round(d[1]*255) + "," + Math.round(d[2]*255) + ")";
-    })
+    .style("fill", scaleProps.sp_fill_boxes_func)
     .style("stroke", "black")
     .style("stroke-width", "1px");
 
-  // Put the size values in the boxes (v2 only)
-
-
-
-
-
-
-
-
-
-
-
+  // Add any box text
+  if(scaleProps.sp_box_text != null){
+    d3.select(scaleProps.sp_svgId)
+      .selectAll("text.label")
+      .data(scaleProps.sp_box_text)
+      .enter()
+      .append("text")
+      .attr("class", "label")
+      .attr("x", function(d, i) { return (i + 0.5) * scaleProps.sp_width + scaleProps.sp_xoff; })
+      .attr("y", scaleProps.sp_tick_yoff - 4)
+      .attr("font-size", scaleProps.sp_tick_font_size)
+      .attr("text-anchor", "middle")
+      .text(function(d) { return d; });
+  }
 
   // Draw the ticks
   d3.select(scaleProps.sp_svgId)
