@@ -1,16 +1,16 @@
-function makeV2Scale(scaleData, scaleProps) {
+function makeV2Scale(scaleProps) {
 
   // Add the svg
   d3.select(scaleProps.sp_divId)
     .append("svg")
-    .attr("id", "svgV2Scale")
+    .attr("id", scaleProps.sp_svgId.substring(1))	// skip over the initial #
     .attr("height", 50)
-    .attr("width", scaleData.v2_values.length * scaleProps.sp_width + 2 * scaleProps.sp_xoff);
+    .attr("width", scaleProps.sp_values.length * scaleProps.sp_width + 2 * scaleProps.sp_xoff);
 
-  // Draw white boxes
+  // Draw the boxes
   d3.select(scaleProps.sp_svgId)
     .selectAll("rect")
-    .data(scaleData.v2_values)
+    .data(scaleProps.sp_values)
     .enter()
     .append("rect")
     .attr("width", scaleProps.sp_width)
@@ -26,7 +26,7 @@ function makeV2Scale(scaleData, scaleProps) {
   // Put the size values in the boxes
   d3.select(scaleProps.sp_svgId)
     .selectAll("text.label")
-    .data(scaleData.v2_values)
+    .data(scaleProps.sp_values)
     .enter()
     .append("text")
     .attr("class", "label")
@@ -39,7 +39,7 @@ function makeV2Scale(scaleData, scaleProps) {
   // Draw the ticks
   d3.select(scaleProps.sp_svgId)
     .selectAll("line")
-    .data(scaleData.v2_breaks)
+    .data(scaleProps.sp_breaks)
     .enter()
     .append("line")
     .attr("x1", function(d, i) { return (i+1) * scaleProps.sp_width + scaleProps.sp_xoff; })
@@ -52,7 +52,7 @@ function makeV2Scale(scaleData, scaleProps) {
   // Draw the tick labels
   d3.select(scaleProps.sp_svgId)
     .selectAll("text.tick")
-    .data(scaleData.v2_breaks)
+    .data(scaleProps.sp_breaks)
     .enter()
     .append("text")
     .attr("class", "tick")
@@ -63,14 +63,13 @@ function makeV2Scale(scaleData, scaleProps) {
     .text(function(d) { return d; });
 
   // Draw the scale title
-  var v2_title = ("v2_title" in scaleData) ? scaleData.v2_title : ["Pin Sizes"];
   d3.select(scaleProps.sp_svgId)
     .selectAll("text.title")
-    .data(v2_title)
+    .data(scaleProps.sp_title)
     .enter()
     .append("text")
     .attr("class", "title")
-    .attr("x", 0.5 * (scaleData.v2_values.length * scaleProps.sp_width) + scaleProps.sp_xoff)
+    .attr("x", 0.5 * (scaleProps.sp_values.length * scaleProps.sp_width) + scaleProps.sp_xoff)
     .attr("y", scaleProps.sp_xHeight + 2)
     .attr("font-size", scaleProps.sp_tick_font_size)
     .attr("text-anchor", "middle")

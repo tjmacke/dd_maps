@@ -15,8 +15,11 @@ function makeScales(scaleData) {
   // properties that provide the scale data
   colorScaleProps.sp_divId = "#colorScale";
   colorScaleProps.sp_svgId = "#svgColorScale";
+  colorScaleProps.sp_values = scaleData.color_values;
+  colorScaleProps.sp_breaks = scaleData.color_breaks;
+  colorScaleProps.sp_title = ("color_title" in scaleData) ? scaleData.color_title : ["Pin Colors"];
 
-  makeColorScale(scaleData, colorScaleProps);
+  makeColorScale(colorScaleProps);
 
   var v2ScaleProps = {};
   // properties that define the scale
@@ -33,6 +36,9 @@ function makeScales(scaleData) {
   // properties that provide the scale data
   v2ScaleProps.sp_divId = "#v2Scale";
   v2ScaleProps.sp_svgId = "#svgV2Scale";
+  v2ScaleProps.sp_values = scaleData.v2_values;
+  v2ScaleProps.sp_breaks = scaleData.v2_breaks;
+  v2ScaleProps.sp_title = ("v2_title" in scaleData) ? scaleData.v2_title : ["Pin Sizes"];
 
-  makeV2Scale(scaleData, v2ScaleProps);
+  makeV2Scale(v2ScaleProps);
 }

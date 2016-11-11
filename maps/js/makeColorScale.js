@@ -1,16 +1,16 @@
-function makeColorScale(scaleData, scaleProps) {
+function makeColorScale(scaleProps) {
 
-  // Add the svg 
+  // Add the svg
   d3.select(scaleProps.sp_divId)
     .append("svg")
-    .attr("id", "svgColorScale")
+    .attr("id", scaleProps.sp_svgId.substring(1))	// skip over the initial #
     .attr("height", 50)
-    .attr("width", scaleData.color_values.length * scaleProps.sp_width + 2 * scaleProps.sp_xoff);
+    .attr("width", scaleProps.sp_values.length * scaleProps.sp_width + 2 * scaleProps.sp_xoff);
 
-  // Draw the colored boxes
+  // Draw the boxes
   d3.select(scaleProps.sp_svgId)
     .selectAll("rect")
-    .data(scaleData.color_values)
+    .data(scaleProps.sp_values)
     .enter()
     .append("rect")
     .attr("width", scaleProps.sp_width)
@@ -39,7 +39,7 @@ function makeColorScale(scaleData, scaleProps) {
   // Draw the ticks
   d3.select(scaleProps.sp_svgId)
     .selectAll("line")
-    .data(scaleData.color_breaks)
+    .data(scaleProps.sp_breaks)
     .enter()
     .append("line")
     .attr("x1", function(d, i) { return (i+1) * scaleProps.sp_width + scaleProps.sp_xoff; })
@@ -52,7 +52,7 @@ function makeColorScale(scaleData, scaleProps) {
   // Draw the tick labels
   d3.select(scaleProps.sp_svgId)
     .selectAll("text.tick")
-    .data(scaleData.color_breaks)
+    .data(scaleProps.sp_breaks)
     .enter()
     .append("text")
     .attr("class", "tick")
@@ -63,14 +63,13 @@ function makeColorScale(scaleData, scaleProps) {
     .text(function(d) { return d; });
 
   // Draw the scale title
-  var color_title = ("color_title" in scaleData) ? scaleData.color_title : ["Pin Colors"];
   d3.select(scaleProps.sp_svgId)
     .selectAll("text.title")
-    .data(color_title)
+    .data(scaleProps.sp_title)
     .enter()
     .append("text")
     .attr("class", "title")
-    .attr("x", 0.5 * (scaleData.color_values.length * scaleProps.sp_width) + scaleProps.sp_xoff)
+    .attr("x", 0.5 * (scaleProps.sp_values.length * scaleProps.sp_width) + scaleProps.sp_xoff)
     .attr("y", scaleProps.sp_xHeight + 2)
     .attr("font-size", scaleProps.sp_tick_font_size)
     .attr("text-anchor", "middle")
