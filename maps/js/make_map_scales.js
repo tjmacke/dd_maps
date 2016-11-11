@@ -1,4 +1,4 @@
-function makeScales(scaleData) {
+function makeMapScales(scaleData) {
 
   var colorScaleProps = {}
   // properties that define the scale
@@ -23,7 +23,7 @@ function makeScales(scaleData) {
   };
   colorScaleProps.sp_box_text = null;
 
-  makeColorScale(colorScaleProps);
+  makeScale(colorScaleProps);
 
   var v2ScaleProps = {};
   // properties that define the scale
@@ -48,5 +48,5 @@ function makeScales(scaleData) {
   }
   v2ScaleProps.sp_box_text = scaleData.v2_values;
 
-  makeV2Scale(v2ScaleProps);
+  makeScale(v2ScaleProps);
 }

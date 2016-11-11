@@ -1,4 +1,4 @@
-function makeV2Scale(scaleProps) {
+function makeScale(scaleProps) {
 
   // Add the svg
   d3.select(scaleProps.sp_divId)
