@@ -1,14 +1,14 @@
 function makeColorScale(scaleData, scaleProps) {
 
   // Add the svg 
-  d3.select("#colorScale")
+  d3.select(scaleProps.sp_divId)
     .append("svg")
     .attr("id", "svgColorScale")
     .attr("height", 50)
     .attr("width", scaleData.color_values.length * scaleProps.sp_width + 2 * scaleProps.sp_xoff);
 
   // Draw the colored boxes
-  d3.select("#svgColorScale")
+  d3.select(scaleProps.sp_svgId)
     .selectAll("rect")
     .data(scaleData.color_values)
     .enter()
@@ -37,7 +37,7 @@ function makeColorScale(scaleData, scaleProps) {
 
 
   // Draw the ticks
-  d3.select("#svgColorScale")
+  d3.select(scaleProps.sp_svgId)
     .selectAll("line")
     .data(scaleData.color_breaks)
     .enter()
@@ -50,7 +50,7 @@ function makeColorScale(scaleData, scaleProps) {
     .style("stroke-width", "1px");
 
   // Draw the tick labels
-  d3.select("#svgColorScale")
+  d3.select(scaleProps.sp_svgId)
     .selectAll("text.tick")
     .data(scaleData.color_breaks)
     .enter()
@@ -64,7 +64,7 @@ function makeColorScale(scaleData, scaleProps) {
 
   // Draw the scale title
   var color_title = ("color_title" in scaleData) ? scaleData.color_title : ["Pin Colors"];
-  d3.select("#svgColorScale")
+  d3.select(scaleProps.sp_svgId)
     .selectAll("text.title")
     .data(color_title)
     .enter()

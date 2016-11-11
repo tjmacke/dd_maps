@@ -1,14 +1,14 @@
 function makeV2Scale(scaleData, scaleProps) {
 
   // Add the svg
-  d3.select("#v2Scale")
+  d3.select(scaleProps.sp_divId)
     .append("svg")
     .attr("id", "svgV2Scale")
     .attr("height", 50)
     .attr("width", scaleData.v2_values.length * scaleProps.sp_width + 2 * scaleProps.sp_xoff);
 
   // Draw white boxes
-  d3.select("#svgV2Scale")
+  d3.select(scaleProps.sp_svgId)
     .selectAll("rect")
     .data(scaleData.v2_values)
     .enter()
@@ -24,7 +24,7 @@ function makeV2Scale(scaleData, scaleProps) {
     .style("stroke-width", "1px");
 
   // Put the size values in the boxes
-  d3.select("#svgV2Scale")
+  d3.select(scaleProps.sp_svgId)
     .selectAll("text.label")
     .data(scaleData.v2_values)
     .enter()
@@ -37,7 +37,7 @@ function makeV2Scale(scaleData, scaleProps) {
     .text(function(d) { return d; });
 
   // Draw the ticks
-  d3.select("#svgV2Scale")
+  d3.select(scaleProps.sp_svgId)
     .selectAll("line")
     .data(scaleData.v2_breaks)
     .enter()
@@ -50,7 +50,7 @@ function makeV2Scale(scaleData, scaleProps) {
     .style("stroke-width", "1px");
 
   // Draw the tick labels
-  d3.select("#svgV2Scale")
+  d3.select(scaleProps.sp_svgId)
     .selectAll("text.tick")
     .data(scaleData.v2_breaks)
     .enter()
@@ -64,7 +64,7 @@ function makeV2Scale(scaleData, scaleProps) {
 
   // Draw the scale title
   var v2_title = ("v2_title" in scaleData) ? scaleData.v2_title : ["Pin Sizes"];
-  d3.select("#svgV2Scale")
+  d3.select(scaleProps.sp_svgId)
     .selectAll("text.title")
     .data(v2_title)
     .enter()
