@@ -21,7 +21,16 @@ function makeMapScales(scaleData) {
   colorScaleProps.sp_fill_boxes_func = function(d, i) {
     return "rgb(" + Math.round(d[0]*255) + "," + Math.round(d[1]*255) + "," + Math.round(d[2]*255) + ")";
   };
-  colorScaleProps.sp_box_text = null;
+  if(!("color_stats" in scaleData)) {
+    colorScaleProps.sp_box_text = null;
+  } else {
+    var color_box_text = [];
+    for(var i = 0; i < scaleData.color_stats.length; i++){
+      color_box_text.push(scaleData.color_stats[i][1] + "%");
+    }
+    colorScaleProps.sp_box_text = color_box_text;
+    colorScaleProps.sp_box_text_color = "rgb(255,255,255)";
+  }
 
   makeScale(colorScaleProps);
 
@@ -29,7 +38,7 @@ function makeMapScales(scaleData) {
   // properties that define the scale
   v2ScaleProps.sp_tick_font_size = 12;
   v2ScaleProps.sp_xoff           = 5;
-  v2ScaleProps.sp_width          = 70;
+  v2ScaleProps.sp_width          = 75;
   v2ScaleProps.sp_height         = 15;
   v2ScaleProps.sp_tick_len       = 5;
   v2ScaleProps.sp_xHeight        = Math.round(0.7 * v2ScaleProps.sp_tick_font_size);
@@ -46,7 +55,17 @@ function makeMapScales(scaleData) {
   v2ScaleProps.sp_fill_boxes_func = function(d, i) {
     return "white";
   }
-  v2ScaleProps.sp_box_text = scaleData.v2_values;
+  if(!("v2_stats" in scaleData)) {
+    v2ScaleProps.sp_box_text = scaleData.v2_values;
+  } else {
+    v2ScaleProps.sp_box_text = scaleData.v2_values;
+    var v2_box_text = [];
+    for(var i = 0; i < scaleData.v2_stats.length; i++){
+      v2_box_text.push(scaleData.v2_values[i] + ", " + scaleData.v2_stats[i][1] + "%"); 
+    }
+    v2ScaleProps.sp_box_text = v2_box_text;
+  }
+  v2ScaleProps.sp_box_text_color = "black";
 
   makeScale(v2ScaleProps);
 }

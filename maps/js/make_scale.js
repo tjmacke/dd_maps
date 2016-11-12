@@ -33,7 +33,8 @@ function makeScale(scaleProps) {
       .attr("y", scaleProps.sp_tick_yoff - 4)
       .attr("font-size", scaleProps.sp_tick_font_size)
       .attr("text-anchor", "middle")
-      .text(function(d) { return d; });
+      .text(function(d) { return d; })
+      .attr("fill", scaleProps.sp_box_text_color);
   }
 
   // Draw the ticks
