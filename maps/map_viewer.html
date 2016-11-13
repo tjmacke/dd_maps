@@ -10,7 +10,9 @@
   <style>
     body { margin: 0; padding: 0; }
     div.controls { position: absolute; width: 100%; height: 50px; top: 0; border: 2px solid black; }
-    #fileReader {float: left; width: 25%; height: 100%; }
+    #data {float: left; width: 25%; height: 100%; }
+    #fileReader {float: left; width: 100%; height: 50%; }
+    #dataStats { float: left; width: 100%; height 50%; font-size: 14px; border-top: 1px solid black; border-collapse: collapse; }
 
     #colorScaleBox { float: left; width: 45%; height: 100%; border: 1px solid black; }
     #colorInfo { float: left; width: 20%; height: 100%; }
@@ -25,8 +27,13 @@
 </head>
 <body>
   <div class="controls">
-    <div id="fileReader">
-      File:  <input type="file" id="fileinput" onchange="loadMapData(event)"/>
+    <div id="data">
+      <div id="fileReader">
+        File:  <input type="file" id="fileinput" onchange="loadMapData(event)"/>
+      </div>
+      <div id="dataStats">
+	Stats:
+      </div>
     </div>
     <div id="colorScaleBox">
       <div id="colorInfo">

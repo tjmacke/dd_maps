@@ -161,6 +161,7 @@ END {
 	}
 }'		|\
 awk -F'\t' 'BEGIN {
+	atype = "'"$ATYPE"'"
 	cnt = "'"$CNT"'" == "yes"
 	rev = "'"$REV"'" == "yes"
 	unit = "'"$UNIT"'"
@@ -183,6 +184,7 @@ awk -F'\t' 'BEGIN {
 	n_addrs++
 	dates[n_addrs] = $1
 	cnts[n_addrs] = $2
+	tcnt += $2
 	addrs[n_addrs] = $3
 	lngs[n_addrs] = $4
 	lats[n_addrs] = $5
@@ -191,6 +193,7 @@ END {
 	if(err)
 		exit err
 
+	# TODO: deal with !rev
 	if(rev){
 		date_max = dates[1]
 		date_min = dates[1]
@@ -204,7 +207,6 @@ END {
 		gsub(/-/, " ", work)
 		t_max = mktime(work " 00 00 00")
 	}
-
 	for(i = 1; i <= n_addrs; i++){
 		work = dates[i]
 		gsub(/-/, " ", work)
@@ -225,8 +227,8 @@ END {
 		printf("\t%s\t%s\t%s\n", addrs[i], lngs[i], lats[i])
 	}
 	if(sfile){
-		printf("date_first_str = \"%s\"\n", rev ? date_max : date_min) >> sfile
-		printf("date_last_str = \"%s\"\n", rev ? date_min : date_max) >> sfile
+		# stats to json is stupid
+		printf("data_stats = %d %s&#44; %d dashes&#44; last &#61; %s\n", NR, atype == "src" ? "sources" : "dests", tcnt, rev ? date_max : date_min) >> sfile
 		close(sfile)
 	}
 }'

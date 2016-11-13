@@ -1,5 +1,9 @@
 function makeMapScales(scaleData) {
 
+  if("data_stats" in scaleData) {
+    document.getElementById("dataStats").innerHTML = "Stats: " + scaleData.data_stats;
+  }
+
   var colorScaleProps = {}
   // properties that define the scale
   colorScaleProps.sp_tick_font_size = 12;
