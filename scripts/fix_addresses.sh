@@ -11,7 +11,7 @@ RFILES=
 while [ $# -gt 0 ] ; do
 	case $1 in
 	-help)
-		echo "$U_UMSG"
+		echo "$U_MSG"
 		exit 0
 		;;
 	-af)
