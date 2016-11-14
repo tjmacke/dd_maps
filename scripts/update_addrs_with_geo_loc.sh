@@ -59,7 +59,7 @@ if [ -z "$ATYPE" ] ; then
 elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
 	LOG ERROR "unknown address type $ATYPE, must be src or dst"
 	echo "$U_MSG" 1>&2
-	exit
+	exit 1
 fi
 
 cat $FILE	|\

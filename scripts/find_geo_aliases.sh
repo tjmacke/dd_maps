@@ -14,6 +14,25 @@ DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 DM_DB=$DM_ADDRS/dd_maps.db
 
+while [ $# -gt 0 ] ; do
+	case $1 in
+	-help)
+		echo "$U_MSG"
+		exit 0
+		;;
+	-*)
+		LOG ERROR "unknown option $1"
+		echo "$U_MSG" 1>&2
+		exit 1
+		;;
+	*)
+		LOG ERROR "extra arguments $*"
+		echo "$U_MSG" 1>&2
+		exit 1
+		;;
+	esac
+done
+
 echo -e ".mode tabs\nSELECT address, lng, lat FROM addresses WHERE a_stat = 'G' AND as_reason = 'geo' ORDER BY lng, lat ;"	|\
 sqlite3 $DM_DB	|\
 awk -F'\t' 'BEGIN {
