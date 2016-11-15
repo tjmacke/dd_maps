@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -dh doordash-home ] -at { src | dst } [ runs-file ]"
+U_MSG="usage: $0 [ -help ] [ -dh doordash-home ] -a addr-file -at { src | dst } [ runs-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -27,7 +27,7 @@ else
 	exit 1
 fi
 
-DD_HOME=
+AFILE=
 ATYPE=
 FILE=
 
@@ -45,6 +45,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		DD_HOME=$1
+		shift
+		;;
+	-a)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-a requires addr-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		AFILE=$1
 		shift
 		;;
 	-at)
@@ -82,6 +92,12 @@ if [ -z "$DD_HOME" ] ; then
 	exit 1
 fi
 
+if [ -z "$AFILE" ] ; then
+	LOG ERROR "missing -a addr-file argument"
+	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
 if [ -z "$ATYPE" ] ; then
 	LOG ERROR "missing -at address-type argument"
 	echo "$U_MSG" 1>&2
@@ -97,6 +113,7 @@ $AWK -F'\t' '
 @include '"$PB_UTILS"'
 BEGIN {
 	atype = "'"$ATYPE"'"
+	afield = atype == "src" ? 6 : 7
 	if(atype == "src"){
 		afield = 6
 		afile = "'"$DD_HOME"'/maps/src.addrs"
@@ -106,7 +123,8 @@ BEGIN {
 	}
 
 	# read the addresses
-	n_a2idx = read_addresses(afile, a2idx, acnt, along, alat)
+	afile = "'"$AFILE"'"
+	n_a2idx = read_addresses(afile, a2idx, alng, alat)
 	if(n_a2idx == 0){
 		printf("ERROR: no addresses in %s\n", afile) > "/dev/stderr"
 		err = 1
@@ -145,7 +163,8 @@ BEGIN {
 			nf = split(pb_vals[i], ary, "\t")
 			if(pb_dashes_overlap(b_time, e_time, ary[pb_fields["tstart"]], ary[pb_fields["tend"]])){
 				fnd = 1
-				drate = ary[pb_fields["drate"]]
+#				drate = ary[pb_fields["drate"]]
+				drate = ary[pb_fields["totalpay"]]/ary[pb_fields["deliveries"]]
 				break
 			}
 		}
@@ -173,7 +192,8 @@ END {
 			printf("WARN: no geo for %s\n", j) > "/dev/stderr"
 			continue
 		}
+		label = sprintf("visits=%d, avgPay=%.2f", j_count[j], j_amount[j]/j_count[j])
 		idx = a2idx[j]
-		printf("%d\t%.2f\t%s\t%s\t%s\n", j_count[j], j_amount[j]/j_count[j], j, along[idx], alat[idx])
+		printf("%.2f\t%d\t%s\t%s\t%s\t%s\n", j_amount[j]/j_count[j], j_count[j], label, j, alng[idx], alat[idx])
 	}
 }' $FILE

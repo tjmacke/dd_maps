@@ -9,10 +9,22 @@ if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
 	exit 1
 fi
-
 DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
+
+# awk v3 does not support includes
+AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
+if [ "$AWK_VERSION" == "3" ] ; then
+	AWK=igawk
+	READ_ADDRESSES="$DM_LIB/read_addresses.awk"
+elif [ "$AWK_VERSION" == "4" ] ; then
+	AWK=awk
+	READ_ADDRESSES="\"$DM_LIB/read_addresses.awk\""
+else
+	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
+	exit 1
+fi
 
 AFILE=
 ATYPE==
@@ -119,7 +131,7 @@ if [ ! -z "$UNIT" ] ; then
 	fi
 fi
 
-awk -F'\t' 'BEGIN {
+$AWK -F'\t' 'BEGIN {
 	atype = "'"$ATYPE"'"
 	f_atype = atype == "src" ? 6 : 7
 }
@@ -127,20 +139,16 @@ $5 == "Job" {
 	printf("%s\t%s\n", $1, $f_atype)
 }' $FILE	|\
 sort -t $'\t' -k 2,2 -k 1,1	|\
-awk -F'\t' 'BEGIN {
+$AWK -F'\t' '
+@include '"$READ_ADDRESSES"'
+BEGIN {
 	afile = "'"$AFILE"'"
-	for(n_a2idx = 0; (getline < afile) > 0; ){
-		n_a2idx++
-		a2idx[$1] = n_a2idx
-		long[n_a2idx] = $2
-		lat[n_a2idx] = $3
-	}
-	close(afile)
+	n_a2idx = read_addresses(afile, a2idx, alng, alat)
 }
 {
 	if($2 != l_2){
 		if(l_2 != ""){
-			printf("%s\t%d\t%s\t%s\t%s\n", date, cnt, l_2,  long[a2idx[l_2]], lat[a2idx[l_2]]) 
+			printf("%s\t%d\t%s\t%s\t%s\n", date, cnt, l_2,  alng[a2idx[l_2]], alat[a2idx[l_2]]) 
 			l_2 = ""
 			cnt = 0
 		}
@@ -155,12 +163,12 @@ awk -F'\t' 'BEGIN {
 }
 END {
 	if(l_2 != ""){
-		printf("%s\t%d\t%s\t%s\t%s\n", date, cnt, l_2,  long[a2idx[l_2]], lat[a2idx[l_2]]) 
+		printf("%s\t%d\t%s\t%s\t%s\n", date, cnt, l_2,  alng[a2idx[l_2]], alat[a2idx[l_2]]) 
 		l_2 = ""
 		cnt = 0
 	}
 }'		|\
-awk -F'\t' 'BEGIN {
+$AWK -F'\t' 'BEGIN {
 	atype = "'"$ATYPE"'"
 	cnt = "'"$CNT"'" == "yes"
 	rev = "'"$REV"'" == "yes"

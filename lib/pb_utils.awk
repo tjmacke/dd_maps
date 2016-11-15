@@ -15,7 +15,7 @@ function read_pay_breakdown(pb_file, pb_keys, pb_vals, pb_fields, pb_sizes,   n_
 		pb_vals[n_pb_lines - 1] = line
 	}
 	pb_sizes["n_pb_keys"] = n_pb_lines - 1
-	close(pf_file)
+	close(pb_file)
 
 	return n_pb_lines - 1
 }
