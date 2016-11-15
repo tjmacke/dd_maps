@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -dh doordash-home ] -a addr-file -at { src | dst } [ runs-file ]"
+U_MSG="usage: $0 [ -help ] [ -dh doordash-home ] -a addr-file -at { src | dst } [ -stats stats-file ] [ runs-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -29,6 +29,7 @@ fi
 
 AFILE=
 ATYPE=
+SFILE=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -65,6 +66,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		ATYPE=$1
+		shift
+		;;
+	-stats)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-stats requires stats-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		SFILE=$1
 		shift
 		;;
 	-*)
@@ -163,7 +174,6 @@ BEGIN {
 			nf = split(pb_vals[i], ary, "\t")
 			if(pb_dashes_overlap(b_time, e_time, ary[pb_fields["tstart"]], ary[pb_fields["tend"]])){
 				fnd = 1
-#				drate = ary[pb_fields["drate"]]
 				drate = ary[pb_fields["totalpay"]]/ary[pb_fields["deliveries"]]
 				break
 			}

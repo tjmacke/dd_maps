@@ -33,7 +33,11 @@ function makeMapScales(scaleData) {
       color_box_text.push(scaleData.color_stats[i][1] + "%");
     }
     colorScaleProps.sp_box_text = color_box_text;
-    colorScaleProps.sp_box_text_color = "rgb(255,255,255)";
+    if("color_box_text_color" in scaleData){
+      colorScaleProps.sp_box_text_color = scaleData.color_box_text_color[0]
+    } else {
+      colorScaleProps.sp_box_text_color = "rgb(255,255,255)";
+    }
   }
 
   makeScale(colorScaleProps);
