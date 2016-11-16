@@ -20,7 +20,21 @@ function makeMapScales(scaleData) {
   colorScaleProps.sp_divId = "#colorScale";
   colorScaleProps.sp_svgId = "#svgColorScale";
   colorScaleProps.sp_values = scaleData.color_values;
-  colorScaleProps.sp_breaks = scaleData.color_breaks;
+  var color_sp_breaks = scaleData.color_breaks;
+  colorScaleProps.sp_breaks_idx_off = 1;
+  if (("color_min_value" in scaleData) || ("color_max_value" in scaleData)) {
+    color_sp_breaks = [];
+    if ("color_min_value" in scaleData) {
+      color_sp_breaks.push(Math.floor(scaleData.color_min_value[0]));
+      colorScaleProps.sp_breaks_idx_off = 0;
+    }
+    for(var i = 0; i < scaleData.color_breaks.length; i++)
+      color_sp_breaks.push(scaleData.color_breaks[i]);
+    if ("color_max_value" in scaleData) {
+      color_sp_breaks.push(Math.ceil(scaleData.color_max_value[0]));
+    }
+  }
+  colorScaleProps.sp_breaks = color_sp_breaks;
   colorScaleProps.sp_title = ("color_title" in scaleData) ? scaleData.color_title : ["Pin Colors"];
   colorScaleProps.sp_fill_boxes_func = function(d, i) {
     return "rgb(" + Math.round(d[0]*255) + "," + Math.round(d[1]*255) + "," + Math.round(d[2]*255) + ")";
@@ -58,7 +72,21 @@ function makeMapScales(scaleData) {
   v2ScaleProps.sp_divId = "#v2Scale";
   v2ScaleProps.sp_svgId = "#svgV2Scale";
   v2ScaleProps.sp_values = scaleData.v2_values;
-  v2ScaleProps.sp_breaks = scaleData.v2_breaks;
+  var v2_sp_breaks = scaleData.v2_breaks;
+  v2ScaleProps.sp_breaks_idx_off = 1;
+  if (("v2_min_value" in scaleData) || ("v2_max_value" in scaleData)) {
+    v2_sp_breaks = [];
+    if ("v2_min_value" in scaleData) {
+      v2_sp_breaks.push(Math.floor(scaleData.v2_min_value[0]));
+      v2ScaleProps.sp_breaks_idx_off = 0;
+    }
+    for(var i = 0; i < scaleData.v2_breaks.length; i++)
+      v2_sp_breaks.push(scaleData.v2_breaks[i]);
+    if ("v2_max_value" in scaleData) {
+      v2_sp_breaks.push(Math.ceil(scaleData.v2_max_value[0]));
+    }
+  }
+  v2ScaleProps.sp_breaks = v2_sp_breaks;
   v2ScaleProps.sp_title = ("v2_title" in scaleData) ? scaleData.v2_title : ["Pin Sizes"];
   v2ScaleProps.sp_fill_boxes_func = function(d, i) {
     return "white";

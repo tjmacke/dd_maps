@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -dh doordash-home ] -a addr-file -at { src | dst } [ -stats stats-file ] [ runs-file ]"
+U_MSG="usage: $0 [ -help ] -a addr-file -at { src | dst } [ -stats stats-file ] [ runs-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -37,16 +37,6 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
-		;;
-	-dh)
-		shift
-		if [ $# -eq 0 ] ; then
-			LOG ERROR "-dh requires doordash-hom argument"
-			echo "$U_MSG" 1>&2
-			exit 1
-		fi
-		DD_HOME=$1
-		shift
 		;;
 	-a)
 		shift
@@ -97,12 +87,6 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
-if [ -z "$DD_HOME" ] ; then
-	LOG ERROR "DD_HOME is not defined"
-	echo "$U_MSG" 1>&2
-	exit 1
-fi
-
 if [ -z "$AFILE" ] ; then
 	LOG ERROR "missing -a addr-file argument"
 	echo "$U_MSG" 1>&2
@@ -125,13 +109,6 @@ $AWK -F'\t' '
 BEGIN {
 	atype = "'"$ATYPE"'"
 	afield = atype == "src" ? 6 : 7
-	if(atype == "src"){
-		afield = 6
-		afile = "'"$DD_HOME"'/maps/src.addrs"
-	}else{
-		afield = 7
-		afile = "'"$DD_HOME"'/maps/dst.addrs"
-	}
 
 	# read the addresses
 	afile = "'"$AFILE"'"
@@ -141,7 +118,6 @@ BEGIN {
 		err = 1
 		exit err
 	}
-	printf("INFO: %s: %d %s addresses\n", afile, n_a2idx, atype) > "/dev/stderr"
 
 	# read pay breakdown data
 	pb_file = "'"$DD_HOME"'/data/breakdownofpay.20150904.tsv"
@@ -151,10 +127,8 @@ BEGIN {
 		err = 1
 		exit err
 	}
-	printf("INFO: %s: %d pay breakdown entries\n", pb_file, n_pb_keys) > "/dev/stderr"
-#	printf("pb_fields:\n")
-#	for(f in pb_fields)
-#		printf("%-12s -> %2d\n", f, pb_fields[f]) 
+
+	sfile = "'"$SFILE"'"
 }
 {
 	if($5 == "BEGIN"){
@@ -205,5 +179,8 @@ END {
 		label = sprintf("visits=%d, avgPay=%.2f", j_count[j], j_amount[j]/j_count[j])
 		idx = a2idx[j]
 		printf("%.2f\t%d\t%s\t%s\t%s\t%s\n", j_amount[j]/j_count[j], j_count[j], label, j, alng[idx], alat[idx])
+	}
+	if(sfile){
+		close(sfile)
 	}
 }' $FILE
