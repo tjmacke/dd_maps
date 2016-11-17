@@ -165,7 +165,7 @@ BEGIN {
 				if(!(l_4 in a2idx)){
 					printf("WARN: no geo for %s\n", l_4) > "/dev/stderr"
 				}else{
-					label = sprintf("visits=%d, avgPay=%.2f", results["d_cnt"], results["d_rate"])
+					label = sprintf("visits=%d, last=%s, avgPay=%.2f", results["d_cnt"], visits[n_visits, "Date"], results["d_rate"])
 					idx = a2idx[l_4]
 					printf("%.2f\t%d\t%s\t%s\t%s\t%s\n", results["d_rate"], results["d_cnt"], label, l_4, alng[idx], alat[idx])
 					n_dashes += results["d_cnt"]
@@ -224,7 +224,7 @@ function get_drate(site, n_visits, visits, results,   i, k_idx, fnd, j, ary, nf,
 	for(i = 1; i <= n_visits; i++){
 		if(!find_pay_data(visits[i, "Date"], n_pb_keys, pb_keys, k_idx)){
 			printf("WARN: no pay breakdown data for date %s\n", visits[i, "Date"]) > "/dev/stderr"
-			return 0
+			continue
 		}
 		fnd = 0
 		for(j = k_idx["start"]; j <= k_idx["end"]; j++){
