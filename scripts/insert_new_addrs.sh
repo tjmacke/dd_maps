@@ -15,6 +15,8 @@ DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 DM_DB=$DM_ADDRS/dd_maps.db
 
+TMP_AFILE=/tmp/addrs.$$
+
 if [ ! -s $DM_DB ] ; then
 	LOG ERROR "database $DM_DB either does not exist or has zero size"
 	exit 1
@@ -68,13 +70,26 @@ elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
 	exit 1
 fi
 
+sqlite3 $DM_DB > $TMP_AFILE <<_EOF_
+.mode tabs
+SELECT address FROM addresses ;
+_EOF_
+
 awk -F'\t' 'BEGIN {
 	atype = "'"$ATYPE"'"
 	f_addr = atype == "src" ? 3 : 4;
+	afile = "'"$TMP_AFILE"'"
+	for(n_atab = 0; (getline < afile) > 0; ){
+		n_atab++
+		atab[$0] = 1
+	}
+	close(afile)
 }
 $1 != "status" {
-	a_stat = $1 == "G" ? "G, new" : $1
-	printf("%s\t%s\t%s\t%s\n", a_stat, $f_addr, $5, $6)
+	if(!($f_addr in atab)){
+		a_stat = $1 == "G" ? "G, new" : $1
+		printf("%s\t%s\t%s\t%s\n", a_stat, $f_addr, $5, $6)
+	}
 }' $FILE	|\
 sort -t $'\t' -u -k 2,2	|\
 while read line ; do
@@ -115,3 +130,5 @@ while read line ; do
 		LOG ERROR "$err: $addr"
 	fi
 done
+
+rm -f $TMP_AFILE
