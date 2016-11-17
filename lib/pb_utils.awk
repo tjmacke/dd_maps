@@ -52,18 +52,13 @@ function find_pay_data(key, n_ktab, ktab, k_idx,   i, j, k, k1) {
 	}
 	return 0
 }
-function pb_dashes_overlap(b_dash1, e_dash1, b_dash2, e_dash2,   b_min1, e_min1, b_min2, e_min2) {
+function pb_dash_in_shift(b_dash, e_dash, b_shift, e_shift,   bd_min, ed_min, bs_min, es_min) {
 
-	b1_min = 60 * substr(b_dash1, 1, 2) + substr(b_dash1, 3, 2)
-	e1_min = 60 * substr(e_dash1, 1, 2) + substr(e_dash1, 3, 2)
+	bd_min = 60 * substr(b_dash, 1, 2) + substr(b_dash, 3, 2)
+	ed_min = 60 * substr(e_dash, 1, 2) + substr(e_dash, 3, 2)
 
-	b2_min = 60 * substr(b_dash2, 1, 2) + substr(b_dash2, 3, 2)
-	e2_min = 60 * substr(e_dash2, 1, 2) + substr(e_dash2, 3, 2)
+	bs_min = 60 * substr(b_shift, 1, 2) + substr(b_shift, 3, 2)
+	es_min = 60 * substr(e_shift, 1, 2) + substr(e_shift, 3, 2)
 
-	if(e1_min <= b2_min)
-		return 0
-	else if(e2_min <= b1_min)
-		return 0
-	else
-		return 1
+	return bd_min >= bs_min && ed_min <= es_min
 }

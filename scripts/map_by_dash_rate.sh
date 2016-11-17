@@ -1,8 +1,9 @@
 #! /bin/bash
 #
 . ~/etc/funcs.sh
+export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -a addr-file -at { src | dst } [ -stats stats-file ] [ runs-file ]"
+U_MSG="usage: $0 [ -help ] -pb pay-breakdown-file -a addr-file -at { src | dst } [ -stats stats-file ] [ runs-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -27,6 +28,7 @@ else
 	exit 1
 fi
 
+PFILE=
 AFILE=
 ATYPE=
 SFILE=
@@ -37,6 +39,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-pb)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-pb requires pay-breakdown-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		PFILE=$1
+		shift
 		;;
 	-a)
 		shift
@@ -87,6 +99,12 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
+if [ -z "$PFILE" ] ; then
+	LOG ERROR "missing -p pay-detailes-file argument"
+	echo "$U_UMSG" 1>&2
+	exit 1
+fi
+
 if [ -z "$AFILE" ] ; then
 	LOG ERROR "missing -a addr-file argument"
 	echo "$U_MSG" 1>&2
@@ -103,6 +121,14 @@ elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
 	exit 1
 fi
 
+awk -F'\t' 'BEGIN {
+	atype = "'"$ATYPE"'"
+	f_atype = atype == "src" ? 6 : 7
+}
+$5 == "Job" {
+	printf("%s\t%s\t%s\t%s\n", $1, $2, $3, $f_atype)
+}' $FILE	|\
+sort -t $'\t' -k 4,4 -k 1,1 -k 2,2	|\
 $AWK -F'\t' '
 @include '"$READ_ADDRESSES"'
 @include '"$PB_UTILS"'
@@ -118,69 +144,110 @@ BEGIN {
 		err = 1
 		exit err
 	}
+#	printf("INFO: %s: %d addresses\n", afile, n_a2idx) > "/dev/stderr"
 
 	# read pay breakdown data
-	pb_file = "'"$DD_HOME"'/data/breakdownofpay.20150904.tsv"
+	pb_file = "'"$PFILE"'"
 	n_pb_keys = read_pay_breakdown(pb_file, pb_keys, pb_vals, pb_fields, pb_sizes)
 	if(n_pb_keys == 0){
 		printf("ERROR: pay breakdown file %s has no data\n", pb_file)
 		err = 1
 		exit err
 	}
+#	printf("INFO: %s: %d records\n", pb_file, n_pb_keys) > "/dev/stderr"
 
 	sfile = "'"$SFILE"'"
 }
 {
-	if($5 == "BEGIN"){
-		in_rec = 1
-		date = $1
-		b_time = $2
-	}else if($5 == "END"){
-		in_rec = 0
-		e_time = $3
-		if(!find_pay_data(date, n_pb_keys, pb_keys, k_idx)){
-			printf("WARN: no pay breakdown data for date %s\n", date)
-			err = 1
-			next
-		}
-		fnd = 0
-		for(i = k_idx["start"]; i <= k_idx["end"]; i++){
-			nf = split(pb_vals[i], ary, "\t")
-			if(pb_dashes_overlap(b_time, e_time, ary[pb_fields["tstart"]], ary[pb_fields["tend"]])){
-				fnd = 1
-				drate = ary[pb_fields["totalpay"]]/ary[pb_fields["deliveries"]]
-				break
+	if($4 != l_4){
+		if(l_4 != ""){
+			if(get_drate(l_4, n_visits, visits, results)){
+				if(!(l_4 in a2idx)){
+					printf("WARN: no geo for %s\n", l_4) > "/dev/stderr"
+				}else{
+					label = sprintf("visits=%d, avgPay=%.2f", results["d_cnt"], results["d_rate"])
+					idx = a2idx[l_4]
+					printf("%.2f\t%d\t%s\t%s\t%s\t%s\n", results["d_rate"], results["d_cnt"], label, l_4, alng[idx], alat[idx])
+					n_dashes += results["d_cnt"]
+					n_sites++
+					if(date_max == "")
+						date_max = visits[1, "Date"]
+					else if(visits[1, "Date"] > date_max)
+						date_max = visits[1, "Date"]
+				}
 			}
+			delete results
+			n_visits = 0
+			delete visits
 		}
-		if(!fnd){
-			printf("ERROR: no pay breakdown date for date, start, end = %s, %s, %s\n", date, b_time, e_time) > "/dev/stderr"
-		}else{
-			for(j in jobs){
-				j_amount[j] += drate
-				j_count[j]++
-			}
-			delete jobs
-			n_jobs = 0
-		}
-	}else if(in_rec){
-		n_jobs++
-		jobs[$afield] = 1
 	}
+	n_visits++
+	visits[n_visits, "Date"] = $1
+	visits[n_visits, "tStart"] = $2
+	visits[n_visits, "tEnd"] = $3
+	l_4 = $4
 }
 END {
 	if(err)
 		exit err
 
-	for(j in j_amount){
-		if(!(j in a2idx)){
-			printf("WARN: no geo for %s\n", j) > "/dev/stderr"
-			continue
+	if(l_4 != ""){
+		if(get_drate(l_4, n_visits, visits, results)){
+			if(!(l_4 in a2idx)){
+				printf("WARN: no geo for %s\n", l_4) > "/dev/stderr"
+			}else{
+				label = sprintf("visits=%d, avgPay=%.2f", results["d_cnt"], results["d_rate"])
+				idx = a2idx[l_4]
+				printf("%.2f\t%d\t%s\t%s\t%s\t%s\n", results["d_rate"], results["d_cnt"], label, l_4, alng[idx], alat[idx])
+				n_dashes += results["d_cnt"]
+				n_sites++
+				if(date_max == "")
+					date_max = visits[1, "Date"]
+				else if(visits[1, "Date"] > date_max)
+					date_max = visits[1, "Date"]
+			}
 		}
-		label = sprintf("visits=%d, avgPay=%.2f", j_count[j], j_amount[j]/j_count[j])
-		idx = a2idx[j]
-		printf("%.2f\t%d\t%s\t%s\t%s\t%s\n", j_amount[j]/j_count[j], j_count[j], label, j, alng[idx], alat[idx])
+		delete results
+		n_visits = 0
+		delete visits
 	}
+
 	if(sfile){
+		# stats to json is stupid
+		printf("data_stats = %d %s&#44; %d dashes&#44; last &#61; %s\n", n_sites, atype == "src" ? "sources" : "dests", n_dashes, date_max) >> sfile
 		close(sfile)
 	}
+}
+function get_drate(site, n_visits, visits, results,   i, k_idx, fnd, j, ary, nf, d_cnt, d_amt) {
+
+	d_cnt = d_amt = 0
+	for(i = 1; i <= n_visits; i++){
+		if(!find_pay_data(visits[i, "Date"], n_pb_keys, pb_keys, k_idx)){
+			printf("WARN: no pay breakdown data for date %s\n", visits[i, "Date"]) > "/dev/stderr"
+			return 0
+		}
+		fnd = 0
+		for(j = k_idx["start"]; j <= k_idx["end"]; j++){
+			nf = split(pb_vals[j], ary, "\t")
+			if(pb_dash_in_shift(visits[i, "tStart"], visits[i, "tEnd"], ary[pb_fields["tstart"]], ary[pb_fields["tend"]])){
+				fnd = 1
+				d_cnt++
+				d_amt += ary[pb_fields["totalpay"]]/ary[pb_fields["deliveries"]]
+				break
+			}
+		}
+		if(!fnd){
+			printf("WARN: no pay breakdown data for dash = %s, %s, %s\n",
+				visits[i, "Date"], visits[i, "sTime"], visits[i, "eTime"]) > "/dev/stderr"
+		}
+	}
+	if(d_cnt == 0){
+		printf("WARN: no pay breakdown data for site %s\n", site) > "/dev/stderr"
+		return 0
+	}
+
+	results["d_rate"] = d_amt/d_cnt
+	results["d_cnt"] = d_cnt
+	
+	return 1
 }' $FILE
