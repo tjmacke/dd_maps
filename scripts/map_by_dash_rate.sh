@@ -165,7 +165,7 @@ BEGIN {
 				if(!(l_4 in a2idx)){
 					printf("WARN: no geo for %s\n", l_4) > "/dev/stderr"
 				}else{
-					label = sprintf("visits=%d, last=%s, avgPay=%.2f", results["d_cnt"], visits[n_visits, "Date"], results["d_rate"])
+					label = sprintf("visits=%d, last=%s, avgPay=%.2f", results["d_cnt"], results["d_last"], results["d_rate"])
 					idx = a2idx[l_4]
 					printf("%.2f\t%d\t%s\t%s\t%s\t%s\n", results["d_rate"], results["d_cnt"], label, l_4, alng[idx], alat[idx])
 					n_dashes += results["d_cnt"]
@@ -196,7 +196,7 @@ END {
 			if(!(l_4 in a2idx)){
 				printf("WARN: no geo for %s\n", l_4) > "/dev/stderr"
 			}else{
-				label = sprintf("visits=%d, avgPay=%.2f", results["d_cnt"], results["d_rate"])
+				label = sprintf("visits=%d, last=%s, avgPay=%.2f", results["d_cnt"], results["d_last"], results["d_rate"])
 				idx = a2idx[l_4]
 				printf("%.2f\t%d\t%s\t%s\t%s\t%s\n", results["d_rate"], results["d_cnt"], label, l_4, alng[idx], alat[idx])
 				n_dashes += results["d_cnt"]
@@ -218,7 +218,7 @@ END {
 		close(sfile)
 	}
 }
-function get_drate(site, n_visits, visits, results,   i, k_idx, fnd, j, ary, nf, d_cnt, d_amt) {
+function get_drate(site, n_visits, visits, results,   i, k_idx, fnd, j, ary, nf, d_cnt, d_amt, d_last) {
 
 	d_cnt = d_amt = 0
 	for(i = 1; i <= n_visits; i++){
@@ -233,6 +233,7 @@ function get_drate(site, n_visits, visits, results,   i, k_idx, fnd, j, ary, nf,
 				fnd = 1
 				d_cnt++
 				d_amt += ary[pb_fields["totalpay"]]/ary[pb_fields["deliveries"]]
+				d_last = visits[i, "Date"]
 				break
 			}
 		}
@@ -248,6 +249,7 @@ function get_drate(site, n_visits, visits, results,   i, k_idx, fnd, j, ary, nf,
 
 	results["d_rate"] = d_amt/d_cnt
 	results["d_cnt"] = d_cnt
+	results["d_last"] = d_last
 	
 	return 1
 }' $FILE
