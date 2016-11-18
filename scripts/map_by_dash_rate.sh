@@ -9,9 +9,11 @@ if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
 	exit 1
 fi
+DM_ADDRS=$DM_HOME/addrs
 DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
+DM_DB=$DM_ADDRS/dd_maps.db
 
 # awk v3 does not support includes
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"

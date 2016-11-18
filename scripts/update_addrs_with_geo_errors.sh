@@ -1,6 +1,7 @@
 #! /bin/bash
 #
 . ~/etc/funcs.sh
+export LC_ALL=C
 
 U_MSG="usage: $0 [ -help ] [ addr-geo-error-file ]"
 
