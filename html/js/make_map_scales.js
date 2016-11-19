@@ -1,12 +1,14 @@
 function makeMapScales(scaleData) {
 
+  var fontSize = window.devicePixelRatio == 2 ? 12 : 10;
+
   if("data_stats" in scaleData) {
     document.getElementById("dataStats").innerHTML = "Stats: " + scaleData.data_stats;
   }
 
   var colorScaleProps = {}
   // properties that define the scale
-  colorScaleProps.sp_tick_font_size = 12;
+  colorScaleProps.sp_tick_font_size = fontSize;
   colorScaleProps.sp_xoff           = 5;
   colorScaleProps.sp_width          = 40;
   colorScaleProps.sp_height         = 15;
@@ -58,7 +60,7 @@ function makeMapScales(scaleData) {
 
   var v2ScaleProps = {};
   // properties that define the scale
-  v2ScaleProps.sp_tick_font_size = 12;
+  v2ScaleProps.sp_tick_font_size = fontSize;
   v2ScaleProps.sp_xoff           = 5;
   v2ScaleProps.sp_width          = 75;
   v2ScaleProps.sp_height         = 15;
