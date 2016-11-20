@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -pb pay-breakdown-file -a addr-file -at { src | dst } [ -stats stats-file ] [ runs-file ]"
+U_MSG="usage: $0 [ -help ] -d dashes-file -a addr-file -at { src | dst } [ -stats stats-file ] [ runs-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -20,17 +20,17 @@ AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1]
 if [ "$AWK_VERSION" == "3" ] ; then
 	AWK=igawk
 	READ_ADDRESSES="$DM_LIB/read_addresses.awk"
-	PB_UTILS="$DM_LIB/pb_utils.awk"
+	DASH_UTILS="$DM_LIB/dash_utils.awk"
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
 	READ_ADDRESSES="\"$DM_LIB/read_addresses.awk\""
-	PB_UTILS="\"$DM_LIB/pb_utils.awk\""
+	DASH_UTILS="\"$DM_LIB/dash_utils.awk\""
 else
 	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
 	exit 1
 fi
 
-PFILE=
+DFILE=
 AFILE=
 ATYPE=
 SFILE=
@@ -42,14 +42,14 @@ while [ $# -gt 0 ] ; do
 		echo "$U_MSG"
 		exit 0
 		;;
-	-pb)
+	-d)
 		shift
 		if [ $# -eq 0 ] ; then
-			LOG ERROR "-pb requires pay-breakdown-file argument"
+			LOG ERROR "-d requires dashes-file argument"
 			echo "$U_MSG" 1>&2
 			exit 1
 		fi
-		PFILE=$1
+		DFILE=$1
 		shift
 		;;
 	-a)
@@ -101,8 +101,8 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
-if [ -z "$PFILE" ] ; then
-	LOG ERROR "missing -p pay-detailes-file argument"
+if [ -z "$DFILE" ] ; then
+	LOG ERROR "missing -d dashes-file argument"
 	echo "$U_UMSG" 1>&2
 	exit 1
 fi
@@ -133,7 +133,7 @@ $5 == "Job" {
 sort -t $'\t' -k 4,4 -k 1,1 -k 2,2	|\
 $AWK -F'\t' '
 @include '"$READ_ADDRESSES"'
-@include '"$PB_UTILS"'
+@include '"$DASH_UTILS"'
 BEGIN {
 	atype = "'"$ATYPE"'"
 	afield = atype == "src" ? 6 : 7
@@ -149,14 +149,14 @@ BEGIN {
 #	printf("INFO: %s: %d addresses\n", afile, n_a2idx) > "/dev/stderr"
 
 	# read pay breakdown data
-	pb_file = "'"$PFILE"'"
-	n_pb_keys = read_pay_breakdown(pb_file, pb_keys, pb_vals, pb_fields, pb_sizes)
-	if(n_pb_keys == 0){
-		printf("ERROR: pay breakdown file %s has no data\n", pb_file)
+	dfile = "'"$DFILE"'"
+	n_dashes_keys = DU_read_dashes(dfile, dashes_keys, dashes_vals, dashes_fields, dashes_sizes)
+	if(n_dashes_keys == 0){
+		printf("ERROR: dashes file %s has no data\n", dfile)
 		err = 1
 		exit err
 	}
-#	printf("INFO: %s: %d records\n", pb_file, n_pb_keys) > "/dev/stderr"
+#	printf("INFO: %s: %d records\n", dfile, n_dashes_keys) > "/dev/stderr"
 
 	sfile = "'"$SFILE"'"
 }
@@ -224,17 +224,17 @@ function get_drate(site, n_visits, visits, results,   i, k_idx, fnd, j, ary, nf,
 
 	d_cnt = d_amt = 0
 	for(i = 1; i <= n_visits; i++){
-		if(!find_pay_data(visits[i, "Date"], n_pb_keys, pb_keys, k_idx)){
+		if(!DU_find_dash_cands(visits[i, "Date"], n_dashes_keys, dashes_keys, k_idx)){
 			printf("WARN: no pay breakdown data for date %s\n", visits[i, "Date"]) > "/dev/stderr"
 			continue
 		}
 		fnd = 0
 		for(j = k_idx["start"]; j <= k_idx["end"]; j++){
-			nf = split(pb_vals[j], ary, "\t")
-			if(pb_dash_in_shift(visits[i, "tStart"], visits[i, "tEnd"], ary[pb_fields["tstart"]], ary[pb_fields["tend"]])){
+			nf = split(dashes_vals[j], ary, "\t")
+			if(DU_job_in_dash(visits[i, "tStart"], visits[i, "tEnd"], ary[dashes_fields["tstart"]], ary[dashes_fields["tend"]])){
 				fnd = 1
 				d_cnt++
-				d_amt += ary[pb_fields["totalpay"]]/ary[pb_fields["deliveries"]]
+				d_amt += ary[dashes_fields["totalpay"]]/ary[dashes_fields["deliveries"]]
 				d_last = visits[i, "Date"]
 				break
 			}
