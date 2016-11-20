@@ -20,6 +20,19 @@ if [ ! -s $DM_DB ] ; then
 	exit 1
 fi
 
+# awk v3 does not support includes
+AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
+if [ "$AWK_VERSION" == "3" ] ; then
+	AWK=igawk
+	DASH_UTILS="$DM_LIB/dash_utils.awk"
+elif [ "$AWK_VERSION" == "4" ] ; then
+	AWK=awk
+	DASH_UTILS="\"$DM_LIB/dash_utils.awk\""
+else
+	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
+	exit 1
+fi
+
 FILE=
 
 TMP_DFILE=/tmp/dashes.$$
@@ -108,7 +121,7 @@ while read line ; do
 	date="$(echo "$line" | awk -F'\t' '{ print $1 }')"
 	tstart="$(echo "$line" | awk -F'\t' '{ print $2 }')"
 	sel_stmt="$(echo "$date" |\
-	awk -F'\t' 'BEGIN {
+	$AWK -F'\t' 'BEGIN {
 		apos = sprintf("%c", 39)
 	}
 	{
@@ -117,14 +130,13 @@ while read line ; do
 		printf("SELECT dash_id, time_start, time_end FROM dashes WHERE time_start LIKE %s%s%%%s;\n", apos, $1, apos)
 	}')"
 	dash_id="$(echo -e "$sel_stmt" | sqlite3 $DM_DB 2> /dev/null	|\
-	awk -F'\t' 'BEGIN {
+	awk -F'\t' '
+	@include '"$DASH_UTILS"'
+	BEGIN {
 		tstart = "'"$tstart"'"
 	}
 	{
-		js_min = 60 * substr(tstart, 1, 2) + substr(tstart, 4, 2)
-		ds_min = 60 * substr($2, 12, 2) + substr($2, 15, 2)
-		de_min = 60 * substr($3, 12, 2) + substr($3, 15, 2)
-		if(js_min >= ds_min && js_min <= de_min){
+		if(DU_job_in_dash(js_min, "", ds_min, de_min)){
 			printf("%d\n", $1)
 			exit 0
 		}

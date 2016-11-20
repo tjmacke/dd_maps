@@ -55,10 +55,14 @@ function DU_find_dash_cands(key, n_ktab, ktab, k_idx,   i, j, k, k1) {
 function DU_job_in_dash(b_job, e_job, b_dash, e_dash,   bj_min, ej_min, bd_min, ed_min) {
 
 	bj_min = 60 * substr(b_job, 1, 2) + substr(b_job, 3, 2)
-	ej_min = 60 * substr(e_job, 1, 2) + substr(e_job, 3, 2)
+	if(e_job != "")
+		ej_min = 60 * substr(e_job, 1, 2) + substr(e_job, 3, 2)
 
 	bd_min = 60 * substr(b_dash, 1, 2) + substr(b_dash, 3, 2)
 	ed_min = 60 * substr(e_dash, 1, 2) + substr(e_dash, 3, 2)
 
-	return bj_min >= bd_min && ej_min <= ed_min
+	if(e_job != "")
+		return bj_min >= bd_min && ej_min <= ed_min
+	else
+		return bj_min >= bd_min && bj_min <= ed_min
 }
