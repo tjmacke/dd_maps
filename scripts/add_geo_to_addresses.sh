@@ -15,9 +15,7 @@ DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 DM_DB=$DM_ADDRS/dd_maps.db
 
-# TODO: get_latlong.sh will eventually return > 1 addresss, as even the top rated can be wrong, so put the results in a file
 LL_FILE=/tmp/ll.$$.json
-
 
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
