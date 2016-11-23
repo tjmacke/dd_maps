@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -c conf-file ] [ -v2 { desat | size } ] [ -stats stats-file ] [ map-data-file ]"
+U_MSG="usage: $0 [ -help ] [ -c conf-file ] [ -stats stats-file ] [ map-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -34,7 +34,6 @@ fi
 
 CFILE=$DM_ETC/color.info
 SFILE=
-V2=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -51,16 +50,6 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		CFILE=$1
-		shift
-		;;
-	-v2)
-		shift
-		if [ $# -eq 0 ] ; then
-			LOG ERROR "-v2 requires an argument"
-			echo "$U_MSG" 1>&2
-			exit 1
-		fi
-		V2=$1
 		shift
 		;;
 	-stats)
@@ -92,14 +81,6 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
-if [ ! -z "$V2" ] ; then
-	if [ "$V2" != "desat" ] && [ "$V2" != "size" ] ; then
-		LOG ERROR "unknown -v2 value $V2"
-		echo "$U_MSG" 1>&2
-		exit 1
-	fi
-fi 
-
 $AWK -F'\t' '
 @include '"$RD_CONFIG"'
 @include '"$COLOR_UTILS"'
@@ -116,15 +97,15 @@ BEGIN {
 		exit err
 	}
 
- 	v2_is = "'"$V2"'"
-	use_v2 = v2_is != ""
 
-	if(v2_is == "size"){
+	if(("_globals", "v2_values") in config){
 		if(IU_init(config, v2, "v2", "v2_values", "v2_breaks")){
 			err = 1
 			exit err
 		}
-	}
+		use_v2 = 1
+	}else
+		use_v2 = 0
 
 	sfile = "'"$SFILE"'"
 }
@@ -145,29 +126,38 @@ BEGIN {
 	else if($1 > dv4hue_max)
 		dv4hue_max = $1
 
-	if(use_v2){
-		v2_data[n_points] = $2
-	}
-
-	labels[n_points] = $(use_v2 + 2)
-	titles[n_points] = $(use_v2 + 3)
-	longs[n_points] = $(use_v2 + 4)
-	lats[n_points] = $(use_v2 + 5)
+	v2_data[n_points] = $2
+	labels[n_points] = $3
+	titles[n_points] = $4
+	longs[n_points] = $5
+	lats[n_points] = $6
 }
 END {
 	if(err)
 		exit err
 
+	# use_v2 at this point means we have a v2 interp in the config
 	if(use_v2){
-		v2_data_min = v2_data[1]
-		v2_data_max = v2_data[1]
-		for(i = 2; i <= n_points; i++){
-			if(v2_data[i] < v2_data_min)
-				v2_data_min = v2_data[i]
-			else if(v2_data[i] > v2_data_max)
-				v2_data_max = v2_data[i]
+		use_v2 = 0
+		for(i = 1; i <= n_points; i++){
+			if(v2_data[i] != "."){
+				v2_data_min = v2_data[1]
+				v2_data_max = v2_data[1]
+				use_v2 = 1
+				break;
+			}
 		}
-		h_ds_range = v2_data_max > v2_data_min
+		if(use_v2){
+			for(i = 2; i <= n_points; i++){
+				if(v2_data[i] == ".")
+					continue;
+				if(v2_data[i] < v2_data_min)
+					v2_data_min = v2_data[i]
+				else if(v2_data[i] > v2_data_max)
+					v2_data_max = v2_data[i]
+			}
+			h_ds_range = v2_data_max > v2_data_min
+		}
 	}
 
 	for(i = 1; i <= n_points; i++){
@@ -175,14 +165,12 @@ END {
 		hex_color = CU_rgb_to_24bit_color(rgb)
 		style_msg = "."
 
-# TODO: rework this
-		if(v2_is == "desat"){
-			s_frac = !h_ds_range ? 1 : (v2_data[i] - v2_data_min)/(v2_data_max - v2_data_min)
-#			hex_color = CU_desat_12bit_color(hex_color, s_frac)
-			hex_color = CU_desat_24bit_color(hex_color, s_frac)
-		}else if(v2_is == "size"){
-			mrkr_size = IU_interpolate(v2, v2_data[i], v2_data_min, v2_data_max)
-			style_msg = sprintf("\"marker-size\": \"%s\"", mrkr_size)
+		# use_v2 at this point means we have some actual v2 values
+		if(use_v2){
+			if(v2_data[i] != "."){
+				mrkr_size = IU_interpolate(v2, v2_data[i], v2_data_min, v2_data_max)
+				style_msg = sprintf("\"marker-size\": \"%s\"", mrkr_size)
+			}
 		}
 
 		printf("#%s\t%s\t%s:<br/>%s\t%s\t%s\n", hex_color, style_msg, titles[i], labels[i], longs[i], lats[i])

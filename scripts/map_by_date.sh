@@ -203,7 +203,6 @@ END {
 	if(err)
 		exit err
 
-	# TODO: deal with !rev
 	if(rev){
 		date_max = dates[1]
 		date_min = dates[1]
@@ -229,12 +228,12 @@ END {
 			printf("%g", t)
 		if(cnt){
 			label = sprintf("visits=%d, last=%s", cnts[i], dates[i])
-			printf("\t%d\t%s", cnts[i], label)
+#			printf("\t%d\t%s", cnts[i], label)
 		}else{
 			label = sprintf("last=%s", dates[i])
-			printf("\t%s", label)
+#			printf("\t%s", label)
 		}
-		printf("\t%s\t%s\t%s\n", addrs[i], lngs[i], lats[i])
+		printf("\t%s\t%s\t%s\t%s\t%s\n", cnt ? cnts[i] : ".", label, addrs[i], lngs[i], lats[i])
 	}
 	if(sfile){
 		# stats to json is stupid
