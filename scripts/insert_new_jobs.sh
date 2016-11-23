@@ -64,7 +64,7 @@ if [ $# -ne 0 ] ; then
 fi
 
 # TODO:
-# get the jobs
+# get the jobs, adjust awk script to only add new jobs
 #
 # sqlite3 $DM_DB > $TMP_JFILE <<_EOF_
 # .mode tabs
@@ -146,7 +146,47 @@ while read line ; do
 		continue
 	fi
 
-	echo "$dash_id, $src_addr_id, $dst_addr_id, $line"
+	ins_stmt="$(echo "$line" |\
+	awk -F'\t' 'BEGIN {
+		apos = sprintf("%c", 39)
+		dash_id = "'"$dash_id"'" + 0
+		src_addr_id = "'"$src_addr_id"'" + 0
+		dst_addr_id = "'"$dst_addr_id"'" + 0
+	}
+	{
+		t_start = $1 "T" $2
+		t_end = $2 "T" $3
+		printf(".log stderr\\n")
+		printf("INSERT INTO jobs (dash_id, time_start, time_end, src_addr_id, dst_addr_id, amount, payment")
+		if($10 != ".")
+			printf(", notes")
+		printf(") VALUES (")
+		printf("%d", dash_id)
+		printf(", %s", esc_string(t_start))
+		printf(", %s", esc_string(t_end))
+		printf(", %d", src_addr_id)
+		printf(", %d", dst_addr_id)
+		printf(", %s", $8)
+		printf(", %s", esc_string($9))
+		if($10 != ".")
+			printf(", %s", esc_string($10))
+		printf(");\n")
+	}
+	function esc_string(str,   work) {
+		work = str
+		gsub(apos, apos apos, work)
+		return apos work apos
+	}')"
+	sql_msg="$(echo -e "$ins_stmt" | sqlite3 $DM_DB 2>&1)"
+	if [ ! -z "$sql_msg" ] ; then
+		err="$(echo "$sql_msg"	|\
+			tail -1		|\
+			awk -F: '{
+				work = $(NF-1) ; sub(/^ */, "", work) ; printf("%s", work)
+				work = $NF ; sub(/^ */, "", work) ; printf(": %s", work)
+			}')"
+		LOG ERROR "$err: $line"
+	fi
 done
 
 rm -f $TMP_DFILE $TMP_AFILE $TMP_JFILE
