@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -c conf-file ] [ -stats stats-file ] [ map-data-file ]"
+U_MSG="usage: $0 [ -help ] -c conf-file [ -stats stats-file ] [ map-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -32,7 +32,6 @@ else
 	exit 1
 fi
 
-CFILE=$DM_ETC/color.info
 SFILE=
 FILE=
 
@@ -81,6 +80,12 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
+if [ -z "$CFILE" ] ; then
+	LOG ERROR "missing -c config-file argument"
+	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
 $AWK -F'\t' '
 @include '"$RD_CONFIG"'
 @include '"$COLOR_UTILS"'
@@ -92,11 +97,14 @@ BEGIN {
  		exit err
  	}
 
-	if(IU_init(config, color, "color", "color_values", "color_breaks")){
-		err = 1;
-		exit err
-	}
-
+	if(("_globals", "color_values") in config){
+		if(IU_init(config, color, "color", "color_values", "color_breaks")){
+			err = 1;
+			exit err
+		}
+		use_color = 1
+	}else
+		use_color = 0
 
 	if(("_globals", "v2_values") in config){
 		if(IU_init(config, v2, "v2", "v2_values", "v2_breaks")){
@@ -110,22 +118,9 @@ BEGIN {
 	sfile = "'"$SFILE"'"
 }
 {
-	if(NF == 5 && use_v2){
-		printf("ERROR: line %d: wrong number of fields %d: need %d\n", NR, NF, 6) > "/dev/stderr"
-		err = 1
-		exit err
-	}
+	# TODO: allow for a mix of lengths?
 	n_points++
-
-	dv4hue[n_points] = $1
-	if(n_points == 1){
-		dv4hue_min = $1
-		dv4hue_max = $1
-	}else if($1 < dv4hue_min)
-		dv4hue_min = $1
-	else if($1 > dv4hue_max)
-		dv4hue_max = $1
-
+	color_data[n_points] = $1
 	v2_data[n_points] = $2
 	labels[n_points] = $3
 	titles[n_points] = $4
@@ -135,6 +130,29 @@ BEGIN {
 END {
 	if(err)
 		exit err
+
+	# use_color at this point means we have a color interp in the config
+	if(use_color){
+		use_color = 0
+		for(i = 1; i <= n_points; i++){
+			if(color_data[i] != "."){
+				color_data_min = color_data[i]
+				color_data_max = color_data[i]
+				use_color = 1
+				break
+			}
+		}
+		if(use_color){
+			for(i = 1; i <= n_points; i++){
+				if(color_data[i] == ".")
+					continue;
+				if(color_data[i] < color_data_min)
+					color_data_min = color_data[i]
+				else if(color_data[i] > color_data_max)
+					color_data_max = color_data[i]
+			}
+		}
+	}
 
 	# use_v2 at this point means we have a v2 interp in the config
 	if(use_v2){
@@ -148,7 +166,7 @@ END {
 			}
 		}
 		if(use_v2){
-			for(i = 2; i <= n_points; i++){
+			for(i = 1; i <= n_points; i++){
 				if(v2_data[i] == ".")
 					continue;
 				if(v2_data[i] < v2_data_min)
@@ -156,16 +174,22 @@ END {
 				else if(v2_data[i] > v2_data_max)
 					v2_data_max = v2_data[i]
 			}
-			h_ds_range = v2_data_max > v2_data_min
 		}
 	}
 
 	for(i = 1; i <= n_points; i++){
-		rgb = IU_interpolate(color, dv4hue[i], dv4hue_min, dv4hue_max)
-		hex_color = CU_rgb_to_24bit_color(rgb)
-		style_msg = "."
+		# use_color at this point means we have some actual color values
+		hex_color = "#FFE4E1"
+		if(use_color){
+			if(color_data[i] != "."){
+				rgb = IU_interpolate(color, color_data[i], color_data_min, color_data_max)
+				# TODO: figure out whehter CU_ should return #XXX or #XXXXXX
+				hex_color = "#" CU_rgb_to_24bit_color(rgb)
+			}
+		}
 
 		# use_v2 at this point means we have some actual v2 values
+		style_msg = "."
 		if(use_v2){
 			if(v2_data[i] != "."){
 				mrkr_size = IU_interpolate(v2, v2_data[i], v2_data_min, v2_data_max)
@@ -173,16 +197,18 @@ END {
 			}
 		}
 
-		printf("#%s\t%s\t%s:<br/>%s\t%s\t%s\n", hex_color, style_msg, titles[i], labels[i], longs[i], lats[i])
+		printf("%s\t%s\t%s:<br/>%s\t%s\t%s\n", hex_color, style_msg, titles[i], labels[i], longs[i], lats[i])
 	}
 
 	if(sfile != ""){
-		printf("color_min_value = %g\n", dv4hue_min) >> sfile
-		printf("color_max_value = %g\n", dv4hue_max) >> sfile
-		printf("color_stats = %d,%.1f", color["counts", 1], 100.0*color["counts", 1]/color["tcounts"]) >> sfile
-		for(i = 2; i <= color["nvalues"]; i++)
-			printf(" | %d,%.1f", color["counts", i], 100.0*color["counts", i]/color["tcounts"]) >> sfile
-		printf("\n") >> sfile
+		if(use_color){
+			printf("color_min_value = %g\n", color_data_min) >> sfile
+			printf("color_max_value = %g\n", color_data_max) >> sfile
+			printf("color_stats = %d,%.1f", color["counts", 1], 100.0*color["counts", 1]/color["tcounts"]) >> sfile
+			for(i = 2; i <= color["nvalues"]; i++)
+				printf(" | %d,%.1f", color["counts", i], 100.0*color["counts", i]/color["tcounts"]) >> sfile
+			printf("\n") >> sfile
+		}
 		if(use_v2){
 			printf("v2_min_value = %g\n", v2_data_min) >> sfile
 			printf("v2_max_value = %g\n", v2_data_max) >> sfile

@@ -1,0 +1,33 @@
+script	needs DM_HOME	uses DB	calls	notes
+add_geo_to_addresses.sh	yes	no	get_latlong.sh	uses ~/etc/opencagedata.key, $DM_ETC/address.info
+cfg_to_json.sh	no	no	.	.
+chk_1_address.sh	yes	no	get_addrs_from_runs.sh, get_latlong.sh	.
+chk_all_addresses.sh	yes	no	chk_1_address.sh	.
+chk_runs_file.sh	no	no	.	.
+color_map_data.sh	yes	no	.	.
+combine_time_and_addr.sh	yes	no	.	Obs?
+find_geo_aliases.sh	yes	yes	.	.
+fix_addresses.sh	no	no	.	.
+fmt_geo_errors.sh	no	no	.	.
+get_actual_hours.sh	no	no	.	.
+get_addrs_from_runs.sh	yes	no	.	uses $DM_ETC/address.info
+get_job_times.sh	no	no	.	.
+get_latlong.sh	no	no	.	.
+get_new_geo.sh	yes	no	add_geo_to_addresses.sh	.
+get_new_sources.sh	no	no	.	.
+get_pay_data.sh	no	no	.	.
+get_src_times.sh	no	no	.	.
+insert_new_addrs.sh	yes	yes	.	.
+insert_new_dashes.sh	yes	yes	.	.
+insert_new_jobs.sh	yes	yes	.	.
+map_by_dash_rate.sh	yes	no	.	.
+map_by_date.sh	no	yes	.	.
+mk_dash_summary.sh	no	no	.	.
+mk_dash_totals.sh	no	no	.	.
+mk_geojson.sh	no	no	.	.
+mk_map.sh	no	no	.	Obs?
+mk_pay_summary.sh	no	no	.	.
+plot_pay_rates.sh	yes	no	.	.
+plot_src_info.sh	yes	no	.	.
+update_addrs_with_geo_errors.sh	yes	yes	.	.
+update_addrs_with_geo_loc.sh	yes	yes	.	.

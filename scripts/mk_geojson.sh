@@ -5,27 +5,6 @@ export LC_ALL=C
 
 U_MSG="usage: $0 [ -help ] -c conf-file [ address-data-file ]"
 
-if [ -z "$DM_HOME" ] ; then
-	LOG ERROR "DM_HOME is not defined"
-	exit 1
-fi
-DM_ADDRS=$DM_HOME/addrs
-DM_ETC=$DM_HOME/etc
-DM_LIB=$DM_HOME/lib
-DM_SCRIPTS=$DM_HOME/scripts
-DM_DB=$DM_ADDRS/dd_maps.db
-
-# awk v3 does not support include
-AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
-if [ "$AWK_VERSION" == "3" ] ; then
-	AWK=igawk
-elif [ "$AWK_VERSION" == "4" ] ; then
-	AWK=awk
-else
-	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
-	exit 1
-fi
-
 CFILE=
 FILE=
 
@@ -71,7 +50,7 @@ if [ -z "$CFILE" ] ; then
 fi
 
 sort -t $'\t' -k 4,4 -k 5,5 $FILE |\
-$AWK -F'\t' 'BEGIN {
+awk -F'\t' 'BEGIN {
 	PI = 4 * atan2(1, 1)
 	RAD = 0.0001
 	cfile = "'"$CFILE"'"
@@ -121,6 +100,7 @@ END {
 	for(i = 1; i <= n_pgroups; i++){
 		geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
 		for(j = 0; j < pg_counts[i]; j++){
+			h_color = colors[pg_starts[i] + j] != "."
 			h_style = styles[pg_starts[i] + j] != "."
 			printf("{\n")
 			printf("  \"type\": \"Feature\",\n")
@@ -130,7 +110,8 @@ END {
 			printf("},\n")
 			printf("  \"properties\": {\n")
 			printf("    \"title\": \"%s\",\n", titles[pg_starts[i] + j])
-			printf("    \"marker-color\": \"%s\"%s\n", colors[pg_starts[i] + j], h_style ? "," : "")
+			if(h_color)
+				printf("    \"marker-color\": \"%s\"%s\n", colors[pg_starts[i] + j], h_style ? "," : "")
 			if(h_style)
 				printf("    %s\n", styles[pg_starts[i] + j])
 			printf("  }\n")
