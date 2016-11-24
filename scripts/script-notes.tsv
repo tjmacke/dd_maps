@@ -22,7 +22,7 @@ insert_new_addrs.sh	yes	yes	.	.
 insert_new_dashes.sh	yes	yes	.	.
 insert_new_jobs.sh	yes	yes	.	.
 map_by_dash_rate.sh	yes	no	.	.
-map_by_date.sh	no	yes	.	.
+map_by_date.sh	yes	yes	.	.
 mk_dash_summary.sh	no	no	.	.
 mk_dash_totals.sh	no	no	.	.
 mk_geojson.sh	no	no	.	.
