@@ -1,20 +1,20 @@
 script	uses DM_HOME	uses sqlite3	calls	notes
-add_geo_to_addresses.sh	yes	no	get_latlong.sh	uses DM_ETC/address.info
+add_geo_to_addrs.sh	yes	no	get_latlong.sh	uses DM_ETC/address.info
 add_new_addrs.sh	yes	yes	get_addrs_from_runs.sh, insert_new_addrs.sh	.
 cfg_to_json.sh	no	no	.	.
-chk_1_address.sh	yes	no	get_addrs_from_runs.sh, get_latlong.sh	.
-chk_all_addresses.sh	yes	no	chk_1_address.sh	.
+chk_1_addr.sh	yes	no	get_addrs_from_runs.sh, get_latlong.sh	.
+chk_all_addrs.sh	yes	no	chk_1_addr.sh	.
 chk_runs_file.sh	no	no	.	.
 color_map_data.sh	yes	no	.	.
 combine_time_and_addr.sh	yes	no	.	Obs?
 find_geo_aliases.sh	yes	yes	.	.
-fix_addresses.sh	no	no	.	.
+fix_addrs.sh	no	no	.	.
 fmt_geo_errors.sh	no	no	.	.
 get_actual_hours.sh	no	no	.	.
 get_addrs_from_runs.sh	yes	no	.	uses $DM_ETC/address.info
 get_job_times.sh	no	no	.	uses ~/etc/opencagedata.key, $JU_BIN/json_get
 get_latlong.sh	no	no	.	.
-get_new_geo.sh	yes	no	add_geo_to_addresses.sh	.
+get_new_geo.sh	yes	no	add_geo_to_addrs.sh	.
 get_new_sources.sh	no	no	.	.
 get_pay_data.sh	no	no	.	.
 get_src_times.sh	no	no	.	.

@@ -101,7 +101,7 @@ while read line ; do
 		continue
 	fi
 	atype="$(echo "$line" | awk -F: '{ print $3 }')"
-	$DM_SCRIPTS/chk_1_address.sh -dh $DD_HOME -at $atype -m $MONTH "$qry"
+	$DM_SCRIPTS/chk_1_addr.sh -dh $DD_HOME -at $atype -m $MONTH "$qry"
 	echo ""
 	if [ $t_sleep -gt 0 ] ; then
 		sleep $t_sleep
