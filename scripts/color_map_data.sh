@@ -118,7 +118,19 @@ BEGIN {
 	sfile = "'"$SFILE"'"
 }
 {
-	# TODO: allow for a mix of lengths?
+	# Rules: 
+	# 1. all lines must have the same number of fields.
+	# 2. number of fields must be 6 or 12 (points or lines)
+	# 3. For 12 field lines, at least 1 color and 1 size must be "off", ie have value = "."
+	
+	if(n_fields == 0)
+		n_fields = NF
+	else if(NF != n_fields){
+		printf("ERROR: line %d: wrong number of fields %d, must be %d\n", NR, NF, n_fields) > "/dev/stderr"
+		err = 1
+		exit err
+	}
+
 	n_points++
 	color_data[n_points] = $1
 	size_data[n_points] = $2
@@ -131,50 +143,20 @@ END {
 	if(err)
 		exit err
 
-	# use_color at this point means we have a color interp in the config
+ 	# use_color at this point means we have a color interp in the config
 	if(use_color){
-		use_color = 0
-		for(i = 1; i <= n_points; i++){
-			if(color_data[i] != "."){
-				color_data_min = color_data[i]
-				color_data_max = color_data[i]
-				use_color = 1
-				break
-			}
-		}
-		if(use_color){
-			for(i = 1; i <= n_points; i++){
-				if(color_data[i] == ".")
-					continue;
-				if(color_data[i] < color_data_min)
-					color_data_min = color_data[i]
-				else if(color_data[i] > color_data_max)
-					color_data_max = color_data[i]
-			}
-		}
+		use_color = get_data_stats(n_points, color_data, stats)
+		color_data_min = stats["min"]
+		color_data_max = stats["max"]
+		delete stats
 	}
 
-	# use_size at this point means we have a size interp in the config
-	if(use_size){
-		use_size = 0
-		for(i = 1; i <= n_points; i++){
-			if(size_data[i] != "."){
-				size_data_min = size_data[1]
-				size_data_max = size_data[1]
-				use_size = 1
-				break;
-			}
-		}
-		if(use_size){
-			for(i = 1; i <= n_points; i++){
-				if(size_data[i] == ".")
-					continue;
-				if(size_data[i] < size_data_min)
-					size_data_min = size_data[i]
-				else if(size_data[i] > size_data_max)
-					size_data_max = size_data[i]
-			}
-		}
+ 	# use_size at this point means we have a size interp in the config
+ 	if(use_size){
+		use_size = get_data_stats(n_points, size_data, stats)
+		size_data_min = stats["min"]
+		size_data_max = stats["max"]
+		delete stats
 	}
 
 	for(i = 1; i <= n_points; i++){
@@ -221,4 +203,31 @@ END {
 	}
 
 	exit 0
+}
+function get_data_stats(n_data, data, d_stats,   use_data, i, d_min, d_max) {
+
+	d_stats["use"] = 0
+	use_data = 0
+	for(i = 1; i <= n_data; i++){
+		if(data[i] != "."){
+			d_min = data[i]
+			d_max = data[i]
+			use_data = 1
+			break
+		}
+	}
+	if(use_data){
+		for(i = 1; i <= n_data; i++){
+			if(data[i] == ".")
+				continue;
+			if(data[i] < d_min)
+				d_min = data[i]
+			else if(data[i] > d_max)
+				d_max = data[i]
+		}
+		d_stats["use"] = 1
+		d_stats["min"] = d_min
+		d_stats["max"] = d_max
+	}
+	return use_data
 }' $FILE
