@@ -106,14 +106,14 @@ BEGIN {
 	}else
 		use_color = 0
 
-	if(("_globals", "v2_values") in config){
-		if(IU_init(config, v2, "v2", "v2_values", "v2_breaks")){
+	if(("_globals", "size_values") in config){
+		if(IU_init(config, size, "size", "size_values", "size_breaks")){
 			err = 1
 			exit err
 		}
-		use_v2 = 1
+		use_size = 1
 	}else
-		use_v2 = 0
+		use_size = 0
 
 	sfile = "'"$SFILE"'"
 }
@@ -121,7 +121,7 @@ BEGIN {
 	# TODO: allow for a mix of lengths?
 	n_points++
 	color_data[n_points] = $1
-	v2_data[n_points] = $2
+	size_data[n_points] = $2
 	labels[n_points] = $3
 	titles[n_points] = $4
 	longs[n_points] = $5
@@ -154,25 +154,25 @@ END {
 		}
 	}
 
-	# use_v2 at this point means we have a v2 interp in the config
-	if(use_v2){
-		use_v2 = 0
+	# use_size at this point means we have a size interp in the config
+	if(use_size){
+		use_size = 0
 		for(i = 1; i <= n_points; i++){
-			if(v2_data[i] != "."){
-				v2_data_min = v2_data[1]
-				v2_data_max = v2_data[1]
-				use_v2 = 1
+			if(size_data[i] != "."){
+				size_data_min = size_data[1]
+				size_data_max = size_data[1]
+				use_size = 1
 				break;
 			}
 		}
-		if(use_v2){
+		if(use_size){
 			for(i = 1; i <= n_points; i++){
-				if(v2_data[i] == ".")
+				if(size_data[i] == ".")
 					continue;
-				if(v2_data[i] < v2_data_min)
-					v2_data_min = v2_data[i]
-				else if(v2_data[i] > v2_data_max)
-					v2_data_max = v2_data[i]
+				if(size_data[i] < size_data_min)
+					size_data_min = size_data[i]
+				else if(size_data[i] > size_data_max)
+					size_data_max = size_data[i]
 			}
 		}
 	}
@@ -188,11 +188,11 @@ END {
 			}
 		}
 
-		# use_v2 at this point means we have some actual v2 values
+		# use_size at this point means we have some actual size values
 		style_msg = "."
-		if(use_v2){
-			if(v2_data[i] != "."){
-				mrkr_size = IU_interpolate(v2, v2_data[i], v2_data_min, v2_data_max)
+		if(use_size){
+			if(size_data[i] != "."){
+				mrkr_size = IU_interpolate(size, size_data[i], size_data_min, size_data_max)
 				style_msg = sprintf("\"marker-size\": \"%s\"", mrkr_size)
 			}
 		}
@@ -209,12 +209,12 @@ END {
 				printf(" | %d,%.1f", color["counts", i], 100.0*color["counts", i]/color["tcounts"]) >> sfile
 			printf("\n") >> sfile
 		}
-		if(use_v2){
-			printf("v2_min_value = %g\n", v2_data_min) >> sfile
-			printf("v2_max_value = %g\n", v2_data_max) >> sfile
-			printf("v2_stats = %d,%.1f", v2["counts", 1], 100.0*v2["counts", 1]/v2["tcounts"]) >> sfile
-			for(i = 2; i <= v2["nvalues"]; i++)
-				printf(" | %d,%.1f", v2["counts", i], 100.0*v2["counts", i]/v2["tcounts"]) >> sfile
+		if(use_size){
+			printf("size_min_value = %g\n", size_data_min) >> sfile
+			printf("size_max_value = %g\n", size_data_max) >> sfile
+			printf("size_stats = %d,%.1f", size["counts", 1], 100.0*size["counts", 1]/size["tcounts"]) >> sfile
+			for(i = 2; i <= size["nvalues"]; i++)
+				printf(" | %d,%.1f", size["counts", i], 100.0*size["counts", i]/size["tcounts"]) >> sfile
 			printf("\n") >> sfile
 		}
 		close(sfile)

@@ -58,52 +58,52 @@ function makeMapScales(scaleData) {
 
   makeScale(colorScaleProps);
 
-  var v2ScaleProps = {};
+  var sizeScaleProps = {};
   // properties that define the scale
-  v2ScaleProps.sp_tick_font_size = fontSize;
-  v2ScaleProps.sp_xoff           = 5;
-  v2ScaleProps.sp_width          = 75;
-  v2ScaleProps.sp_height         = 15;
-  v2ScaleProps.sp_tick_len       = 5;
-  v2ScaleProps.sp_xHeight        = Math.round(0.7 * v2ScaleProps.sp_tick_font_size);
-  v2ScaleProps.sp_yoff           = v2ScaleProps.sp_tick_font_size + 2;
-  v2ScaleProps.sp_tick_yoff      = v2ScaleProps.sp_yoff + v2ScaleProps.sp_height;
-  v2ScaleProps.sp_tick_text_yoff = v2ScaleProps.sp_tick_yoff + v2ScaleProps.sp_tick_len + v2ScaleProps.sp_xHeight;
+  sizeScaleProps.sp_tick_font_size = fontSize;
+  sizeScaleProps.sp_xoff           = 5;
+  sizeScaleProps.sp_width          = 75;
+  sizeScaleProps.sp_height         = 15;
+  sizeScaleProps.sp_tick_len       = 5;
+  sizeScaleProps.sp_xHeight        = Math.round(0.7 * sizeScaleProps.sp_tick_font_size);
+  sizeScaleProps.sp_yoff           = sizeScaleProps.sp_tick_font_size + 2;
+  sizeScaleProps.sp_tick_yoff      = sizeScaleProps.sp_yoff + sizeScaleProps.sp_height;
+  sizeScaleProps.sp_tick_text_yoff = sizeScaleProps.sp_tick_yoff + sizeScaleProps.sp_tick_len + sizeScaleProps.sp_xHeight;
 
   // properties that provide the scale data
-  v2ScaleProps.sp_divId = "#v2Scale";
-  v2ScaleProps.sp_svgId = "#svgV2Scale";
-  v2ScaleProps.sp_values = scaleData.v2_values;
-  var v2_sp_breaks = scaleData.v2_breaks;
-  v2ScaleProps.sp_breaks_idx_off = 1;
-  if (("v2_min_value" in scaleData) || ("v2_max_value" in scaleData)) {
-    v2_sp_breaks = [];
-    if ("v2_min_value" in scaleData) {
-      v2_sp_breaks.push(Math.floor(scaleData.v2_min_value[0]));
-      v2ScaleProps.sp_breaks_idx_off = 0;
+  sizeScaleProps.sp_divId = "#sizeScale";
+  sizeScaleProps.sp_svgId = "#svgSizeScale";
+  sizeScaleProps.sp_values = scaleData.size_values;
+  var size_sp_breaks = scaleData.size_breaks;
+  sizeScaleProps.sp_breaks_idx_off = 1;
+  if (("size_min_value" in scaleData) || ("size_max_value" in scaleData)) {
+    size_sp_breaks = [];
+    if ("size_min_value" in scaleData) {
+      size_sp_breaks.push(Math.floor(scaleData.size_min_value[0]));
+      sizeScaleProps.sp_breaks_idx_off = 0;
     }
-    for(var i = 0; i < scaleData.v2_breaks.length; i++)
-      v2_sp_breaks.push(scaleData.v2_breaks[i]);
-    if ("v2_max_value" in scaleData) {
-      v2_sp_breaks.push(Math.ceil(scaleData.v2_max_value[0]));
+    for(var i = 0; i < scaleData.size_breaks.length; i++)
+      size_sp_breaks.push(scaleData.size_breaks[i]);
+    if ("size_max_value" in scaleData) {
+      size_sp_breaks.push(Math.ceil(scaleData.size_max_value[0]));
     }
   }
-  v2ScaleProps.sp_breaks = v2_sp_breaks;
-  v2ScaleProps.sp_title = ("v2_title" in scaleData) ? scaleData.v2_title : ["Pin Sizes"];
-  v2ScaleProps.sp_fill_boxes_func = function(d, i) {
+  sizeScaleProps.sp_breaks = size_sp_breaks;
+  sizeScaleProps.sp_title = ("size_title" in scaleData) ? scaleData.size_title : ["Pin Sizes"];
+  sizeScaleProps.sp_fill_boxes_func = function(d, i) {
     return "white";
   }
-  if(!("v2_stats" in scaleData)) {
-    v2ScaleProps.sp_box_text = scaleData.v2_values;
+  if(!("size_stats" in scaleData)) {
+    sizeScaleProps.sp_box_text = scaleData.size_values;
   } else {
-    v2ScaleProps.sp_box_text = scaleData.v2_values;
-    var v2_box_text = [];
-    for(var i = 0; i < scaleData.v2_stats.length; i++){
-      v2_box_text.push(scaleData.v2_values[i] + ", " + scaleData.v2_stats[i][1] + "%"); 
+    sizeScaleProps.sp_box_text = scaleData.size_values;
+    var size_box_text = [];
+    for(var i = 0; i < scaleData.size_stats.length; i++){
+      size_box_text.push(scaleData.size_values[i] + ", " + scaleData.size_stats[i][1] + "%"); 
     }
-    v2ScaleProps.sp_box_text = v2_box_text;
+    sizeScaleProps.sp_box_text = size_box_text;
   }
-  v2ScaleProps.sp_box_text_color = "black";
+  sizeScaleProps.sp_box_text_color = "black";
 
-  makeScale(v2ScaleProps);
+  makeScale(sizeScaleProps);
 }
