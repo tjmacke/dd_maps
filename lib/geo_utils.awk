@@ -60,6 +60,12 @@ function GU_mk_point(file, color, style, long, lat, title, last,   h_color, h_st
 	printf("  }\n")									> file
 	printf("}%s\n", !last ? "," : "")						> file
 }
+function GU_mk_line(file, lng_1, lat_1, lng_2, lat_2, last) {
+	printf("{\n")																> file
+	printf("  \"type\": \"Feature\",\n")													> file
+	printf("  \"geometry\": {\"type\": \"LineString\", \"coordinates\": [[%.5f, %.5f], [%.5f, %.5f]]}\n", lng_1, lat_1, lng_2, lat_2)	> file
+	printf("}%s\n", !last ? "," : "")													> file
+}
 function GU_gc_dist(lng_1, lat_1, lng_2, lat_2,   R_EARTH, D2R, ph1_1, phi_2, delta_phi, delta_lambda, a, c) {
 
 	R_EARTH = 3.959e3	# mean radius in miles

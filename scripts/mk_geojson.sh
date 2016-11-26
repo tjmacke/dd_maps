@@ -170,19 +170,53 @@ END {
 		sg_start = 1
 		sg_count = 1
 		sg_title = titles[sg_start]
-		for(i = 2; i <= n_points; i++){
-			if(titles[i] != sg_title){
+		for(p = 2; p <= n_points; p++){
+			if(titles[p] != sg_title){
 				n_pgroups = GU_find_pgroups(sg_start, sg_count, longs_2, lats_2, pg_starts, pg_counts)
-				printf("sg: %4d %2d %d %s\n", sg_start, sg_count, n_pgroups, sg_title)
+				put_src = 1
+				for(i = 1; i <= n_pgroups; i++){
+					s_idx = pg_starts[i]
+					# Put the source point
+					if(put_src){
+						put_src = 0
+						s_idx = pg_starts[i]
+						GU_mk_point("/dev/stdout", colors[s_idx], styles[s_idx], longs[s_idx], lats[s_idx], titles[s_idx], 0)
+					}
 
-				sg_start = i
+					# Put the dst points
+					GU_geo_adjust(longs_2[pg_starts[i]], lats_2[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
+					for(j = 0; j < pg_counts[i]; j++){
+						d_idx = pg_starts[i] + j
+						GU_mk_point("/dev/stdout", colors_2[d_idx], styles_2[d_idx],
+							longs_2[d_idx] + long_adj[j+1], lats_2[d_idx] + lat_adj[j+1], titles_2[d_idx], 0)
+						GU_mk_line("/dev/stdout", longs[s_idx], lats[s_idx], longs_2[d_idx], lats_2[d_idx], d_idx == n_points)
+					}
+				}
+				sg_start = p
 				sg_count = 1
-				sg_title = titles[i]
+				sg_title = titles[p]
 			}else
 				sg_count++
 		}
 		n_pgroups = GU_find_pgroups(sg_start, sg_count, longs_2, lats_2, pg_starts, pg_counts)
-		printf("sg: %4d %2d %d %s\n", sg_start, sg_count, n_pgroups, sg_title)
+		put_src = 1
+		for(i = 1; i <= n_pgroups; i++){
+			s_idx = pg_starts[i]
+			# Put the source point
+			if(put_src){
+				put_src = 0
+				GU_mk_point("/dev/stdout", colors[s_idx], styles[s_idx], longs[s_idx], lats[s_idx], titles[s_idx], 0)
+			}
+
+			# Put the dst points
+			GU_geo_adjust(longs_2[pg_starts[i]], lats_2[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
+			for(j = 0; j < pg_counts[i]; j++){
+				d_idx = pg_starts[i] + j;
+				GU_mk_point("/dev/stdout", colors_2[s_idx], styles_2[s_idx],
+					longs_2[d_idx] + long_adj[j+1], lats_2[d_idx] + lat_adj[j+1], titles_2[d_idx], 0)
+				GU_mk_line("/dev/stdout", longs[s_idx], lats[s_idx], longs_2[d_idx], lats_2[d_idx], d_idx == n_points)
+			}
+		}
 	}
 	printf("]\n")
 

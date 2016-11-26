@@ -213,7 +213,8 @@ END {
 		}
 
 		# use_size at this point means we have some actual size values
-		style_msg_1 = style_msg_2 = "."
+#		style_msg_1 = style_msg_2 = "."
+		style_msg_1 = style_msg_2 = sprintf("\"marker-size\": \"%s\"", "small")
 		if(use_size){
 			if(size_data[i] != "."){
 				mrkr_size = IU_interpolate(size, size_data[i], size_data_min, size_data_max)
