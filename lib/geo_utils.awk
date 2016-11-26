@@ -42,6 +42,24 @@ function GU_geo_adjust(long, lat, n, long_adj, lat_adj,   PI, RAD, i, a) {
 		}
 	}
 }
+function GU_mk_point(file, color, style, long, lat, title, last,   h_color, h_style) {
+ 	h_color = color != "."
+	h_style = style != "."
+ 	printf("{\n")									> file
+ 	printf("  \"type\": \"Feature\",\n")						> file
+ 	printf("  \"geometry\": {")							> file
+ 	printf("\"type\": \"Point\", ")							> file
+ 	printf("\"coordinates\": [%.5f, %.5f]", long, lat)				> file
+ 	printf("},\n")									> file
+ 	printf("  \"properties\": {\n")							> file
+ 	printf("    \"title\": \"%s\",\n", title)					> file
+	if(h_color)
+		printf("    \"marker-color\": \"%s\"%s\n", color, h_style ? "," : "")	> file
+	if(h_style)
+		printf("    %s\n", style)						> file
+	printf("  }\n")									> file
+	printf("}%s\n", !last ? "," : "")						> file
+}
 function GU_gc_dist(lng_1, lat_1, lng_2, lat_2,   R_EARTH, D2R, ph1_1, phi_2, delta_phi, delta_lambda, a, c) {
 
 	R_EARTH = 3.959e3	# mean radius in miles

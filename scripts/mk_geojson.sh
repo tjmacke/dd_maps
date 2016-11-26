@@ -158,22 +158,9 @@ END {
 		for(i = 1; i <= n_pgroups; i++){
 			GU_geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
 			for(j = 0; j < pg_counts[i]; j++){
-				h_color = colors[pg_starts[i] + j] != "."
-				h_style = styles[pg_starts[i] + j] != "."
-				printf("{\n")
-				printf("  \"type\": \"Feature\",\n")
-				printf("  \"geometry\": {")
-				printf("\"type\": \"Point\", ")
-				printf("\"coordinates\": [%.5f, %.5f]", longs[pg_starts[i] + j] + long_adj[j+1], lats[pg_starts[i] + j] + lat_adj[j+1])
-				printf("},\n")
-				printf("  \"properties\": {\n")
-				printf("    \"title\": \"%s\",\n", titles[pg_starts[i] + j])
-				if(h_color)
-					printf("    \"marker-color\": \"%s\"%s\n", colors[pg_starts[i] + j], h_style ? "," : "")
-				if(h_style)
-					printf("    %s\n", styles[pg_starts[i] + j])
-				printf("  }\n")
-				printf("}%s\n", (pg_starts[i] + j < n_points) ? "," : "")
+				s_idx = pg_starts[i] + j;
+				GU_mk_point("/dev/stdout",
+					colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], s_idx == n_points)
 			}
 		}
 	}else{
