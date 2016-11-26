@@ -13,7 +13,6 @@ DM_ADDRS=$DM_HOME/addrs
 DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
-DM_DB=$DM_ADDRS/dd_maps.db
 
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
@@ -138,6 +137,15 @@ BEGIN {
 	titles[n_points] = $4
 	longs[n_points] = $5
 	lats[n_points] = $6
+
+	if(n_fields == 12){
+		color_data_2[n_points] = $7
+		size_data_2[n_points] = $8
+		labels_2[n_points] = $9
+		titles_2[n_points] = $10
+		longs_2[n_points] = $11
+		lats_2[n_points] = $12
+	}
 }
 END {
 	if(err)
@@ -149,41 +157,83 @@ END {
 		color_data_min = stats["min"]
 		color_data_max = stats["max"]
 		delete stats
+
+		if(n_fields == 12){
+			use_color_2 = get_data_stats(n_points, color_data_2, stats)
+			if(!use_color){
+				color_data_min = stats["min"]
+				color_data_max = stats["max"]
+			}
+			delete stats
+			if(use_color && use_color_2){
+				printf("ERROR: at most 1 of src or dst points can have color info\n") > "/dev/stdee"
+				exit 1
+			}
+		}else
+			use_color_2 = 0
 	}
 
  	# use_size at this point means we have a size interp in the config
  	if(use_size){
-		use_size = get_data_stats(n_points, size_data, stats)
+		use_size= get_data_stats(n_points, size_data, stats)
 		size_data_min = stats["min"]
 		size_data_max = stats["max"]
 		delete stats
+
+		if(n_fields == 12){
+			use_size_2 = get_data_stats(n_points, size_data_2, stats)
+			if(!use_size){
+				size_data_min = stats["min"]
+				size_data_max = stats["max"]
+			}
+			delete stats
+			if(use_size && use_size_2){
+				printf("ERROR: at most 1 of src or dst point can have size info\n") > "/dev/stderr"
+				exit 1
+			}
+		}else
+			use_size_2 = 0
 	}
 
 	for(i = 1; i <= n_points; i++){
 		# use_color at this point means we have some actual color values
-		hex_color = "#FFE4E1"
+		hex_color_1 = hex_color_2 = "#FFE4E1"
 		if(use_color){
 			if(color_data[i] != "."){
 				rgb = IU_interpolate(color, color_data[i], color_data_min, color_data_max)
 				# TODO: figure out whehter CU_ should return #XXX or #XXXXXX
-				hex_color = "#" CU_rgb_to_24bit_color(rgb)
+				hex_color_1 = "#" CU_rgb_to_24bit_color(rgb)
+			}
+		}else if(use_color_2){
+			if(color_data_2[i] != "."){
+				rgb = IU_interpolate(color, color_data_2[i], color_data_min, color_data_max)
+				# TODO: figure out whehter CU_ should return #XXX or #XXXXXX
+				hex_color_2 = "#" CU_rgb_to_24bit_color(rgb)
 			}
 		}
 
 		# use_size at this point means we have some actual size values
-		style_msg = "."
+		style_msg_1 = style_msg_2 = "."
 		if(use_size){
 			if(size_data[i] != "."){
 				mrkr_size = IU_interpolate(size, size_data[i], size_data_min, size_data_max)
-				style_msg = sprintf("\"marker-size\": \"%s\"", mrkr_size)
+				style_msg_1 = sprintf("\"marker-size\": \"%s\"", mrkr_size)
+			}
+		}else if(use_size_2){
+			if(size_data_2[i] != "."){
+				mrkr_size = IU_interpolate(size, size_data_2[i], size_data_min, size_data_max)
+				style_msg_2 = sprintf("\"marker-size\": \"%s\"", mrkr_size)
 			}
 		}
 
-		printf("%s\t%s\t%s:<br/>%s\t%s\t%s\n", hex_color, style_msg, titles[i], labels[i], longs[i], lats[i])
+		printf("%s\t%s\t%s:<br/>%s\t%s\t%s", hex_color_1, style_msg_1, titles[i], labels[i], longs[i], lats[i])
+		if(n_fields == 12)
+			printf("\t%s\t%s\t%s:<br/>%s\t%s\t%s", hex_color_2, style_msg_2, titles_2[i], labels_2[i], longs_2[i], lats_2[i])
+		printf("\n")
 	}
 
 	if(sfile != ""){
-		if(use_color){
+		if(use_color || use_color_2){
 			printf("color_min_value = %g\n", color_data_min) >> sfile
 			printf("color_max_value = %g\n", color_data_max) >> sfile
 			printf("color_stats = %d,%.1f", color["counts", 1], 100.0*color["counts", 1]/color["tcounts"]) >> sfile
@@ -191,7 +241,7 @@ END {
 				printf(" | %d,%.1f", color["counts", i], 100.0*color["counts", i]/color["tcounts"]) >> sfile
 			printf("\n") >> sfile
 		}
-		if(use_size){
+		if(use_size || use_size_2){
 			printf("size_min_value = %g\n", size_data_min) >> sfile
 			printf("size_max_value = %g\n", size_data_max) >> sfile
 			printf("size_stats = %d,%.1f", size["counts", 1], 100.0*size["counts", 1]/size["tcounts"]) >> sfile

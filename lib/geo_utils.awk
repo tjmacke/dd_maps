@@ -1,4 +1,4 @@
-function gc_dist(lng_1, lat_1, lng_2, lat_2,   R_EARTH, D2R, ph1_1, phi_2, delta_phi, delta_lambda, a, c) {
+function GU_gc_dist(lng_1, lat_1, lng_2, lat_2,   R_EARTH, D2R, ph1_1, phi_2, delta_phi, delta_lambda, a, c) {
 
 	R_EARTH = 3.959e3	# mean radius in miles
 	D2R = (2*atan2(0, -1))/360.0

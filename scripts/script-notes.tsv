@@ -1,6 +1,6 @@
 script	uses DM_HOME	uses sqlite3	calls	notes
 add_geo_to_addrs.sh	yes	no	get_latlong.sh	uses DM_ETC/address.info
-add_new_addrs.sh	yes	yes	get_addrs_from_runs.sh, insert_new_addrs.sh	.
+add_new_addrs.sh	yes	no	get_addrs_from_runs.sh, insert_new_addrs.sh	.
 cfg_to_json.sh	no	no	.	.
 chk_1_addr.sh	yes	no	get_addrs_from_runs.sh, get_latlong.sh	.
 chk_all_addrs.sh	yes	no	chk_1_addr.sh	.
@@ -22,7 +22,7 @@ insert_new_addrs.sh	yes	yes	.	.
 insert_new_dashes.sh	yes	yes	.	.
 insert_new_jobs.sh	yes	yes	.	.
 map_by_dash_rate.sh	yes	no	.	.
-map_by_date.sh	yes	yes	.	.
+map_by_date.sh	yes	no	.	.
 mk_dash_summary.sh	no	no	.	.
 mk_dash_totals.sh	no	no	.	.
 mk_geojson.sh	no	no	.	.
