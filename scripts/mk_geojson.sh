@@ -14,6 +14,19 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
+# awk v3 does not support include
+AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
+if [ "$AWK_VERSION" == "3" ] ; then
+	AWK=igawk
+	GEO_UTILS="$DM_LIB/geo_utils.awk"
+elif [ "$AWK_VERSION" == "4" ] ; then
+	AWK=awk
+	GEO_UTILS="\"$DM_LIB/geo_utils.awk\""
+else
+	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
+	exit 1
+fi
+
 CFILE=
 GTYPE=
 FILE=
@@ -84,9 +97,11 @@ else
 fi
 
 sort -t $'\t' $skeys $FILE |\
-awk -F'\t' 'BEGIN {
-	PI = 4 * atan2(1, 1)
-	RAD = 0.0001
+$AWK -F'\t' '
+@include '"$GEO_UTILS"'
+BEGIN {
+#	PI = 4 * atan2(1, 1)
+#	RAD = 0.0001
 	cfile = "'"$CFILE"'"
 }
 {
@@ -139,9 +154,9 @@ END {
 	if(n_fields == 5){
 		# code for points
 		# points have been sorted on geo so points w/same geo are consecutive
-		n_pgroups = find_pgroups(1, n_points, longs, lats, pg_starts, pg_counts)
+		n_pgroups = GU_find_pgroups(1, n_points, longs, lats, pg_starts, pg_counts)
 		for(i = 1; i <= n_pgroups; i++){
-			geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
+			GU_geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
 			for(j = 0; j < pg_counts[i]; j++){
 				h_color = colors[pg_starts[i] + j] != "."
 				h_style = styles[pg_starts[i] + j] != "."
@@ -170,7 +185,7 @@ END {
 		sg_title = titles[sg_start]
 		for(i = 2; i <= n_points; i++){
 			if(titles[i] != sg_title){
-				n_pgroups = find_pgroups(sg_start, sg_count, longs_2, lats_2, pg_starts, pg_counts)
+				n_pgroups = GU_find_pgroups(sg_start, sg_count, longs_2, lats_2, pg_starts, pg_counts)
 				printf("sg: %4d %2d %d %s\n", sg_start, sg_count, n_pgroups, sg_title)
 
 				sg_start = i
@@ -179,51 +194,10 @@ END {
 			}else
 				sg_count++
 		}
-		n_pgroups = find_pgroups(sg_start, sg_count, longs_2, lats_2, pg_starts, pg_counts)
+		n_pgroups = GU_find_pgroups(sg_start, sg_count, longs_2, lats_2, pg_starts, pg_counts)
 		printf("sg: %4d %2d %d %s\n", sg_start, sg_count, n_pgroups, sg_title)
 	}
 	printf("]\n")
 
 	printf("}\n")
-}
-function find_pgroups(start, count, longs, lats, pg_starts, pg_counts,   n_pgroups, l_geo, geo, i) {
-
-	n_pgroups = 1
-	pg_starts[n_pgroups] = start
-	pg_counts[n_pgroups] = 1
-	l_geo[1] = longs[start]
-	l_geo[2] = lats[start]
-	for(i = 1; i < count; i++){
-		geo[1] = longs[start + i]
-		geo[2] = longs[start + i]
-		if(geo_equal(geo, l_geo)){
-			pg_counts[n_pgroups]++
-		}else{
-			n_pgroups++
-			pg_starts[n_pgroups] = start + i
-			pg_counts[n_pgroups] = 1
-		}
-		l_geo[1] = geo[1]
-		l_geo[2] = geo[2]
-	}
-
-	return n_pgroups
-}
-function geo_equal(g1, g2) {
-	return g1[1] == g2[1] && g1[2] == g2[2]
-}
-function geo_isnull(g) {
-	return g[1] == "" || g[2] == ""
-}
-function geo_adjust(long, lat, n, long_adj, lat_adj,   i, a) {
-
-	long_adj[1] = 0
-	lat_adj[1] = 0
-	if(n > 1){
-		a = 2.0*PI/(n-1)
-		for(i = 2; i <= n; i++){
-			long_adj[i] = RAD * sin(a * (i-2))
-			lat_adj[i] = RAD * cos(a * (i-2))
-		}
-	}
 }'
