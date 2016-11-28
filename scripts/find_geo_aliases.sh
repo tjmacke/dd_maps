@@ -39,7 +39,7 @@ while [ $# -gt 0 ] ; do
 	esac
 done
 
-echo -e ".mode tabs\nSELECT address, lng, lat FROM addresses WHERE a_stat = 'G' AND as_reason = 'geo' ORDER BY lng, lat ;"	|\
+echo -e ".mode tabs\nSELECT address, lng, lat FROM addresses WHERE a_stat = 'G' AND as_reason LIKE 'geo.ok.%' ORDER BY lng, lat ;"	|\
 sqlite3 $DM_DB	|\
 awk -F'\t' 'BEGIN {
 	l_key[1] = ""
