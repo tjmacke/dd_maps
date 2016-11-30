@@ -8,7 +8,7 @@ chk_runs_file.sh	no	no	.	.
 color_map_data.sh	yes	no	.	.
 combine_time_and_addr.sh	yes	no	.	Obs?
 find_geo_aliases.sh	yes	yes	.	.
-fix_addrs.sh	no	no	.	.
+fix_addrs_in_runs.sh	no	no	.	.
 fmt_geo_errors.sh	no	no	.	.
 get_actual_hours.sh	no	no	.	.
 get_addrs_from_runs.sh	yes	no	.	uses $DM_ETC/address.info

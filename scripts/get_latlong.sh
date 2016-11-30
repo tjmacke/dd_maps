@@ -39,7 +39,7 @@ if [ $# -ne 0 ] ; then
 fi
 
 if [ -z "$ADDR" ] ; then
-	LOG ERROR "missing url-safe-address argument"
+	LOG ERROR "missing canonical-address argument"
 	echo "$U_MSG" 1>&2
 	exit 1
 fi
