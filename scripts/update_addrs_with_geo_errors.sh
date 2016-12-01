@@ -62,7 +62,7 @@ while read line ; do
 	{
 		printf(".log stderr\\n")
 		printf("UPDATE addresses SET a_stat = %s, as_reason = %s WHERE address = %s AND a_stat = %s AND as_reason = %s;\n",
-			esc_string("B"), esc_string("geofail"), esc_string($0), esc_string("G"), esc_string("new"))
+			esc_string("B"), esc_string("geo.fail"), esc_string($0), esc_string("G"), esc_string("new"))
 	}
 	function esc_string(str,   work) {
 		work = str
