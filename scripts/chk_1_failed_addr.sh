@@ -4,6 +4,13 @@
 
 U_MSG="usage: $0 [ -help ] address"
 
+if [ -z "$DM_HOME" ] ; then
+	LOG ERROR "DM_HOME is not defined"
+	exit 1
+fi
+DM_ADDRS=$DM_HOME/addrs
+DM_ETC=$DM_HOME/etc
+DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
 ATYPE="src"
