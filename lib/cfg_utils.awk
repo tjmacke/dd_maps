@@ -1,4 +1,4 @@
-function rd_config(cfile, config,    err, n_cflines, cfline, nf, ary, i, tkey) {
+function CFG_read(cfile, config,    err, n_cflines, cfline, nf, ary, i, tkey) {
 
 	err = 0
 	for(n_cflines = 0; (getline cfline < cfile) > 0; ){
@@ -36,4 +36,37 @@ function rd_config(cfile, config,    err, n_cflines, cfline, nf, ary, i, tkey) {
 	}
 	close(cfile)
 	return err
+}
+function CFG_dump(file, config,   ng, k, keys, nk, k1tab, k1, nk2, k2tab, k2tab_srt, k2) {
+
+	ng = 0
+	for(k in config){
+		nk = split(k, keys, SUBSEP)
+		if(keys[1] == "_globals"){
+			ng++
+			k2tab[keys[2]] = 1
+		}else
+			k1tab[keys[1]] = 1
+	}
+	if(ng > 0){
+		nk2 = asorti(k2tab, k2tab_srt)
+		for(k2 = 1; k2 <= nk2; k2++)
+			printf("%s = %s\n", k2tab_srt[k2], config["_globals", k2tab_srt[k2]]) > file
+		delete k2tab_srt
+		delete k2tab
+	}
+	for(k1 in k1tab){
+		for(k in config){
+			nk = split(k, keys, SUBSEP)
+			if(keys[1] == k1)
+				k2tab[keys[2]] = 1
+		}
+		nk2 = asorti(k2tab, k2tab_srt)
+		printf("%s = {\n", k1) > file
+		for(k2 = 1; k2 <= nk2; k2++)
+			printf("\t%s = %s\n", k2tab_srt[k2], config[k1, k2tab_srt[k2]]) > file
+		printf("}\n") > file
+		delete k2tab_srt
+		delete k2tab
+	}
 }

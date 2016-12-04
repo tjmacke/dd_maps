@@ -20,10 +20,10 @@ LL_FILE=/tmp/ll.$$.json
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
 	AWK=igawk
-	RD_CONFIG="$DM_LIB/rd_config.awk"
+	CFG_UTILS="$DM_LIB/cfg_utils.awk"
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
-	RD_CONFIG="\"$DM_LIB/rd_config.awk\""
+	CFG_UTILS="\"$DM_LIB/cfg_utils.awk\""
 else
 	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
 	exit 1
@@ -115,10 +115,10 @@ while read line ; do
 	else
 		# validate what came back
 		$AWK -F'\t' '
-		@include '"$RD_CONFIG"'
+		@include '"$CFG_UTILS"'
 		BEGIN {
 			cfile = "'"$CFILE"'"
-			if(rd_config(cfile, config)){
+			if(CFG_read(cfile, config)){
 				err = 1
 				exit err
 			}

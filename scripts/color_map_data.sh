@@ -18,12 +18,12 @@ DM_SCRIPTS=$DM_HOME/scripts
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
 	AWK=igawk
-	RD_CONFIG="$DM_LIB/rd_config.awk"
+	CFG_UTILS="$DM_LIB/cfg_utils.awk"
 	COLOR_UTILS="$DM_LIB/color_utils.awk"
 	INTERP_UTILS="$DM_LIB/interp_utils.awk"
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
-	RD_CONFIG="\"$DM_LIB/rd_config.awk\""
+	CFG_UTILS="\"$DM_LIB/cfg_utils.awk\""
 	COLOR_UTILS="\"$DM_LIB/color_utils.awk\""
 	INTERP_UTILS="\"$DM_LIB/interp_utils.awk\""
 else
@@ -86,12 +86,12 @@ if [ -z "$CFILE" ] ; then
 fi
 
 $AWK -F'\t' '
-@include '"$RD_CONFIG"'
+@include '"$CFG_UTILS"'
 @include '"$COLOR_UTILS"'
 @include '"$INTERP_UTILS"'
 BEGIN {
  	cfile = "'"$CFILE"'"
- 	if(rd_config(cfile, config)){
+ 	if(CFG_read(cfile, config)){
  		err = 1
  		exit err
  	}
