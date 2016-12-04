@@ -51,7 +51,6 @@ st_quals = {
 
 towns = {
 	East PA	 = East Palo Alto
-	LAH	 = Los Altos Hills
 	MP	 = Menlo Park
 	MV	 = Mountain View
 	PA	 = Palo Alto
