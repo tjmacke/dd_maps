@@ -10,6 +10,7 @@ color_map_data.sh	yes	no	.	.
 combine_time_and_addr.sh	yes	no	.	Obs?
 delete_unused_addrs.sh	yes	yes	.	.
 find_geo_aliases.sh	yes	yes	.	.
+find_qry_aliases.sh	yes	yes	.	.
 find_unused_addrs_in_runs.sh	no	no	.	.
 unused/fmt_geo_errors.sh	no	no	.	.
 unused/get_actual_hours.sh	no	no	.	.
@@ -19,6 +20,7 @@ get_geo_for_new_db_addrs.sh	yes	yes	add_geo_to_addrs.sh	.
 unused/get_job_times.sh	no	no	.	.
 get_latlong.sh	no	no	.	uses ~/etc/opencagedata.key, $JU_BIN/json_get
 get_new_sources.sh	no	no	.	.
+get_pay_rates.sh	no	no	.	.
 unused/get_pay_data.sh	no	no	.	.
 unused/get_src_times.sh	no	no	.	.
 insert_new_addrs.sh	yes	yes	.	.
@@ -27,9 +29,8 @@ insert_new_jobs.sh	yes	yes	.	.
 map_by_dash_rate.sh	yes	no	.	.
 map_by_date.sh	yes	no	.	.
 unused/mk_dash_summary.sh	no	no	.	.
-mk_dash_totals.sh	no	no	.	.
+unused/mk_dash_totals.sh	no	no	.	.
 mk_geojson.sh	no	no	.	.
-mk_pay_summary.sh	no	no	.	.
 plot_pay_rates.sh	yes	no	$DM_LIB/plotPayRatesMain.R	Requires R, Rscript
 plot_src_info.sh	yes	no	$DM_LIB/plotSrcInfoMain.R	Requires R, Rscript
 update_addrs_with_geo_errors.sh	yes	yes	.	.
