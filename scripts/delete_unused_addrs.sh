@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ unused-addr-file ]"
+U_MSG="usage: $0 [ -help ] unused-addr-file"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -37,6 +37,13 @@ done
 
 if [ $# -ne 0 ] ; then
 	LOG ERROR "extra arguments $*"
+	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
+# require a file, piping seems dangerours
+if [ -z "$FILE" ] ; then
+	LOG ERROR "missing unused-addr-file"
 	echo "$U_MSG" 1>&2
 	exit 1
 fi

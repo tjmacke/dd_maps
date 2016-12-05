@@ -64,6 +64,7 @@ $5 == "Job" {
 }
 END {
 	for(a in atab){
-		printf("%d\t%s\n", atab[a], a)
+		if(atab[a] == 0)
+			printf("%s\n", a)
 	}
 }' $FILE

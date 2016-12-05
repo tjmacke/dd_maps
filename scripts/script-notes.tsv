@@ -2,15 +2,15 @@ script	uses DM_HOME	uses sqlite3	calls	notes
 add_geo_to_addrs.sh	yes	no	get_latlong.sh	uses DM_ETC/address.info
 add_new_addrs.sh	yes	no	get_addrs_from_runs.sh, insert_new_addrs.sh	.
 cfg_to_json.sh	no	no	.	.
+change_addrs_in_runs.sh	no	no	.	.
 chk_1_failed_addr.sh	yes	no	get_addrs_from_runs.sh, get_latlong.sh	.
-chk_addrs_used_in_runs.sh	no	no	.	.
 chk_failed_addrs.sh	yes	no	chk_1_failed_addr.sh	.
 chk_runs_file.sh	no	no	.	.
 color_map_data.sh	yes	no	.	.
 combine_time_and_addr.sh	yes	no	.	Obs?
 delete_unused_addrs.sh	yes	yes	.	.
 find_geo_aliases.sh	yes	yes	.	.
-fix_addrs_in_runs.sh	no	no	.	.
+find_unused_addrs_in_runs.sh	no	no	.	.
 fmt_geo_errors.sh	no	no	.	.
 get_actual_hours.sh	no	no	.	.
 get_addrs_from_runs.sh	yes	no	.	uses $DM_ETC/address.info
