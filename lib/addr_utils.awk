@@ -1,9 +1,10 @@
-function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary, i, f_st, nf2, ary2, i1, name, street, town) {
+function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary, i, f_st, nf2, ary2, i1, name, street, quals, town, k) {
 
 	result["status"] = "B"
 	result["emsg"  ] = ""
 	result["name"  ] = ""
 	result["street"] = ""
+	result["quals" ] = ""
 	result["town"  ] = ""
 	result["state" ] = ""
 
@@ -71,7 +72,14 @@ function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary
 			name = name ", " ary[i]
 	}
 
-	# TODO: reply addresses need extra thought here
+	# Street qualifiers are those fields, if any, that follow f_st and precede nf
+	if(nf - f_st > 1){
+		quals = ary[f_st+1]
+		for(i = f_st+2; i < nf; i++)
+			quals = quals ", " ary[i]
+	}else
+		quals = ""
+
 	# clean up street
 	nf2 = split(ary[f_st], ary2, /  */)
 	if(nf2 < 2){
@@ -79,23 +87,41 @@ function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary
 		return 1
 	}
 
+	# Street Hacks: Probably should just compare ignore case but not ready for that step yet
+	# change el Camino X to El Camino X
+	# change el Monte X  to El Monte X
+	if(nf2 > 3){
+		if(ary2[nf2-2] == "el" && ary2[nf2-1] == "Camino")
+			ary2[nf2-2] = "El"
+		else if(ary2[nf2-2] == "el" && ary2[nf2-1] == "Monte")
+			ary2[nf2-2] =  "El"
+	}
+
 	# Street should be num [ dir ] str [ st ]
 	street = ary2[1]
-	if(ary2[2] in dirs){
-		street = street " " dirs[ary2[2]]
-		i1 = 3
-	}else
-		i1 = 2
-	for(i = i1; i < nf2; i++){
-		street = street " " ary2[i]
+
+	# This is amusing.  What is South Court? Is is S. Court or South Ct.  No idea so, leave such streets in long form
+	if(nf2 == 3 && (ary2[2] in dirs) && (ary2[3] in st_types)){
+		for(i = 2; i <= nf2; i++)
+			street = street " " ary2[i]
+	}else{
+		if(ary2[2] in dirs){
+			street = street " " dirs[ary2[2]]
+			i1 = 3
+		}else
+			i1 = 2
+		for(i = i1; i < nf2; i++){
+			street = street " " ary2[i]
+		}
+		street = street ((ary2[nf2] in st_types) ? (" " st_types[ary2[nf2]]) : (" " ary2[nf2]))
 	}
-	street = street ((ary2[nf2] in st_types) ? (" " st_types[ary2[nf2]]) : (" " ary2[nf2]))
 
 	result["status"] = "G"
-	result["name"] = name
+	result["name"  ] = name
 	result["street"] = street
-	result["town"] = town
-	result["state"] = "CA"
+	result["quals" ] = quals
+	result["town"  ] = town
+	result["state" ] = "CA"
 
 	return 0
 }
