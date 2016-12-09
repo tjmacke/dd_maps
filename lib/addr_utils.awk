@@ -1,4 +1,4 @@
-function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary, i, town, f_st, nf2, ary2, street, i1) {
+function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary, i, f_st, nf2, ary2, i1, name, street, town) {
 
 	result["status"] = "B"
 	result["emsg"  ] = ""
@@ -7,17 +7,34 @@ function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary
 	result["town"  ] = ""
 	result["state" ] = ""
 
-	# TODO: rply addresses have 2 extra fields: ST[ DDDDD], United States
 	nf = split(addr, ary, ",")
+	for(i = 1; i <= nf; i++){
+		sub(/^ */, "", ary[i])
+		sub(/ *$/, "", ary[i])
+	}
+
+	if(rply){
+		if(ary[nf] != "United States of America"){
+			result["emsg"] = "not.usa"
+			return 1
+		}else
+			nf--
+		if(ary[nf] == "CA")
+			nf--
+		else if(ary[nf] ~ /CA [0-9]{5}$/)
+			nf--
+		else if(ary[nf] ~ /CA [0-9]{5}-[0-9]{4}$/)
+			nf--
+		else{
+			result["emsg"] = "not.CA"
+			return 1
+		}
+	}
 
 	# minimal address has 2 fields: street, town
 	if(nf < 2){
 		result["emsg"] = "short.addr"
 		return 1
-	}
-	for(i = 1; i <= nf; i++){
-		sub(/^ */, "", ary[i])
-		sub(/ *$/, "", ary[i])
 	}
 
 	# check that we have a known town
@@ -44,8 +61,17 @@ function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary
 		result["emsg"] = "no.street"
 		return 1
 	}
+	
+	# The name is what precedes f_st.  if f_st == 1, set name to "Residence"
+	if(f_st == 1)
+		name = "Residence"
+	else{
+		name = ary[1]
+		for(i = 2; i < f_st; i++)
+			name = name ", " ary[i]
+	}
 
-	# TODO: reply addresses need extra though here
+	# TODO: reply addresses need extra thought here
 	# clean up street
 	nf2 = split(ary[f_st], ary2, /  */)
 	if(nf2 < 2){
@@ -66,6 +92,7 @@ function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary
 	street = street ((ary2[nf2] in st_types) ? (" " st_types[ary2[nf2]]) : (" " ary2[nf2]))
 
 	result["status"] = "G"
+	result["name"] = name
 	result["street"] = street
 	result["town"] = town
 	result["state"] = "CA"
