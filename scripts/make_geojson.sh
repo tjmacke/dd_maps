@@ -150,7 +150,9 @@ END {
 	close(cfile)
 
 	# add the geojson
-	printf("\"points\": [\n")
+	printf("\"geojson\": {\n")
+	printf("\"type\": \"FeatureCollection\",\n")
+	printf("\"features\": [\n")
 	if(n_fields == 5){
 		# code for points
 		# points have been sorted on geo so points w/same geo are consecutive
@@ -220,5 +222,6 @@ END {
 	}
 	printf("]\n")
 
+	printf("}\n")
 	printf("}\n")
 }'

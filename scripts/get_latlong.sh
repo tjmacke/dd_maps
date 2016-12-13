@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] canonical-address"
+U_MSG="usage: $0 [ -help ] [ -limit N ] canonical-address"
 
 # TODO: fix this evil dependency
 JU_HOME=~
@@ -11,6 +11,7 @@ JU_BIN=$JU_HOME/bin
 
 KEY=$(cat ~/etc/opencagedata.key)
 
+LIMIT=
 ADDR=
 
 while [ $# -gt 0 ] ; do
@@ -18,6 +19,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-limit)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-limit requires integer argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		LIMIT=$1
+		shift
 		;;
 	-*)
 		LOG ERROR "unknown option $1"
@@ -65,6 +76,9 @@ if [ -z "$E_ADDR" ] ; then
 	exit 1
 fi
 PARMS="query=$E_ADDR&key=$KEY"
+if [ ! -z "$LIMIT" ] ; then
+	PARMS="${PARMS}&limit=$LIMIT" 
+fi
 
 curl -s -S https://api.opencagedata.com/geocode/v1/json?"$PARMS"		|\
 $JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng}'	|\
