@@ -80,7 +80,6 @@ plotPayRates <- function(df, pfn='') {
 	legend('topleft', inset=c(0.05, 0.05), bg='gray96',
 		legend=lgnd,
 		col=c('red', 'green', 'blue'), lty=1)
-	# TODO: legend for only 1 pt has nothing to paste
 
 	if (pfn != '') {
 		ign <- dev.off()

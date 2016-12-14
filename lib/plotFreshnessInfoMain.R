@@ -2,7 +2,7 @@ dm_home <- Sys.getenv(c('DM_HOME'))
 if (dm_home == '') {
 	stop('DM_HOME is not defined.', call.=F)
 }
-sfn <- paste(dm_home, 'lib', 'plotSiteEvolution.R', sep='/')
+sfn <- paste(dm_home, 'lib', 'plotSiteFreshness.R', sep='/')
 source(sfn, chdir=T)
 
 args <- commandArgs(trailingOnly=T)
@@ -41,6 +41,6 @@ if (dfn == '') {
 }
 
 df <- read.csv(dfn, sep='\t')
-ofn = sprintf('%sEvolution.%s.pdf', stype, format(Sys.time(), '%Y-%m-%d'))
+ofn = sprintf('%sFreshness.%s.pdf', stype, format(Sys.time(), '%Y-%m-%d'))
 
-plotSiteEvolution(df, stype, ofn)
+plotSiteFreshness(df, stype, ofn)

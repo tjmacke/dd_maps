@@ -1,4 +1,4 @@
-plotSiteEvolution <- function(df, stype, pfn='') {
+plotSiteFreshness <- function(df, stype, pfn='') {
 
 	if (!exists('dm_home')) {
 		stop('dm_home is not defined.', call.=T)
@@ -21,7 +21,7 @@ plotSiteEvolution <- function(df, stype, pfn='') {
 		xlab='Month',
 		xaxt='n',
 		yaxt='n',
-		ylab='Percent of something')
+		ylab='Percent Fresh by Time')
 
 	axis(1, at=dl$tk, label=F)
 	y_adj <- 4.2
@@ -41,6 +41,9 @@ plotSiteEvolution <- function(df, stype, pfn='') {
 	lines(as.Date(df$date, '%Y-%m-%d'), df$le26, lwd=1.5, col='lightblue')
 	lines(as.Date(df$date, '%Y-%m-%d'), df$le52, lwd=1.5, col='gray')
 	lines(as.Date(df$date, '%Y-%m-%d'), df$gt52, lwd=1.5, col='black')
+
+	l_date <- substr(df[length(df$date), 1], 1, 7)
+	title(paste(stype, ' Freshness through ', l_date, sep=''))
 
 	lgnd = c('<= 1 week', '<= 2 weeks', '<= 4 weeks', '<= 8 weeks', '<= 12 weeks', '<= 26 weeks', '<= 52 weeks', '> 52 weeks')
 	legend('topleft', inset=c(0.08, 0.02), bg='white',
