@@ -1,4 +1,4 @@
-plotSiteFreshness <- function(df, stype, pfn='') {
+plotFreshnessInfo <- function(df, stype, pfn='') {
 
 	if (!exists('dm_home')) {
 		stop('dm_home is not defined.', call.=T)

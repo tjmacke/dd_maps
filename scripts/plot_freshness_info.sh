@@ -63,4 +63,4 @@ fi
 
 # Why? Well Rscript is in /usr/bin on Linux, but /usr/local/bin on Mac OS/X.  So
 # this works as long as Rscript is installed and is in your path
-Rscript $DM_LIB/plotSiteFreshnessMain.R -at $ATYPE $FILE
+Rscript $DM_LIB/plotFreshnessInfoMain.R -at $ATYPE $FILE
