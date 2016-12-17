@@ -26,6 +26,8 @@ function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary
 			nf--
 		else if(ary[nf] ~ /CA [0-9]{5}-[0-9]{4}$/)
 			nf--
+		else if(ary[nf] == "California")
+			nf--
 		else{
 			result["emsg"] = "not.CA"
 			return 1

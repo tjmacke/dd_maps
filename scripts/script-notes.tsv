@@ -16,7 +16,7 @@ unused/fmt_geo_errors.sh	no	no	.	.
 unused/get_actual_hours.sh	no	no	.	.
 get_addrs_from_runs.sh	yes	no	.	uses $DM_ETC/address.info
 get_freshness_info.sh	no	no	.	.
-get_geo_for_addrs.sh	yes	no	get_addrs_from_runs.sh, add_geo_to_addrs.sh	.	
+get_geo_for_addrs.sh	yes	no	get_addrs_from_runs.sh, add_geo_to_addrs.sh	.
 get_geo_for_new_db_addrs.sh	yes	yes	add_geo_to_addrs.sh	.
 unused/get_job_times.sh	no	no	.	.
 get_latlong.sh	no	no	.	uses ~/etc/opencagedata.key, $JU_BIN/json_get
