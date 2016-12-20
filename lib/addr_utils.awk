@@ -1,4 +1,4 @@
-function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary, i, f_st, nf2, ary2, i1, name, street, quals, town, k) {
+function AU_parse(rply, do_subs, addr, result, towns, st_types, st_quals, dirs,   nf, ary, i, f_st, nf2, ary2, i1, name, street, quals, town, k) {
 
 	result["status"] = "B"
 	result["emsg"  ] = ""
@@ -15,6 +15,7 @@ function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary
 	}
 
 	if(rply){
+		# TODO: generalize to all states?
 		if(ary[nf] != "United States of America"){
 			result["emsg"] = "not.usa"
 			return 1
@@ -45,7 +46,7 @@ function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary
 		result["emsg"] = "bad.town"
 		return 1
 	}
-	town = towns[ary[nf]]
+	town = do_subs ? towns[ary[nf]] : ary[nf]
 
 	# find the street.
 	# street is 1) 1st elt of ary[1:nf-1] that begins w/number & ends w/st_type or 2) last elt of ary[1:nf-1] that begins w/number
@@ -92,30 +93,36 @@ function AU_parse(rply, addr, result, towns, st_types, st_quals, dirs,   nf, ary
 	# Street Hacks: Probably should just compare ignore case but not ready for that step yet
 	# change el Camino X to El Camino X
 	# change el Monte X  to El Monte X
-	if(nf2 > 3){
-		if(ary2[nf2-2] == "el" && ary2[nf2-1] == "Camino")
-			ary2[nf2-2] = "El"
-		else if(ary2[nf2-2] == "el" && ary2[nf2-1] == "Monte")
-			ary2[nf2-2] =  "El"
+	if(do_subs){
+		if(nf2 > 3){
+			if(ary2[nf2-2] == "el" && ary2[nf2-1] == "Camino")
+				ary2[nf2-2] = "El"
+			else if(ary2[nf2-2] == "el" && ary2[nf2-1] == "Monte")
+				ary2[nf2-2] =  "El"
+		}
 	}
 
 	# Street should be num [ dir ] str [ st ]
 	street = ary2[1]
-
-	# This is amusing.  What is South Court? Is is S. Court or South Ct.  No idea so, leave such streets in long form
-	if(nf2 == 3 && (ary2[2] in dirs) && (ary2[3] in st_types)){
+	if(do_subs){
+		# This is amusing.  What is South Court? Is is S. Court or South Ct.  No idea so, leave such streets in long form
+		if(nf2 == 3 && (ary2[2] in dirs) && (ary2[3] in st_types)){
+			for(i = 2; i <= nf2; i++)
+				street = street " " ary2[i]
+		}else{
+			if(ary2[2] in dirs){
+				street = street " " dirs[ary2[2]]
+				i1 = 3
+			}else
+				i1 = 2
+			for(i = i1; i < nf2; i++){
+				street = street " " ary2[i]
+			}
+			street = street ((ary2[nf2] in st_types) ? (" " st_types[ary2[nf2]]) : (" " ary2[nf2]))
+		}
+	}else{
 		for(i = 2; i <= nf2; i++)
 			street = street " " ary2[i]
-	}else{
-		if(ary2[2] in dirs){
-			street = street " " dirs[ary2[2]]
-			i1 = 3
-		}else
-			i1 = 2
-		for(i = i1; i < nf2; i++){
-			street = street " " ary2[i]
-		}
-		street = street ((ary2[nf2] in st_types) ? (" " st_types[ary2[nf2]]) : (" " ary2[nf2]))
 	}
 
 	result["status"] = "G"
@@ -137,4 +144,55 @@ function AU_get_addr_data(addr_info, key, data,   k, keys, nk, i) {
 		}
 	}
 	return n_data
+}
+function AU_match(cand, ref,   is_mat, i, n_cand_st, cand_st, cand_odd, n_ref_st, ref_st, ref_odd) {
+
+	is_mat = 0
+
+	# deal with street ranges
+	n_cand_st = split(cand["street"], cand_st, /-/)
+	n_ref_st = split(ref["street"], ref_st, /-/)
+
+	# US rule: require all numbers to be either odd or even
+	cand_odd = cand_st[1] % 2
+	for(i = 2; i <= n_cand_st; i++){
+		if(cand_st[i] % 2 != cand_odd){
+			printf("ERROR: odd/even candidate address range: %s\n", cand["street"]) > "/dev/stderr"
+			return 0
+		}
+	}
+	n_ref_st = split(ref["street"], ref_st, /-/)
+	ref_odd = ref_st[1] % 2
+	for(i = 2; i <= n_ref_st; i++){
+		if(ref_st[i] % 2 != ref_odd){
+			printf("ERROR: odd/even reference address range: %s\n", ref["street"]) > "/dev/stderr"
+			return 0
+		}
+	}
+	if(cand_odd != ref_off)
+		return 0
+
+	# odd/even good, check the actual numbers/ranges
+	if(n_cand_st == 1){
+		if(n_ref_st == 1){
+			printf("DEBUG: AU_match: case 1: c.N v r.N: %d vs %d\n", cand_st[1], ref_st[1]) > "/dev/stderr"
+			is_mat = cand_st[1] == ref_st[1]
+		}else{
+			printf("DEBUG: AU_match: case 2: c.N v r.R: %d vs %d-%d\n", cand_st[1], ref_st[1], ref_st[2]) > "/dev/stderr"
+			is_mat = cand_st[1] >= ref_st[1] && cand_st[1] <= ref_st[2];
+		}
+	}else if(n_ref_st == 1){
+		printf("DEBUG: AU_match: case 3: c.R v r.N: %d-%d vs %d\n", cand_st[1], cand_st[2], ref_st[1]) > "/dev/stderr"
+		is_mat = ref_st[1] >= cand_st[1] && ref_st[1] <= cand_st[2]
+	}else{
+		printf("DEBUG: AU_match: case 4: c.R v r.R: %d-%d vs %d-%d\n", cand_st[1], cand_st[2], ref_st[1], ref_st[2]) > "/dev/stderr"
+		is_mat = !(cand_st[2] < ref_st[1] || cand_st[1] > ref_st[2])
+	}
+
+	# streets are good, deal with towns
+	if(is_mat){
+		is_mat = cand["town"] == ref["town"]
+	}
+
+	return is_mat
 }
