@@ -52,10 +52,6 @@ while [ $# -gt 0 ] ; do
 		AI_FILE=$1
 		shift
 		;;
-	-hdr)
-		HDR="yes"
-		shift
-		;;
 	-limit)
 		shift
 		if [ $# -eq 0 ] ; then
@@ -100,6 +96,8 @@ $AWK -F'\t' '
 @include '"$CFG_UTILS"'
 @include '"$ADDR_UTILS"'
 BEGIN {
+	today = "'"$TODAY"'"
+
 	ai_file="'"$AI_FILE"'"
 	if(CFG_read(ai_file, addr_info)){
 		err = 1
@@ -126,23 +124,21 @@ BEGIN {
 	}
 }
 {
+	# Use qry.line format, with all addreses as src ($3) addresses with dst ($4) set to "."
 	if(AU_parse(0, 1, $1, result, towns_2qry, st_types_2qry, "", dirs_2qry)){
-		printf("2qry: %s, %s\t%s\n", result["status"], result["emsg"], $1)
+		printf("%s, %s\t%s\t%s\t%s\n", result["status"], result["emsg"], today, $1, ".")
 	}else{
-		quals = result["quals"] != "" ? result["quals"] : "."
-		printf("%s\t%s\t%s\t%s\t%s\n", result["status"], $1, result["street"] ", " result["town"] ", CA", quals, result["name"])
+		printf("%s\t%s\t%s\t%s\t%s\t%s\n", result["status"], today, $1, ".", result["street"] ", " result["town"] ", CA", result["name"]) 
 	}
 }')"
-
 stat="$(echo "$line" | awk -F'\t' '{ print $1 }')"
+addr="$(echo "$line" | awk -F'\t' '{ print $3 }')"
 if [ "$stat" != "G" ] ; then
-	addr="$(echo "$line" | awk -F'\t' '{ print $2 }')"
-	echo "ERROR: bad address: $stat: $addr" 1>&2
+	emsg="$(echo $stat | awk '{ print $2 }')"
+	echo "ERROR: $TODAY: addr: $addr: $emsg" 1>&2
 else
-	addr="$(echo "$line" | awk -F'\t' '{ print $2 }')"
-	query="$(echo "$line" | awk -F'\t' '{ print $3 }')"
-	quals="$(echo "$line" | awk -F'\t' '{ print $4 }')"
-	name="$(echo "$line" | awk -F'\t' '{ print $5 }')"
+	query="$(echo "$line" | awk -F'\t' '{ print $5 }')"
+	name="$(echo "$line" | awk -F'\t' '{ print $6 }')"
 	$DM_SCRIPTS/get_latlong.sh $LIMIT "$query" > $TMP_GFILE
 	$AWK -F'\t' '
 	@include '"$CFG_UTILS"'
@@ -152,9 +148,6 @@ else
 
 		addr = "'"$addr"'"
 		query = "'"$query"'"
-		quals = "'"$quals"'"
-		if(quals == ".")
-			quals = ""
 		name = "'"$name"'"
 
 		ai_file="'"$AI_FILE"'"
@@ -206,26 +199,19 @@ else
 	{
 		if(AU_parse(1, 1, $2, result, towns_2std, st_types_2std, "", dirs_2std)){
 			n_lines++
-			lines[n_lines] = sprintf("2std: %s, %s\t%s", result["status"], result["emsg"], $0)
+			lines[n_lines] = sprintf("emsg  = %s", result["emsg"])
+			n_lines++
+			lines[n_lines] = sprintf("reply = %s", $2)
 		}else{
-
-			# AU_match() handles street ranges, turn it on some day
-			printf("DEBUG: _main_: AU_match() = %d\n", AU_match(result, addr_ary)) > "/dev/stderr"
-
-			cand = ""
-			if(name != "Residence")
-				cand = name ", "
-			cand = cand result["street"]
-			if(quals != "")
-				cand = cand ", " quals
-			cand = cand ", " result["town"]
-			if(cand == addr){
+			if(AU_match(result, addr_ary)){
 				printf("%s\t%s\t%s\t%s\t%s\t%s\n", today, addr, ".", $4, $3, $2)
 				err = 0
 				exit err
 			}else{
 				n_lines++
-				lines[n_lines] = sprintf("2std: %s, %s\t%s", "B", "no.match", $0)
+				lines[n_lines] = sprintf("emsg  =, %s\t%s", "no.match", $0)
+				n_lines++
+				lines[n_lines] = sprintf("reply = %s", $2)
 			}
 		}
 	}
@@ -234,10 +220,12 @@ else
 			exit err
 
 		if(n_lines > 0){
-			printf("addr:\t\t\t\t%s\n", addr) > "/dev/stderr"
-			printf("query:\t\t\t\t%s\n", query) > "/dev/stderr"
+			printf("ERROR: %s: addr: %s: not found:\n", today, addr) > "/dev/stderr"
+			printf("{\n") > "/dev/stderr"
+			printf("\tquery = %s\n", query) > "/dev/stderr"
 			for(i = 1; i <= n_lines; i++)
-				printf("%s\n", lines[i]) > "/dev/stderr"
+				printf("\t%s\n", lines[i]) > "/dev/stderr"
+			printf("}\n") > "/dev/stderr"		
 		}
 	}' $TMP_GFILE
 fi

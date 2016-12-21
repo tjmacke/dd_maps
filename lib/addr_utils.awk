@@ -169,23 +169,19 @@ function AU_match(cand, ref,   is_mat, i, n_cand_st, cand_st, cand_odd, n_ref_st
 			return 0
 		}
 	}
-	if(cand_odd != ref_off)
+	if(cand_odd != ref_odd)
 		return 0
 
 	# odd/even good, check the actual numbers/ranges
 	if(n_cand_st == 1){
 		if(n_ref_st == 1){
-			printf("DEBUG: AU_match: case 1: c.N v r.N: %d vs %d\n", cand_st[1], ref_st[1]) > "/dev/stderr"
 			is_mat = cand_st[1] == ref_st[1]
 		}else{
-			printf("DEBUG: AU_match: case 2: c.N v r.R: %d vs %d-%d\n", cand_st[1], ref_st[1], ref_st[2]) > "/dev/stderr"
-			is_mat = cand_st[1] >= ref_st[1] && cand_st[1] <= ref_st[2];
+			is_mat = cand_st[1] >= ref_st[1] && cand_st[1] <= ref_st[2]
 		}
 	}else if(n_ref_st == 1){
-		printf("DEBUG: AU_match: case 3: c.R v r.N: %d-%d vs %d\n", cand_st[1], cand_st[2], ref_st[1]) > "/dev/stderr"
 		is_mat = ref_st[1] >= cand_st[1] && ref_st[1] <= cand_st[2]
 	}else{
-		printf("DEBUG: AU_match: case 4: c.R v r.R: %d-%d vs %d-%d\n", cand_st[1], cand_st[2], ref_st[1], ref_st[2]) > "/dev/stderr"
 		is_mat = !(cand_st[2] < ref_st[1] || cand_st[1] > ref_st[2])
 	}
 
