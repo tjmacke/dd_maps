@@ -135,6 +135,7 @@ function AU_parse(rply, do_subs, addr, result, towns, st_types, st_quals, dirs, 
 	return 0
 }
 function AU_get_addr_data(addr_info, key, data,   k, keys, nk, i) {
+
 	n_data = 0
 	for(k in addr_info){
 		nk = split(k, keys, SUBSEP)
@@ -191,4 +192,50 @@ function AU_match(cand, ref,   is_mat, i, n_cand_st, cand_st, cand_odd, n_ref_st
 	}
 
 	return is_mat
+}
+function AU_get_rtab(street, rtab,   n_rtab, i, nw, work) {
+
+	n_rtab = split(street, rtab, ";")
+	for(i = 1; i <= n_rtab; i++){
+		nw = split(rtab[i], work, "-")
+		rtab[i, 1] = work[1]
+		if(nw > 1){
+			rtab[i, 2] = work[2]
+			rtab[i, "rng"] = 1
+			if(rtab[i, 1] % 2 != rtab[i, 2] % 2){
+				printf("ERROR: bad range: odd/even %d-%d\n", rtab[i, 1], rtab[i, 2]) > "/dev/stderr"
+				return 0
+			}
+		}else
+			rtab[i, "rng"] = 0
+		delete rtab[i]
+	}
+	return n_rtab
+}
+function AU_rtabs_intersect(n_rtab1, rtab1, n_rtab2, rtab2,   i, j) {
+
+	# the most common case: number v number
+	if(n_rtab1 == 1 && !rtab1[1, "rng"] && n_rtab2 == 1 && !rtab2[1, "rng"])
+		return rtab1[1,1] == rtab2[1,1]
+
+	for(i = 1; i <= n_rtab1; i++){
+		for(j = 1; j <= n_rtab2; j++){
+			if(!rtab1[i, "rng"]){
+				if(!rtab2[j, "rng"]){	# number v number
+					if(rtab1[i, 1] == ranges2[j, 1])
+						return 1
+				}else{			# number v range
+					if(rtab1[i, 1] >= rtab2[j, 1] && rtab1[i, 1] <= rtab2[j, 2])
+						return 1
+				}
+			}else if(!rtab2[j, "rng"]){	# range v number
+				if(rtab2[j, 1] >= rtab1[i, 1] && rtab2[j, 1] <= rtab1[i, 2])
+					return 1
+			}else{				# range v range
+				if(!(rtab1[i, 2] < rtab2[j, 1] || rtab1[i, 1] > rtab2[j, 2]))
+					return 1
+			}
+		}
+	}
+	return 0
 }
