@@ -203,7 +203,8 @@ else
 			n_lines++
 			lines[n_lines] = sprintf("reply = %s", $2)
 		}else{
-			if(AU_match(result, addr_ary)){
+			# original AU_match(result, addr_ary)
+			if(AU_match_2(result, addr_ary)){
 				printf("%s\t%s\t%s\t%s\t%s\t%s\n", today, addr, ".", $4, $3, $2)
 				err = 0
 				exit err

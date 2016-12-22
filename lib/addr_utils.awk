@@ -193,22 +193,38 @@ function AU_match(cand, ref,   is_mat, i, n_cand_st, cand_st, cand_odd, n_ref_st
 
 	return is_mat
 }
+function AU_match_2(cand, ref,   n_cand_rtab, cand_rtab, n_ref_rtab, ref_rtab) {
+
+	n_cand_rtab = AU_get_rtab(cand["street"], cand_rtab)
+	if(n_cand_rtab == 0)
+		return 0
+
+	n_ref_rtab = AU_get_rtab(ref["street"], ref_rtab)
+	if(n_ref_rtab == 0)
+		return 0
+
+	if(!AU_rtabs_intersect(n_cand_rtab, cand_rtab, n_ref_rtab, ref_rtab))
+		return 0
+
+	return cand["town"] = ref["town"]
+}
 function AU_get_rtab(street, rtab,   n_rtab, i, nw, work) {
 
 	n_rtab = split(street, rtab, ";")
 	for(i = 1; i <= n_rtab; i++){
 		nw = split(rtab[i], work, "-")
-		rtab[i, 1] = work[1]
 		if(nw > 1){
-			rtab[i, 2] = work[2]
+			rtab[i, 1] = work[1] + 0	# force number
+			rtab[i, 2] = work[2] + 0	# force number
 			rtab[i, "rng"] = 1
 			if(rtab[i, 1] % 2 != rtab[i, 2] % 2){
 				printf("ERROR: bad range: odd/even %d-%d\n", rtab[i, 1], rtab[i, 2]) > "/dev/stderr"
 				return 0
 			}
-		}else
+		}else{
+			rtab[i] = work[1] + 0	# force number
 			rtab[i, "rng"] = 0
-		delete rtab[i]
+		}
 	}
 	return n_rtab
 }
@@ -216,20 +232,20 @@ function AU_rtabs_intersect(n_rtab1, rtab1, n_rtab2, rtab2,   i, j) {
 
 	# the most common case: number v number
 	if(n_rtab1 == 1 && !rtab1[1, "rng"] && n_rtab2 == 1 && !rtab2[1, "rng"])
-		return rtab1[1,1] == rtab2[1,1]
+		return rtab1[1] == rtab2[1]
 
 	for(i = 1; i <= n_rtab1; i++){
 		for(j = 1; j <= n_rtab2; j++){
 			if(!rtab1[i, "rng"]){
 				if(!rtab2[j, "rng"]){	# number v number
-					if(rtab1[i, 1] == ranges2[j, 1])
+					if(rtab1[i] == rtab2[j])
 						return 1
 				}else{			# number v range
-					if(rtab1[i, 1] >= rtab2[j, 1] && rtab1[i, 1] <= rtab2[j, 2])
+					if(rtab1[i] >= rtab2[j, 1] && rtab1[i] <= rtab2[j, 2])
 						return 1
 				}
 			}else if(!rtab2[j, "rng"]){	# range v number
-				if(rtab2[j, 1] >= rtab1[i, 1] && rtab2[j, 1] <= rtab1[i, 2])
+				if(rtab2[j] >= rtab1[i, 1] && rtab2[j] <= rtab1[i, 2])
 					return 1
 			}else{				# range v range
 				if(!(rtab1[i, 2] < rtab2[j, 1] || rtab1[i, 1] > rtab2[j, 2]))
@@ -238,4 +254,15 @@ function AU_rtabs_intersect(n_rtab1, rtab1, n_rtab2, rtab2,   i, j) {
 		}
 	}
 	return 0
+}
+function AU_rtab_dump(file, n_rtab, rtab,   i) {
+	
+	printf("n_rtab = %d {\n", n_rtab) > file
+	for(i = 1; i <= n_rtab; i++){
+		if(rtab[i, "rng"])
+			printf("\trtab[%d, 1-2] = %d-%d\n", i, rtab[i, 1], rtab[i, 2]) > file 
+		else
+			printf("\trtab[%d     ] = %d\n", i, rtab[i]) > file 
+	}
+	printf("}\n") > file
 }
