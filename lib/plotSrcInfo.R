@@ -1,4 +1,4 @@
-plotSrcInfo <- function(df) {
+plotSrcInfo <- function(df, multi) {
 
 	if (!exists('dm_home')) {
 		stop('dm_home is not defined.', call.=F)
@@ -18,10 +18,20 @@ plotSrcInfo <- function(df) {
 		yaxt='n',
 		ylab='Number of New Sources')
 
-	axis(1, at=dl$tk, labels=F)
-	y_adj <- 0.75
-	text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.8)
-	axis(2, at=seq(from=0, to=10, by=1), labels=T, las=1)
+	l_date <- df[length(df$date), 1]
+	if (multi) {
+		axis(1, at=dl$tk, labels=F)
+		y_adj <- 1
+		text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.7)
+		axis(2, at=seq(from=0, to=10, by=1), labels=T, las=1)
+		title(paste('New Delivery Sources', l_date, sep=' through '), cex.main=1)
+	} else {
+		axis(1, at=dl$tk, labels=F)
+		y_adj <- 0.75
+		text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.8)
+		axis(2, at=seq(from=0, to=10, by=1), labels=T, las=1)
+		title(paste('New Delivery Sources', l_date, sep=' through '))
+	}
 
 	# draw a nice grid
 	abline(h=seq(from=0, to=10, by=1), lty=3, col='black')
@@ -32,7 +42,4 @@ plotSrcInfo <- function(df) {
 	} else {
 		points(as.Date(df$date, '%Y-%m-%d'), df$nNewSources)
 	}
-
-	l_date <- df[length(df$date), 1]
-	title(paste('New Delivery Sources', l_date, sep=' through '))
 }

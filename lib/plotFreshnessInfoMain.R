@@ -14,7 +14,7 @@ i = 1
 while(i <= length(args)) {
 	if (args[i] == "-at") {
 		i <- i + 1
-		if (i == length(args)) {
+		if (i > length(args)) {
 			stop('ERROR: -at requires address-type argument', call.=F)
 		}
 		stype <- args[i]
@@ -43,4 +43,4 @@ if (dfn == '') {
 df <- read.csv(dfn, sep='\t')
 ofn = sprintf('%sFreshness.%s.pdf', stype, format(Sys.time(), '%Y-%m-%d'))
 pdf(file=ofn)
-plotFreshnessInfo(df, stype)
+plotFreshnessInfo(df, stype, F)

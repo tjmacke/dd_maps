@@ -16,4 +16,4 @@ if (length(args) == 0) {
 df <- read.csv(args[1], sep='\t')
 ofn=sprintf('payRates.%s.pdf', format(Sys.time(), '%Y-%m-%d'))
 pdf(file=ofn)
-plotPayRates(df)
+plotPayRates(df, F)

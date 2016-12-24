@@ -1,4 +1,4 @@
-plotPayRates <- function(df) {
+plotPayRates <- function(df, multi) {
 
 	if (!exists('dm_home')) {
 		stop('dm_home is not defined.', call.=F)
@@ -39,10 +39,20 @@ plotPayRates <- function(df) {
 		yaxt='n',
 		ylab='Rates ($/hr)')
 
-	axis(1, at=dl$tk, labels=F)
-	y_adj <- 2.7
-	text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.8)
-	axis(2, at=seq(from=0, to=35, by=5), labels=T, las=1)
+	l_date <- df[length(df$date), 1]
+	if (multi) {
+		y_adj <- 4
+		text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.7)
+		axis(1, at=dl$tk, labels=F)
+		axis(2, at=seq(from=0, to=35, by=5), labels=T, las=1)
+		title(paste('Doordash Rates', l_date, sep=' through '), cex.main=1)
+	} else {
+		y_adj <- 2.7
+		text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.8)
+		axis(1, at=dl$tk, labels=F)
+		axis(2, at=seq(from=0, to=35, by=5), labels=T, las=1)
+		title(paste('Doordash Rates', l_date, sep=' through '))
+	}
 
 	# draw a nice grid
 	abline(h=seq(from=0, to=35, by=5), lty=3, col='black')
@@ -64,9 +74,6 @@ plotPayRates <- function(df) {
 		points(as.Date(df$date, '%Y-%m-%d'), df$dph, col='blue')
 	}
 
-	l_date <- df[length(df$date), 1]
-	title(paste('Doordash Rates', l_date, sep=' through '))
-
 	if(length(df$date) >= 2) {
 		lgnd <- c(paste('$/Hour', d_hrate, sep=', '), paste('$/Dash', d_drate, sep=', '), paste('Dashes/Hour', d_dph, sep=', '))
 	} else {
@@ -74,5 +81,5 @@ plotPayRates <- function(df) {
 	}
 	legend('topleft', inset=c(0.05, 0.05), bg='gray96',
 		legend=lgnd,
-		col=c('red', 'green', 'blue'), lty=1)
+		col=c('red', 'green', 'blue'), lty=1, cex=ifelse(multi, 0.4, 1))
 }

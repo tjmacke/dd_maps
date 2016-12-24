@@ -1,4 +1,4 @@
-plotFreshnessInfo <- function(df, stype) {
+plotFreshnessInfo <- function(df, stype, multi) {
 
 	if (!exists('dm_home')) {
 		stop('dm_home is not defined.', call.=T)
@@ -18,10 +18,20 @@ plotFreshnessInfo <- function(df, stype) {
 		yaxt='n',
 		ylab='Percent Fresh by Time')
 
-	axis(1, at=dl$tk, label=F)
-	y_adj <- 4.2
-	text(dl$tk, y = 0 - y_adj, label=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.8)
-	axis(2, at=seq(from=0, to=100, by=10), labels=T, las=1)
+	l_date <- substr(df[length(df$date), 1], 1, 7)
+	if (multi) {
+		y_adj <- 7
+		text(dl$tk, y = 0 - y_adj, label=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.7)
+		axis(1, at=dl$tk, label=F)
+		axis(2, at=seq(from=0, to=100, by=10), labels=T, las=1, cex=0.8)
+		title(paste(stype, ' Freshness through ', l_date, sep=''), cex.main=1)
+	} else {
+		y_adj <- 4.2
+		text(dl$tk, y = 0 - y_adj, label=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.8)
+		axis(1, at=dl$tk, label=F)
+		axis(2, at=seq(from=0, to=100, by=10), labels=T, las=1)
+		title(paste(stype, ' Freshness through ', l_date, sep=''))
+	}
 
 	# draw a nice grid
 	abline(h=seq(from=0, to=100, by=10), lty=3, col='black')
@@ -37,11 +47,8 @@ plotFreshnessInfo <- function(df, stype) {
 	lines(as.Date(df$date, '%Y-%m-%d'), df$le52, lwd=1.5, col='gray')
 	lines(as.Date(df$date, '%Y-%m-%d'), df$gt52, lwd=1.5, col='black')
 
-	l_date <- substr(df[length(df$date), 1], 1, 7)
-	title(paste(stype, ' Freshness through ', l_date, sep=''))
-
 	lgnd = c('<= 1 week', '<= 2 weeks', '<= 4 weeks', '<= 8 weeks', '<= 12 weeks', '<= 26 weeks', '<= 52 weeks', '> 52 weeks')
 	legend('topleft', inset=c(0.08, 0.02), bg='white',
 		legend=lgnd,
-		col=c('red', 'orange', 'yellow', 'green', 'cyan', 'lightblue', 'gray', 'black'), lty=1, cex=0.7)
+		col=c('red', 'orange', 'yellow', 'green', 'cyan', 'lightblue', 'gray', 'black'), lty=1, cex=ifelse(multi, 0.4, 0.7))
 }
