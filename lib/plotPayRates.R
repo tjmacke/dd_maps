@@ -1,4 +1,4 @@
-plotPayRates <- function(df, pfn='') {
+plotPayRates <- function(df) {
 
 	if (!exists('dm_home')) {
 		stop('dm_home is not defined.', call.=F)
@@ -27,11 +27,6 @@ plotPayRates <- function(df, pfn='') {
 		d_dph <- ifelse(s_dph > 0, 'Up', ifelse(s_dph == 0, 'Flat', 'Down'))
 	}
 
-	if (pfn != '') {
-		pdf(file=pfn)
-	} else {
-		x11()
-	}
 	dl <- makeDateLabels(df$date)
 
 	# TODO: replace c(0, 35) with a properly scaled Y-Axis
@@ -80,8 +75,4 @@ plotPayRates <- function(df, pfn='') {
 	legend('topleft', inset=c(0.05, 0.05), bg='gray96',
 		legend=lgnd,
 		col=c('red', 'green', 'blue'), lty=1)
-
-	if (pfn != '') {
-		ign <- dev.off()
-	}
 }

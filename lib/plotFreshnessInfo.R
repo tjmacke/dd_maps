@@ -1,4 +1,4 @@
-plotFreshnessInfo <- function(df, stype, pfn='') {
+plotFreshnessInfo <- function(df, stype) {
 
 	if (!exists('dm_home')) {
 		stop('dm_home is not defined.', call.=T)
@@ -6,11 +6,6 @@ plotFreshnessInfo <- function(df, stype, pfn='') {
 	sfn <- paste(dm_home, 'lib', 'makeDateLabels.R', sep='/')
 	source(sfn, chdir=T)
 
-	if (pfn != '') {
-		pdf(file=pfn)
-	} else {
-		X11()
-	}
 	dl <- makeDateLabels(df$date)
 
 	# TODO: replace c(0, 60) with a properly scaled Y-Axis
@@ -49,8 +44,4 @@ plotFreshnessInfo <- function(df, stype, pfn='') {
 	legend('topleft', inset=c(0.08, 0.02), bg='white',
 		legend=lgnd,
 		col=c('red', 'orange', 'yellow', 'green', 'cyan', 'lightblue', 'gray', 'black'), lty=1, cex=0.7)
-
-	if (pfn != '') {
-		ign <- dev.off()
-	}
 }

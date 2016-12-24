@@ -1,4 +1,4 @@
-plotSrcInfo <- function(df, pfn='') {
+plotSrcInfo <- function(df) {
 
 	if (!exists('dm_home')) {
 		stop('dm_home is not defined.', call.=F)
@@ -6,11 +6,6 @@ plotSrcInfo <- function(df, pfn='') {
 	sfn <- paste(dm_home, 'lib', 'makeDateLabels.R', sep='/')
 	source(sfn, chdir=T)
 
-	if (pfn != '') {
-		pdf(file=pfn)
-	} else {
-		x11()
-	}
 	dl <- makeDateLabels(df$date)
 
 	# TODO: replace c(0, 10) with a properly scaled Y-Axis
@@ -40,8 +35,4 @@ plotSrcInfo <- function(df, pfn='') {
 
 	l_date <- df[length(df$date), 1]
 	title(paste('New Delivery Sources', l_date, sep=' through '))
-
-	if (pfn != '') {
-		ign <- dev.off()
-	}
 }

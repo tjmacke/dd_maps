@@ -42,5 +42,5 @@ if (dfn == '') {
 
 df <- read.csv(dfn, sep='\t')
 ofn = sprintf('%sFreshness.%s.pdf', stype, format(Sys.time(), '%Y-%m-%d'))
-
-plotFreshnessInfo(df, stype, ofn)
+pdf(file=ofn)
+plotFreshnessInfo(df, stype)
