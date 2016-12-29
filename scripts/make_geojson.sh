@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -c conf-file -gt { points | lines } [ address-data-file ]"
+U_MSG="usage: $0 [ -help ] -c conf-file -gt { points | lines } [ -t title ] [ address-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -29,6 +29,7 @@ fi
 
 CFILE=
 GTYPE=
+TITLE=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -55,6 +56,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		GTYPE=$1
+		shift
+		;;
+	-t)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-t requires title argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		TITLE="$1"
 		shift
 		;;
 	-*)
@@ -100,9 +111,8 @@ sort -t $'\t' $skeys $FILE |\
 $AWK -F'\t' '
 @include '"$GEO_UTILS"'
 BEGIN {
-#	PI = 4 * atan2(1, 1)
-#	RAD = 0.0001
 	cfile = "'"$CFILE"'"
+	title = "'"$TITLE"'"
 }
 {
 	# Rules:
@@ -152,6 +162,12 @@ END {
 	# add the geojson
 	printf("\"geojson\": {\n")
 	printf("\"type\": \"FeatureCollection\",\n")
+	printf("\"metadata\": {\n")
+	printf("  \"generated\": \"%s\",\n", strftime("%Y%m%dT%H%M%S%z"))
+	if(title != "")
+		printf("  \"title\": \"%s\",\n", title)
+	printf("  \"count\": %d\n", n_points)
+	printf("},\n")
 	printf("\"features\": [\n")
 	if(n_fields == 5){
 		# code for points
