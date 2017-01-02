@@ -62,8 +62,8 @@ fi
 
 $DM_SCRIPTS/get_pay_rates.sh $DIR/payments.*.tsv > $TMP_PAY_FILE
 cat $DIR/r*.tsv | $DM_SCRIPTS/get_new_sources.sh > $TMP_SRC_FILE
-$DM_SCRIPTS/get_freshness_info.sh -at src $DIR/r*.tsv > $TMP_SFRESH_FILE
-$DM_SCRIPTS/get_freshness_info.sh -at dst $DIR/r*.tsv > $TMP_DFRESH_FILE
+cat $DIR/r*.tsv | $DM_SCRIPTS/get_freshness_info.sh -at src -ts week > $TMP_SFRESH_FILE
+cat $DIR/r*.tsv | $DM_SCRIPTS/get_freshness_info.sh -at dst -ts week > $TMP_DFRESH_FILE
 
 Rscript $DM_LIB/plotAllStatsMain.R -p $TMP_PAY_FILE -s $TMP_SRC_FILE -sf $TMP_SFRESH_FILE -df $TMP_DFRESH_FILE
 
