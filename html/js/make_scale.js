@@ -1,5 +1,9 @@
 function makeScale(scaleProps) {
 
+  // remove old graph and release the refs
+  var svg = d3.select(scaleProps.sp_divId).selectAll("svg");
+  svg = svg.remove();
+
   // Add the svg
   d3.select(scaleProps.sp_divId)
     .append("svg")

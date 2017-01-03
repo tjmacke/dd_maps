@@ -33,7 +33,9 @@ function makeMapScales(scaleData) {
     for(var i = 0; i < scaleData.color_breaks.length; i++)
       color_sp_breaks.push(scaleData.color_breaks[i]);
     if ("color_max_value" in scaleData) {
-      color_sp_breaks.push(Math.ceil(scaleData.color_max_value[0]));
+      var color_max_value = Math.ceil(scaleData.color_max_value[0]);
+      var color_breaks_max_value = scaleData.color_breaks[scaleData.color_breaks.length - 1];
+      color_sp_breaks.push(color_max_value > color_breaks_max_value ? color_max_value : color_breaks_max_value);
     }
   }
   colorScaleProps.sp_breaks = color_sp_breaks;
@@ -85,7 +87,9 @@ function makeMapScales(scaleData) {
     for(var i = 0; i < scaleData.size_breaks.length; i++)
       size_sp_breaks.push(scaleData.size_breaks[i]);
     if ("size_max_value" in scaleData) {
-      size_sp_breaks.push(Math.ceil(scaleData.size_max_value[0]));
+      var size_max_value = Math.ceil(scaleData.size_max_value[0]);
+      var size_breaks_max_value = scaleData.size_breaks[scaleData.size_breaks.length - 1];
+      size_sp_breaks.push(size_max_value > size_breaks_max_value ? size_max_value : size_breaks_max_value);
     }
   }
   sizeScaleProps.sp_breaks = size_sp_breaks;

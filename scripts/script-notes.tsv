@@ -33,6 +33,7 @@ map_by_dash_rate.sh	yes	no	.	.
 map_by_date.sh	yes	no	.	.
 unused/mk_dash_summary.sh	no	no	.	.
 unused/mk_dash_totals.sh	no	no	.	.
+plot_all_stats.sh	yes	no	get_pay_rates.sh, get_new_sources.sh, get_freshness_info.sh	.
 plot_freshness_info.sh	yes	no	$DM_LIB/plotFreshnessInfoMain.R	Requires R, Rscript
 plot_pay_rates.sh	yes	no	$DM_LIB/plotPayRatesMain.R	Requires R, Rscript
 plot_src_info.sh	yes	no	$DM_LIB/plotSrcInfoMain.R	Requires R, Rscript
