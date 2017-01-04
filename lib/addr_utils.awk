@@ -1,4 +1,4 @@
-function AU_parse(rply, do_subs, addr, result, towns, st_types, st_quals, dirs,   nf, ary, i, f_st, nf2, ary2, i1, name, street, quals, town, k) {
+function AU_parse(rply, do_subs, addr, result, towns, st_types, st_quals, dirs, st_ords,   nf, ary, i, f_st, nf2, ary2, i1, name, street, quals, town, k) {
 
 	result["status"] = "B"
 	result["emsg"  ] = ""
@@ -116,7 +116,10 @@ function AU_parse(rply, do_subs, addr, result, towns, st_types, st_quals, dirs, 
 			}else
 				i1 = 2
 			for(i = i1; i < nf2; i++){
-				street = street " " ary2[i]
+				if(i == i1)
+					street = street ((ary2[i] in st_ords) ? (" " st_ords[ary2[i]]) : (" "ary2[i]))
+				else
+					street = street " " ary2[i]
 			}
 			street = street ((ary2[nf2] in st_types) ? (" " st_types[ary2[nf2]]) : (" " ary2[nf2]))
 		}

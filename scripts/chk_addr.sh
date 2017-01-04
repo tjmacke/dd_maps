@@ -122,10 +122,16 @@ BEGIN {
 		err = 1
 		exit err
 	}
+	n_ords_2qry = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
+	if(n_ords_2qry == 0){
+		printf("ERROR: %s: no \"ords_2qry\" data\n", ai_file) > "/dev/stderr"
+		err = 1
+		exit err
+	}
 }
 {
 	# Use qry.line format, with all addreses as src ($3) addresses with dst ($4) set to "."
-	if(AU_parse(0, 1, $1, result, towns_2qry, st_types_2qry, "", dirs_2qry)){
+	if(AU_parse(0, 1, $1, result, towns_2qry, st_types_2qry, "", dirs_2qry, ords_2qry)){
 		printf("%s, %s\t%s\t%s\t%s\n", result["status"], result["emsg"], today, $1, ".")
 	}else{
 		printf("%s\t%s\t%s\t%s\t%s\t%s\n", result["status"], today, $1, ".", result["street"] ", " result["town"] ", CA", result["name"]) 
@@ -174,8 +180,14 @@ else
 			err = 1
 			exit err
 		}
+		n_ords_2qry = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
+		if(n_ords_2qry == 0){
+			printf("ERROR: %s: no \"ords_2qry\" data\n", ai_file) > "/dev/stderr"
+			err = 1
+			exit err
+		}
 		# split the input address into fields.  No need to test, as it worked, else we would not be here.
-		AU_parse(0, 0, addr, addr_ary, towns_2qry, st_types_2qry, "", dirs_2qry)
+		AU_parse(0, 0, addr, addr_ary, towns_2qry, st_types_2qry, "", dirs_2qry, ords_2qry)
 
 		n_towns_2std = AU_get_addr_data(addr_info, "towns_2std", towns_2std)
 		if(n_towns_2std == 0){
@@ -195,9 +207,15 @@ else
 			err = 1
 			exit err
 		}
+		n_ords_2std = AU_get_addr_data(addr_info, "ords_2std", ords_2std)
+		if(n_ords_2std == 0){
+			printf("ERROR: %s: no \"ords_2std\" data\n", ai_file) > "/dev/stderr"
+			err = 1
+			exit err
+		}
 	}
 	{
-		if(AU_parse(1, 1, $2, result, towns_2std, st_types_2std, "", dirs_2std)){
+		if(AU_parse(1, 1, $2, result, towns_2std, st_types_2std, "", dirs_2std, ords_2std)){
 			n_lines++
 			lines[n_lines] = sprintf("emsg  = %s", result["emsg"])
 			n_lines++
@@ -211,7 +229,7 @@ else
 				exit err
 			}else{
 				n_lines++
-				lines[n_lines] = sprintf("emsg  =, %s\t%s", "no.match", $0)
+				lines[n_lines] = sprintf("emsg  = %s\t%s", "no.match", $0)
 				n_lines++
 				lines[n_lines] = sprintf("reply = %s", $2)
 				err = 1
