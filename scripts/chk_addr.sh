@@ -202,6 +202,7 @@ else
 			lines[n_lines] = sprintf("emsg  = %s", result["emsg"])
 			n_lines++
 			lines[n_lines] = sprintf("reply = %s", $2)
+			err = 1
 		}else{
 			# original AU_match(result, addr_ary)
 			if(AU_match_2(result, addr_ary)){
@@ -213,14 +214,12 @@ else
 				lines[n_lines] = sprintf("emsg  =, %s\t%s", "no.match", $0)
 				n_lines++
 				lines[n_lines] = sprintf("reply = %s", $2)
+				err = 1
 			}
 		}
 	}
 	END {
-		if(err)
-			exit err
-
-		if(n_lines > 0){
+		if(err && n_lines > 0){
 			printf("ERROR: %s: addr: %s: not found:\n", today, addr) > "/dev/stderr"
 			printf("{\n") > "/dev/stderr"
 			printf("\tquery = %s\n", query) > "/dev/stderr"
@@ -228,6 +227,7 @@ else
 				printf("\t%s\n", lines[i]) > "/dev/stderr"
 			printf("}\n") > "/dev/stderr"		
 		}
+		exit err
 	}' $TMP_GFILE
 fi
 

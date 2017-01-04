@@ -193,13 +193,25 @@ function AU_match(cand, ref,   is_mat, i, n_cand_st, cand_st, cand_odd, n_ref_st
 
 	return is_mat
 }
-function AU_match_2(cand, ref,   n_cand_rtab, cand_rtab, n_ref_rtab, ref_rtab) {
+function AU_match_2(cand, ref,   n_cand_fields, cand_fields, n_ref_fields, ref_fields, i, n_cand_rtab, cand_rtab, n_ref_rtab, ref_rtab) {
 
-	n_cand_rtab = AU_get_rtab(cand["street"], cand_rtab)
+	# street numbers and/or ranges, etc is 1st field
+	n_cand_fields = split(cand["street"], cand_fields, /  */)
+	n_ref_fields = split(ref["street"], ref_fields, /  */)
+
+	# check that non-number parts of streets agree
+	if(n_cand_fields != n_ref_fields)
+		return 0
+	for(i = 2; i <= n_cand_fields; i++){
+		if(cand_fields[i] != ref_fields[i])
+			return 0
+	}
+
+	n_cand_rtab = AU_get_rtab(cand_fields[1], cand_rtab)
 	if(n_cand_rtab == 0)
 		return 0
 
-	n_ref_rtab = AU_get_rtab(ref["street"], ref_rtab)
+	n_ref_rtab = AU_get_rtab(ref_fields[1], ref_rtab)
 	if(n_ref_rtab == 0)
 		return 0
 
