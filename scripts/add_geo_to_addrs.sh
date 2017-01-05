@@ -19,7 +19,7 @@ LL_FILE=/tmp/ll.$$.json
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
-	AWK=igawk
+	AWK="igawk --re-interval"
 	CFG_UTILS="$DM_LIB/cfg_utils.awk"
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk

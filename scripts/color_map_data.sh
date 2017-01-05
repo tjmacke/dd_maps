@@ -17,7 +17,7 @@ DM_SCRIPTS=$DM_HOME/scripts
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
-	AWK=igawk
+	AWK="igawk --re-interval"
 	CFG_UTILS="$DM_LIB/cfg_utils.awk"
 	COLOR_UTILS="$DM_LIB/color_utils.awk"
 	INTERP_UTILS="$DM_LIB/interp_utils.awk"

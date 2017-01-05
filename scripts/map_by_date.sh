@@ -17,7 +17,7 @@ DM_SCRIPTS=$DM_HOME/scripts
 # awk v3 does not support includes
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
-	AWK=igawk
+	AWK="igawk --re-interval"
 	READ_ADDRESSES="$DM_LIB/read_addresses.awk"
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk

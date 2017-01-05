@@ -23,7 +23,7 @@ fi
 # awk v3 does not support includes
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
-	AWK=igawk
+	AWK="igawk --re-interval"
 	DASH_UTILS="$DM_LIB/dash_utils.awk"
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
