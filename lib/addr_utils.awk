@@ -221,7 +221,7 @@ function AU_match_2(cand, ref,   n_cand_fields, cand_fields, n_ref_fields, ref_f
 	if(!AU_rtabs_intersect(n_cand_rtab, cand_rtab, n_ref_rtab, ref_rtab))
 		return 0
 
-	return cand["town"] = ref["town"]
+	return cand["town"] == ref["town"]
 }
 function AU_get_rtab(street, rtab,   n_rtab, i, nw, work) {
 
