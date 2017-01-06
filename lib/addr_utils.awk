@@ -149,53 +149,53 @@ function AU_get_addr_data(addr_info, key, data,   k, keys, nk, i) {
 	}
 	return n_data
 }
-function AU_match(cand, ref,   is_mat, i, n_cand_st, cand_st, cand_odd, n_ref_st, ref_st, ref_odd) {
-
-	is_mat = 0
-
-	# deal with street ranges
-	n_cand_st = split(cand["street"], cand_st, /-/)
-	n_ref_st = split(ref["street"], ref_st, /-/)
-
-	# US rule: require all numbers to be either odd or even
-	cand_odd = cand_st[1] % 2
-	for(i = 2; i <= n_cand_st; i++){
-		if(cand_st[i] % 2 != cand_odd){
-			printf("ERROR: odd/even candidate address range: %s\n", cand["street"]) > "/dev/stderr"
-			return 0
-		}
-	}
-	n_ref_st = split(ref["street"], ref_st, /-/)
-	ref_odd = ref_st[1] % 2
-	for(i = 2; i <= n_ref_st; i++){
-		if(ref_st[i] % 2 != ref_odd){
-			printf("ERROR: odd/even reference address range: %s\n", ref["street"]) > "/dev/stderr"
-			return 0
-		}
-	}
-	if(cand_odd != ref_odd)
-		return 0
-
-	# odd/even good, check the actual numbers/ranges
-	if(n_cand_st == 1){
-		if(n_ref_st == 1){
-			is_mat = cand_st[1] == ref_st[1]
-		}else{
-			is_mat = cand_st[1] >= ref_st[1] && cand_st[1] <= ref_st[2]
-		}
-	}else if(n_ref_st == 1){
-		is_mat = ref_st[1] >= cand_st[1] && ref_st[1] <= cand_st[2]
-	}else{
-		is_mat = !(cand_st[2] < ref_st[1] || cand_st[1] > ref_st[2])
-	}
-
-	# streets are good, deal with towns
-	if(is_mat){
-		is_mat = cand["town"] == ref["town"]
-	}
-
-	return is_mat
-}
+#tm function AU_match(cand, ref,   is_mat, i, n_cand_st, cand_st, cand_odd, n_ref_st, ref_st, ref_odd) {
+#tm 
+#tm 	is_mat = 0
+#tm 
+#tm 	# deal with street ranges
+#tm 	n_cand_st = split(cand["street"], cand_st, /-/)
+#tm 	n_ref_st = split(ref["street"], ref_st, /-/)
+#tm 
+#tm 	# US rule: require all numbers to be either odd or even
+#tm 	cand_odd = cand_st[1] % 2
+#tm 	for(i = 2; i <= n_cand_st; i++){
+#tm 		if(cand_st[i] % 2 != cand_odd){
+#tm 			printf("ERROR: odd/even candidate address range: %s\n", cand["street"]) > "/dev/stderr"
+#tm 			return 0
+#tm 		}
+#tm 	}
+#tm 	n_ref_st = split(ref["street"], ref_st, /-/)
+#tm 	ref_odd = ref_st[1] % 2
+#tm 	for(i = 2; i <= n_ref_st; i++){
+#tm 		if(ref_st[i] % 2 != ref_odd){
+#tm 			printf("ERROR: odd/even reference address range: %s\n", ref["street"]) > "/dev/stderr"
+#tm 			return 0
+#tm 		}
+#tm 	}
+#tm 	if(cand_odd != ref_odd)
+#tm 		return 0
+#tm 
+#tm 	# odd/even good, check the actual numbers/ranges
+#tm 	if(n_cand_st == 1){
+#tm 		if(n_ref_st == 1){
+#tm 			is_mat = cand_st[1] == ref_st[1]
+#tm 		}else{
+#tm 			is_mat = cand_st[1] >= ref_st[1] && cand_st[1] <= ref_st[2]
+#tm 		}
+#tm 	}else if(n_ref_st == 1){
+#tm 		is_mat = ref_st[1] >= cand_st[1] && ref_st[1] <= cand_st[2]
+#tm 	}else{
+#tm 		is_mat = !(cand_st[2] < ref_st[1] || cand_st[1] > ref_st[2])
+#tm 	}
+#tm 
+#tm 	# streets are good, deal with towns
+#tm 	if(is_mat){
+#tm 		is_mat = cand["town"] == ref["town"]
+#tm 	}
+#tm 
+#tm 	return is_mat
+#tm }
 function AU_match_2(cand, ref,   n_cand_fields, cand_fields, n_ref_fields, ref_fields, i, n_cand_rtab, cand_rtab, n_ref_rtab, ref_rtab) {
 
 	# street numbers and/or ranges, etc is 1st field

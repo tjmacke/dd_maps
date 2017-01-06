@@ -138,10 +138,9 @@ BEGIN {
 	}
 }')"
 stat="$(echo "$line" | awk -F'\t' '{ print $1 }')"
-addr="$(echo "$line" | awk -F'\t' '{ print $3 }')"
 if [ "$stat" != "G" ] ; then
 	emsg="$(echo $stat | awk '{ print $2 }')"
-	echo "ERROR: $TODAY: addr: $addr: $emsg" 1>&2
+	echo "ERROR: $TODAY: addr: $ADDR: $emsg" 1>&2
 else
 	query="$(echo "$line" | awk -F'\t' '{ print $5 }')"
 	name="$(echo "$line" | awk -F'\t' '{ print $6 }')"
@@ -152,7 +151,7 @@ else
 	BEGIN {
 		today = "'"$TODAY"'"
 
-		addr = "'"$addr"'"
+		addr = "'"$ADDR"'"
 		query = "'"$query"'"
 		name = "'"$name"'"
 
@@ -186,6 +185,7 @@ else
 			err = 1
 			exit err
 		}
+
 		# split the input address into fields.  No need to test, as it worked, else we would not be here.
 		AU_parse(0, 0, addr, addr_ary, towns_2qry, st_types_2qry, "", dirs_2qry, ords_2qry)
 
@@ -222,7 +222,6 @@ else
 			lines[n_lines] = sprintf("reply = %s", $2)
 			err = 1
 		}else{
-			# original AU_match(result, addr_ary)
 			if(AU_match_2(result, addr_ary)){
 				printf("%s\t%s\t%s\t%s\t%s\t%s\n", today, addr, ".", $4, $3, $2)
 				err = 0
