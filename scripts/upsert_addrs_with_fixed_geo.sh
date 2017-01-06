@@ -85,7 +85,7 @@ while read line ; do
 	}')"
 	addr_id="$(echo -e "$sel_stmt" | sqlite3 $DM_DB 2>&1)"
 	if [ -z "$addr_id" ] ; then
-		q_details="$(echo -e ".\t.\t.\t.\tJob\t$addr\t." | $DM_SCRIPTS/get_addrs_from_runs.sh -at src | awk -F'\t' 'NR > 1{ printf("%s|%s\n", $5, $6) ; exit 0 }')"
+		q_details="$(echo -e ".\t.\t.\t.\tJob\t$addr\t." | $DM_SCRIPTS/get_addrs_from_runs_2.sh -at src | awk -F'\t' 'NR > 1{ printf("%s|%s\n", $5, $6) ; exit 0 }')"
 		sql_stmt="$(echo "$line" |\
 		awk -F'\t' 'BEGIN {
 			apos = sprintf("%c", 39)
