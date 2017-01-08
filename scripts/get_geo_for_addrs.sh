@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ address-file ]"
+U_MSG="usage: $0 [ -help ] { -a address | [ address-file ] }"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -13,6 +13,9 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
+NOW="$(date +%Y%m%d_%H%M%S)"
+
+ADDR=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -20,6 +23,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-a)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-a requires address argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		ADDR="$1"
+		shift
 		;;
 	-*)
 		LOG ERROR "unknown option $1"
@@ -34,9 +47,16 @@ while [ $# -gt 0 ] ; do
 	esac
 done
 
-NOW="$(date +%Y%m%d_%H%M%S)"
-
-cat $FILE											|\
+if [ ! -z "$ADDR" ] ; then
+	if [ ! -z "$FILE" ] ; then
+		LOG ERROR "-a addr not allowed with address-file"
+		echo "$U_MSG" 1>&2
+		exit 1
+	fi
+	echo "$ADDR"
+else
+	cat $FILE
+fi	|\
 awk -F'\t' 'BEGIN {
 }
 {

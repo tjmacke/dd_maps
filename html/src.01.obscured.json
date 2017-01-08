@@ -1,0 +1,299 @@
+{
+"config": {
+  "color_title": ["Weeks Since Last Pickup"],
+  "color_values": [[1,0.05,0.05],[1,0.5,0],[0.9,0.9,0.3],[0.5,0.9,0.5],[0.5,0.85,0.8],[0.6,0.75,0.85],[0.7,0.7,0.7],[0.3,0.3,0.3]],
+  "color_breaks": [1,2,4,8,12,26,52],
+  "color_box_text_color": ["white"],
+  "size_title": ["Visits/Location"],
+  "size_values": ["small","medium","large"],
+  "size_breaks": [13,37],
+  "data_stats": ["30 sources&#44; 46 dashes&#44; last &#61; 2015-09-25"],
+  "color_min_value": [0],
+  "color_max_value": [3],
+  "color_stats": [[17,56.7],[5,16.7],[8,26.7],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],
+  "size_min_value": [1],
+  "size_max_value": [5],
+  "size_stats": [[30,100.0],[0,0.0],[0,0.0]]
+}
+,
+"geojson": {
+"type": "FeatureCollection",
+"metadata": {
+  "generated": "20170108T144615-0800",
+  "title": "Doordash delivery sources",
+  "count": 30
+},
+"features": [
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.10690, 37.40212]},
+  "properties": {
+    "title": "Src_00012:<br/>visits=1, last=2015-09-21",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.11471, 37.40133]},
+  "properties": {
+    "title": "Src_00018:<br/>visits=1, last=2015-09-04",
+    "marker-color": "#e5e54c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.12531, 37.41308]},
+  "properties": {
+    "title": "Src_00031:<br/>visits=1, last=2015-09-04",
+    "marker-color": "#e5e54c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.12557, 37.41293]},
+  "properties": {
+    "title": "Src_00009:<br/>visits=1, last=2015-09-04",
+    "marker-color": "#e5e54c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.13047, 37.41706]},
+  "properties": {
+    "title": "Src_00025:<br/>visits=1, last=2015-09-21",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.13517, 37.41927]},
+  "properties": {
+    "title": "Src_00008:<br/>visits=1, last=2015-09-04",
+    "marker-color": "#e5e54c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.14088, 37.46017]},
+  "properties": {
+    "title": "Src_00022:<br/>visits=2, last=2015-09-25",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.14424, 37.42675]},
+  "properties": {
+    "title": "Src_00030:<br/>visits=3, last=2015-09-25",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.14481, 37.42600]},
+  "properties": {
+    "title": "Src_00015:<br/>visits=2, last=2015-09-25",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.14534, 37.42536]},
+  "properties": {
+    "title": "Src_00011:<br/>visits=1, last=2015-09-09",
+    "marker-color": "#e5e54c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.15924, 37.46235]},
+  "properties": {
+    "title": "Src_00016:<br/>visits=1, last=2015-09-17",
+    "marker-color": "#ff7f00",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16019, 37.44547]},
+  "properties": {
+    "title": "Src_00006:<br/>visits=1, last=2015-09-25",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16076, 37.44684]},
+  "properties": {
+    "title": "Src_00003:<br/>visits=2, last=2015-09-17",
+    "marker-color": "#ff7f00",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16086, 37.44674]},
+  "properties": {
+    "title": "Src_00005:<br/>visits=2, last=2015-09-18",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16126, 37.44615]},
+  "properties": {
+    "title": "Src_00023:<br/>visits=1, last=2015-09-17",
+    "marker-color": "#ff7f00",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16153, 37.43876]},
+  "properties": {
+    "title": "Src_00001:<br/>visits=5, last=2015-09-21",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16153, 37.43886]},
+  "properties": {
+    "title": "Src_00007:<br/>visits=1, last=2015-09-23",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16145, 37.43871]},
+  "properties": {
+    "title": "Src_00014:<br/>visits=1, last=2015-09-18",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16162, 37.43871]},
+  "properties": {
+    "title": "Src_00027:<br/>visits=1, last=2015-09-18",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16169, 37.44483]},
+  "properties": {
+    "title": "Src_00002:<br/>visits=1, last=2015-09-04",
+    "marker-color": "#e5e54c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16179, 37.44491]},
+  "properties": {
+    "title": "Src_00004:<br/>visits=1, last=2015-09-18",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16197, 37.44354]},
+  "properties": {
+    "title": "Src_00013:<br/>visits=3, last=2015-09-18",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16218, 37.44440]},
+  "properties": {
+    "title": "Src_00029:<br/>visits=1, last=2015-09-23",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16253, 37.44486]},
+  "properties": {
+    "title": "Src_00019:<br/>visits=1, last=2015-09-14",
+    "marker-color": "#ff7f00",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.16309, 37.44425]},
+  "properties": {
+    "title": "Src_00024:<br/>visits=3, last=2015-09-23",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.17651, 37.44984]},
+  "properties": {
+    "title": "Src_00017:<br/>visits=1, last=2015-09-04",
+    "marker-color": "#e5e54c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.18307, 37.45348]},
+  "properties": {
+    "title": "Src_00021:<br/>visits=1, last=2015-09-18",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.18346, 37.45276]},
+  "properties": {
+    "title": "Src_00028:<br/>visits=1, last=2015-09-14",
+    "marker-color": "#ff7f00",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.18360, 37.45379]},
+  "properties": {
+    "title": "Src_00026:<br/>visits=3, last=2015-09-25",
+    "marker-color": "#ff0c0c",
+    "marker-size": "small"
+  }
+},
+{
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [-122.21748, 37.47342]},
+  "properties": {
+    "title": "Src_00020:<br/>visits=1, last=2015-09-09",
+    "marker-color": "#e5e54c",
+    "marker-size": "small"
+  }
+}
+]
+}
+}
