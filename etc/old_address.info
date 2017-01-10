@@ -1,0 +1,59 @@
+# This is a comment
+dirs = {
+	E	= East
+	E.	= East
+	N	= North
+	N.	= North
+	S	= South
+	S.	= South
+	W	= West
+	W.	= West
+}
+
+st_abbrevs = {
+	Ave	= Avenue
+	Ave.	= Avenue
+	Blvd	= Boulevard
+	Blvd.	= Boulevard
+	Cir	= Circle
+	Cir.	= Circle
+	Ct	= Court
+	Ct.	= Court
+	Dr	= Drive
+	Dr.	= Drive
+	Ln	= Lane
+	Ln.	= Lane
+	Pkwy	= Parkway
+	Pkwy.	= Parkway
+	Pl	= Place
+	Pl.	= Place
+	Rd	= Road
+	Rd.	= Road
+	Rl	= Real
+	Rl.	= Real
+	Sq	= Square
+	Sq.	= Square
+	St	= Street
+	St.	= Street
+}
+
+st_quals = {
+	apt	= 1
+	bldg	= 1
+	class	= 1
+	door    = 1
+	floor	= 1
+	no	= 1
+	rm	= 1
+	ste	= 1	
+	unit	= 1
+}
+
+towns = {
+	East PA	 = East Palo Alto
+	MP	 = Menlo Park
+	MV	 = Mountain View
+	PA	 = Palo Alto
+	RWC	 = Redwood City
+	Stanford = Stanford University
+}

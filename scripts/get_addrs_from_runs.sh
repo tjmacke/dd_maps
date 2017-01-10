@@ -29,7 +29,7 @@ else
 	exit 1
 fi
 
-AI_FILE=$DM_ETC/new_address.info
+AI_FILE=$DM_ETC/address.info
 ATYPE=
 FILE=
 
