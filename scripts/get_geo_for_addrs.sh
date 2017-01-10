@@ -64,5 +64,5 @@ awk -F'\t' 'BEGIN {
 		next
 	printf("%s\t.\t.\t.\tJob\t%s\t.\n", strftime("%Y-%m-%d"), $1)
 }'												|\
-$DM_SCRIPTS/get_addrs_from_runs_2.sh -at src							|\
-$DM_SCRIPTS/add_geo_to_addrs_2.sh -at src
+$DM_SCRIPTS/get_addrs_from_runs.sh -at src							|\
+$DM_SCRIPTS/add_geo_to_addrs.sh -at src

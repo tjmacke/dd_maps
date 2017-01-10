@@ -16,20 +16,24 @@ DM_SCRIPTS=$DM_HOME/scripts
 
 LL_FILE=/tmp/ll.$$.json
 
+TODAY="$(date +%Y-%m-%d)"
+
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
 	AWK="igawk --re-interval"
 	CFG_UTILS="$DM_LIB/cfg_utils.awk"
+	ADDR_UTILS="$DM_LIB/addr_utils.awk"
 elif [ "$AWK_VERSION" == "4" ] ; then
 	AWK=awk
 	CFG_UTILS="\"$DM_LIB/cfg_utils.awk\""
+	ADDR_UTILS="\"$DM_LIB/addr_utils.awk\""
 else
 	LOG ERROR "unsupported awk version: \"$AWK_VERSION\": must be 3 or 4"
 	exit 1
 fi
 
-CFILE=$DM_ETC/address.info
+AI_FILE=$DM_ETC/new_address.info
 ATYPE=
 FILE=
 
@@ -46,7 +50,7 @@ while [ $# -gt 0 ] ; do
 			echo "$U_MSG" 1>&2
 			exit 1
 		fi
-		CFILE=$1
+		AI_FILE=$1
 		shift
 		;;
 	-at)
@@ -96,19 +100,21 @@ while read line ; do
 	if [ $lcnt -eq 1 ] ; then
 		continue
 	fi
-	date="$(echo "$line" | awk -F'\t' '{ print $2 }')"
+	astat="$(echo "$line" | awk -F'\t' '{ print $1 ~ /^B/ ? "bad" : "good" }')"
+	if [ "$astat" == "bad" ] ; then
+		echo "$line" |\
+		awk -F'\t' 'BEGIN {
+			atype = "'"$ATYPE"'"
+		}
+		{
+			printf("ERROR: %s: addr: %s: %s\n", $2, atype == "src" ? $3 : $4, $1)
+		}' 1>&2
+		continue
+	fi
 	src="$(echo "$line" | awk -F'\t' '{ print $3 }')"
 	dst="$(echo "$line" | awk -F'\t' '{ print $4 }')"
 	query="$(echo "$line" | awk -F'\t' '{ print $5 }')"
-	qName="$(echo "$line" | awk -F'\t' '{ print $6 }')"
-	if [ -z "$query" ] ; then
-		if [ "$ATYPE" == "src" ] ; then
-			echo "ERROR: $date: src: $src: bad source address" 1>&2
-		else
-			echo "ERROR: $date: dst: $dst: bad destination address" 1>&2
-		fi
-		continue
-	fi
+	name="$(echo "$line" | awk -F'\t' '{ print $6 }')"
 	$DM_SCRIPTS/get_latlong.sh "$query" > $LL_FILE
 	if [ ! -s $LL_FILE ] ; then
 		LOG ERROR "get_latlong.sh failed for $query"
@@ -116,121 +122,107 @@ while read line ; do
 		# validate what came back
 		$AWK -F'\t' '
 		@include '"$CFG_UTILS"'
+		@include '"$ADDR_UTILS"'
 		BEGIN {
-			cfile = "'"$CFILE"'"
-			if(CFG_read(cfile, config)){
+			today = "'"$TODAY"'"
+
+			atype = "'"$ATYPE"'"
+			src = "'"$src"'"
+			dst = "'"$dst"'"
+			addr = atype == "src" ? src : dst
+			query = "'"$query"'"
+			name = "'"$name"'"
+
+			ai_file = "'"$AI_FILE"'"
+			if(CFG_read(ai_file, addr_info)){
 				err = 1
 				exit err
 			}
-			for(k in config){
-				split(k, keys, SUBSEP)
-				if(keys[1] == "st_abbrevs")
-					st_abbrevs[keys[2]] = config[k]
-				else if(keys[1] == "dirs")
-					dirs[keys[2]] = config[k]
+
+			n_towns_2qry = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
+			if(n_towns_2qry == 0){
+				printf("ERROR: %s: no \"towns_2qry\" data\n", ai_file) > "/dev/stderr"
+				err = 1
+				exit err
+			}
+			n_st_types_2qry = AU_get_addr_data(addr_info, "st_types_2qry", st_types_2qry)
+			if(n_st_types_2qry == 0){
+				printf("ERROR: %s: no \"st_types_2qry\" data\n", ai_file) > "/dev/stderr"
+				err = 1
+				exit err
+			}
+			n_dirs_2qry = AU_get_addr_data(addr_info, "dirs_2qry", dirs_2qry)
+			if(n_dirs_2qry == 0){
+				printf("ERROR: %s: no \"dirs_2qry\" data\n", ai_file) > "/dev/stderr"
+				err = 1
+				exit err
+			}
+			n_ords_2qry = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
+			if(n_ords_2qry == 0){
+				printf("ERROR: %s: no \"ords_2qry\" data\n", ai_file) > "/dev/stderr"
+				err = 1
+				exit err
+			}
+
+			# split the input address into fields. No need to test, as it must be good to get here
+			AU_parse(0, 0, addr, addr_ary, towns_2qry, st_types_2qry, "", dirs_2qry, ords_2qry)
+
+			n_towns_2std = AU_get_addr_data(addr_info, "towns_2std", towns_2std)
+			if(n_towns_2std == 0){
+				printf("ERROR: %s: no \"towns_2std\" data\n", ai_file) > "/dev/stderr"
+				err = 1
+				exit err
+			}
+			n_st_types_2std = AU_get_addr_data(addr_info, "st_types_2std", st_types_2std)
+			if(n_st_types_2std == 0){
+				printf("ERROR: %s: no \"st_types_2std\" data\n", ai_file) > "/dev/stderr"
+				err = 1
+				exit err
+			}
+			n_dirs_2std = AU_get_addr_data(addr_info, "dirs_2std", dirs_2std)
+			if(n_dirs_2std == 0){
+				printf("ERROR: %s: no \"dirs_2std\" data\n", ai_file) > "/dev/stderr"
+				err = 1
+				exit err
+			}
+			n_ords_2std = AU_get_addr_data(addr_info, "ords_2std", ords_2std)
+			if(n_ords_2std == 0){
+				printf("ERROR: %s: no \"ords_2std\" data\n", ai_file) > "/dev/stderr"
+				err = 1
+				exit err
 			}
 		}
 		{
-			atype = "'"$ATYPE"'"
-			date = "'"$date"'"
-			src = "'"$src"'"
-			dst = "'"$dst"'"
-			query = "'"$query"'"
-			qName = "'"$qName"'"
-
-			conf = $1
-			reply = $2
-			lat = $3
-			long = $4
-
-			nqf = split(query, qAry, ",")
-			for(i = 1; i <= nqf; i++){
-				sub(/^  */, "", qAry[i])
-				sub(/  *$/, "", aQry[i])
-			}
-
-			nrf = split(reply, rAry, ",")
-			for(i = 1; i <= nrf; i++){
-				sub(/^  */, "", rAry[i])
-				sub(/  *$/, "", rAry[i])
-			}
-
-			err = 0
-			if(nrf < nqf){
+			if(AU_parse(1, 1, $2, result, towns_2std, st_types_2std, "", dirs_2std, ords_2std)){
+				n_lines++
+				lines[n_lines] = sprintf("emsg  = %s", result["emsg"])
+				n_lines++
+				lines[n_lines] = sprintf("reply = %s", $2)
 				err = 1
-				emsg = "reply is shorter that query"
 			}else{
-				# qAry[1,2,3] are the street, town and st (w/o zip)
-				# find the street, expand any abbrevs, then start matching
-				r_st = 0
-				for(i = 1; i <= nrf; i++){
-					if(substr(rAry[i], 1, 1) ~ /[1-9]/){
-						r_st = i
-						rAry[r_st] = fix_street(rAry[r_st], st_abbrevs, dirs)
-						break
-					}
-				}
-				if(r_st == 0){
-					err = 1
-					emsg = "no street in reply"
-				}else if(r_st + 2 > nrf){
-					err = 1
-					emsg = "not enough reply after street"
-				}else if(rAry[r_st] != qAry[1]){
-					err = 1
-					emsg = "streets do not match"
-				}else if(rAry[r_st+1] != qAry[2]){
-					err = 1 
-					emsg = "towns do not match"
+				if(AU_match(result, addr_ary)){
+					printf("%s\t%s\t%s\t%s\t%s\t%s\n", today, src, dst, $4, $3, $2)
+					err = 0
+					exit err
 				}else{
-					l_qState = length(qAry[3])
-					l_rState = length(rAry[r_st+2])
-					if(l_rState < l_qState){
-						err = 1
-						emsg = "reply state is too short"
-					}else if(substr(rAry[r_st+2], 1, l_qState) != qAry[3]){
-						err = 1
-						emsg = "states do not match"
-					}else{
-						# if we get here, we matched the reply to query
-					}
+					n_lines++
+					lines[n_lines] = sprintf("emsg  = %s\t%s", "no.match", $0)
+					n_lines++
+					lines[n_lines] = sprintf("reply = %s", $2)
+					err = 1
 				}
-			}
-			if(!err){
-				# do something here to deal w/atype
-				printf("%s\t%s\t%s\t%s\t%s\t%s\n", date, src, dst, long, lat, reply)
-				exit 0
 			}
 		}
 		END {
-			if(err){
-				# deal w/atype here
-				if( atype == "src" )
-					printf("ERROR: %s: src: %s: not found:\n", date, src) > "/dev/stderr"
-				else
-					printf("ERROR: %s: dst: %s: not found:\n", date, dst) > "/dev/stderr"
+			if(err && n_lines > 0){
+				printf("ERROR: %s: addr: %s: not found:\n", today, addr) > "/dev/stderr"
 				printf("{\n") > "/dev/stderr"
-				printf("\temsg  = %s\n", emsg) > "/dev/stderr"
 				printf("\tquery = %s\n", query) > "/dev/stderr"
-				printf("\treply = %s\n", reply) > "/dev/stderr"
-				printf("}\n") > "/dev/stderr"
+				for(i = 1; i <= n_lines; i++)
+					printf("\t%s\n", lines[i]) > "/dev/stderr"
+				printf("}\n") > "/dev/stderr"		
 			}
-		}
-		function fix_street(str, st_abbrevs, dirs,    nw, words, i, work, w) {
-			nw = split(str, words, " ")
-			work = ""
-			for(i = 1; i <= nw; i++){
-				if(words[i] in dirs)
-					w = dirs[words[i]]
-				else if(words[i] in st_abbrevs)
-					w = st_abbrevs[words[i]]
-				else if(words[i] == "el")
-					w = "El"
-				else
-					w = words[i]
-				work = work == "" ? w : work " " w
-			}
-			return work
+			exit err
 		}' $LL_FILE
 	fi
 	sleep 5

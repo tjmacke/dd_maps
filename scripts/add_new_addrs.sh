@@ -44,6 +44,6 @@ if [ -z "$FILES" ] ; then
 fi
 
 for f in $FILES ; do
-	$DM_SCRIPTS/get_addrs_from_runs_2.sh -at src $f	| $DM_SCRIPTS/insert_new_addrs.sh -at src
-	$DM_SCRIPTS/get_addrs_from_runs_2.sh -at dst $f	| $DM_SCRIPTS/insert_new_addrs.sh -at dst
+	$DM_SCRIPTS/get_addrs_from_runs.sh -at src $f	| $DM_SCRIPTS/insert_new_addrs.sh -at src
+	$DM_SCRIPTS/get_addrs_from_runs.sh -at dst $f	| $DM_SCRIPTS/insert_new_addrs.sh -at dst
 done
