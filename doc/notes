@@ -1,218 +1,524 @@
-All files are in $DM_HOME.  if DM_HOME is not defined, the script logs a message to stderr that DM_HOME is not define
-and exits with status = 1.
+1. add_geo_to_addrs.sh:
 
-scripts/add_geo_to_addresses.sh:
-
-	This script is used to add lat/lng (if possible) to either the src or dst addresses in a canonicalized address file.
-	If the lat/lng for the address was found, the result is written to stdout; if not the error and possibly some context
+	This script is used to add lat/lng to either the canonical src or dst addresses in a query-line file.  If the
+	lat/lng for the address was found, the result is written to stdout; if not the error and possibly some context
 	is written to stderr.
 
 	usage:
 
-		./add_geo_to_addresses.sh [ -help ] [ -c conf-file ] -at { src | dst } [ extracted-address-file ]
+		./add_geo_to_addrs.sh [ -help ] [ -c conf-file ] -at { src | dst } [ query-line-file ]
 
 	arguments:
 
 		-help		-- print the usage message. Default: false.
 		-c conf-file	-- This file contains several tables that are used to canonicalize addresses.  Tables
-				-- include mappings like St -> Street and PA -> Palo Alto.  Default: $DM_HOME/etc/street.info.
+				-- include mappings like St -> Street and PA -> Palo Alto.  Default: $DM_HOME/etc/address.info.
 		-at { src | dst	}
-				-- Select the address type. The input file contains both the source and destination addresses
-				-- for each dash.  Use -at src to work on source addresses or -at dst to work on destination
-				-- addresses.  Default: none.
-		extracted-address-file
-				-- A file containing canonicalized addresses.  Default: stdin.  To resvolve addresses in
-				-- more than one file use: cat file-1 ... | add_geo_to_addresses.sh ...
+				-- For historical reasons, query-line files contain both the src and dst address of the 
+				-- delivery, but only one has been canonicalized.  Use -at src to specify that the src
+				-- addresses are canonical or -at dst to specify that the dst addresses are canonical.
+				-- Default: none
+		query-line-file
+				-- A file containing canonicalized src or dst addresses.  Default: stdin.  To resolve addresses in
+				-- more than one file use: cat file-1 ... | add_geo_to_addrs.sh ...
 
 	example:
 
-		If the file addrs.nogeo.20160301.tsv contains canonicalized addresses intended for adding lat/lng to the
-		destination address, use this bash command:
+		If the file addrs.nogeo.20170101.tsv contains canonicalized src addresses that require lat/lng information, use
+		this command:
 
-			add_geo_to_addresses.sh -at dst addrs.nogeo.20160301.tsv > addrs.geo.20160301.tsv 2> addrs.geo.20160301.errs
+			add_geo_to_addrs.sh -at src addrs.nogeo.20170101.tsv > addrs.geo.20170101.tsv 2> addrs.geo.20170101.errs
 
-scripts/chk_1_address.sh:	(called by chk_all_addresses.sh)
+2. add_new_addrs.sh:
 
-	This script is used to investigate why an address was not found.  The suspect address, as a command line argument is
-	submitted to opencagedata.com to get its lat/lng.  opencagedata.com returns a list of its best matches to the query with
-	each match preceded by its score.  This script prints this list after first printing information that shows the origin
-	of the suspect address: the actual dash line from a "run file" that used this address, the suspect address and the query
-	address, ie the address sent to opencagedata.com.
+	This script adds new addresses to the sqlite3 db, dd_maps.db.  Each new address is assigned an initial a_stat of "G"
+	an  initial as_reason of "new".
 
 	usage:
 
-		./chk_1_address.sh [ - help ] [ -dh doordash-home ] -at { src | dst } -m month addr
+		./add_new_addrs.sh [ -help ] runs-file_1 ...
+
+	arguments:
+
+		-help		-- print the usage message. Default false.
+		runs-files	-- one or more runs-file that contains new addresses.  Default: none
+
+	example:
+
+		If new jobs have been added to the runs file runs.20170101.tsv, this command will find any new addresses and
+		insert them into the sqlite3 db dd_maps.db.
+
+			./add_new_addrs.sh $DD_DATA/runs.20170101.tsv
+
+3. cfg_to_json.sh:
+
+	This script converts key = value config files to json that can be used by d3 to configure the scales on the
+	maps.
+
+	usage:
+
+		./cfg_to_json.sh [ -help ] [ config-file ]
+
+	arguments:
+
+		-help		-- print the usage messages. Default: false.
+		config-file	-- Simple key = value config files.  Default: stdin.
+
+	example:
+
+		This command converts the key/value pairs in src.cfg to json.
+	
+			./cfg_to_json.sh src.cfg > src_cfg.json
+
+4. color_map_data.sh:
+
+	This script converts "mapped" address values to color and/or marker sizes using the scale information in a config
+	file.  If requested, append the color and/or size extrema and bin information (count, %) to a "stats" file.
+
+	usage:
+
+		./color_map_data.sh [ -help ] -c conf-file [ -stats stats-file ] [ map-data-file ]
 
 	arguments:
 
 		-help		-- print the usage message. Default: false.
-		-dh doordash-home
-				-- The base doordash directory.  Data to be checked must be in a "runs-file" in $DD_HOME/data.
-				-- Default: the value of $DD_HOME. If DD_HOME is not defined, you must set this value on the
-				-- command line.
-		-at { src | dst }
-				-- Select the address type to check. Use -at src to indicate that the addr argument is a 
-				-- source address or -at dst to indicate it's a destination address. Default: none.
-		-m month	-- The month of the "runs-file" that contains this address.  The format of month is YYYYMMDD.
-				-- This is needed so the original dash can be examined and in some cases fixed.
-		addr		-- the address to check. Since the address will contain spaces, it must be quoted.
+		-c conf-file	-- get color and other graphic parameters from config file conf-file.  Default: none.
+		-stats stats-file
+				-- If present, append graphic value limits and bin information to this file.
+		map-data-file	-- A mapped address file.  Default: stdin.
 
 	example:
 
-		./chk_1_address.sh -dh ~/doordash -m 20160301 -at src "Tommy Thai, 1482 West El Camino Real, MV"
+		./color_map_data -c src.cfg -stats /tmp/stats.$$ src_by_date.tsv > src_colored_by_date.tsv
 
-scripts/chk_all_addresses.sh:
+5. delete_unused_addrs.sh:
 
-	This script is used to check the addresses in an "errs" file (addrs.geo.YYYYMMDD.errs) that was created by a call to
-	add_geo_to_addresses.sh.  This script parses the entries in the errs file and for each address that opencagedata.com
-	could not find a lat/lng, parses the error report for the information required to call ./chk_1_address.sh to get 
-	detailed information of why the call to opencagedata.com failed.
-	
+	This script deletes addresses from the sqlite3 dd_maps.db database.  Sometimes addresses initially entered into
+	this db are incorrecct -- wrong town or street type.  If the original address can be corrected in the original data,
+	the corrected address is entered and updated with its geo, and the original incorrrect address removed, keeping the
+	addresses in the db in sync with the original data.
+
 	usage:
+		./delete_unused_addrs.sh [ -help ] unused-addr-file
 
-		./chk_all_addresses.sh [ -help ] [ -dh doordash-home ] error-file
+	arguments:
 
-	arguments
-
-		-help		-- print the usage message.  Default: false.
-		-dh doordash-home
-				-- The base doordash directory.  Data to be checked must be in a "runs-file" in $DD_HOME/data.
-				-- Default: the value of $DD_HOME.  If DD_HOME is not defined, you must set thie value on the
-				-- command line.
-		error-file	-- The error file created by add_geo_to_addresses.sh to check.
+		-help		-- print usage message. Default: false.
+		unused-addr-file
+				-- file containing addresses to to delete. One address/line.  Default: none.
 
 	example:
 
-		./chk_all_addresses.sh -dh ~/doordash addrs.geo.20160301.errs
+	If the file unused.addrs contains addresses that are no longer in any runs file, use this command to remove them
+	from the db:
 
-scripts/collect_addresses.sh:
+		./delete_unused_addrs.sh unused.addrs
 
-	This script is used collect and count the number of addresses in geo file (addrs.geo.YYYYMMDD.tsv) and write the results
-	to stdout.  At some point, the addresses from the individual sourse and destination addresses will be used to check if
-	an address in a runs-file needs to be submitted to opencagedata.com to get its lat/lng.
+6. find_geo_aliases.sh:
+
+	This script is used to find addresses that resolve to the lat/lng.  In some cases this is fine because my
+	opencagedata.com query can't resolve the addresses, say 2 floors in the same building.  But in other cases, the
+	identical lat/lng show that the same address was entered in two or more different ways, something that must be
+	fixed.
 
 	usage:
 
-		./collect_addrs.sh [ -help ] -at { src | dst } [ addr-geo-file ]
+		./find_geo_aliases.sh [ -help ] (no options or arguments)
 
 	arguments:
-		-help		-- print the usage message.  Default: false.
-		-at { src | dst }
-				-- Select the address type to collect. Use -at src to collect and count source addresses or
-				-- -at dst to collect and count destination addresses.  Default: none.
-		addr-geo-file	-- A file containing the addresses w/latlng to collect.  To collect addresses from more than
-				-- one geo file, cat them together and then pipe the result into ./collect_addrs.sh
+
+		-help		-- print usage message. Default: false.
 
 	example:
 
-		cat addrs.geo.*.tsv | ./collect_addrs -at src > out-file
+		Use this command to find (lexically) distinct addresses with the same lat/lng:
 
-scripts/combine_pay_and_addr.sh:
+			./find_geo_aliases.sh > geo.aliases
 
-	This script combines pay data and location lat/lng info.  The data can be colored by average pay/location and
-	displayed on a map, possibly revealing dash source/destinations that pay well/poorly.
+7. find_qry_addr_aliases.sh:
 
-	Adding lat/lng to addresses is slow, so addresses with lat/lng are collected into two files.  The file src.addrs
-	holds resolved source addresses and the file dst.addrs holds destination addresses. These files are located in
-	$DD_HOME/maps, where DD_HOME is a symbol that points to the root of the doordash file hierarchy.  The command
-	argument -at { src | dst } is used to select whether source (-at src) or destination (-at dst) locations will be
-	used.
-
-	Pay information is taken from $DD_HOME/data/breakdownofpay.20150904.tsv.  Pay information is on a per shift not 
-	per dash basis and includes the number of dashes/shift and the pay/shift.  These are combined as
-
-		dash-rate = (pay/shift) / (dashes/shift)
-
-	which is the average rate for all dashes in a shift.
+	This script find lexically distinct addresses that produce the same canonicalized address.  This generally
+	happens because address canonicalization ignores street qualifiers.  So 123 Main St. and 123 Main St., Apt. 2
+	are both reduced to 123 Main St.  In some cases, more complete canonicalization might help, but in other
+	cases, where the original addresses differ only at the floor level inside of a building, those addresses
+	will always be the same.
 
 	usage:
 
-		./combine_pay_and_addr.sh [ -help ] [ -dh doordash-home ] -at { src | dst } [ runs-file ]
+		./find_qry_addr_aliases.sh [ -help ] (no options or arguments)
 
 	arguments:
-		-help		-- print the usage message.  Default: false.
-		-dh doordash-home
-				-- The base doordash directory.  Data to be checked must be in a "runs-file" in $DD_HOME/data.
-				-- Default: the value of $DD_HOME.  If DD_HOME is not defined, you must set this value on the
-				-- command line.
+
+		-help		-- print usage message. Default: false.
+
+	example:
+
+		Use this command to find (lexically) distinct addresses that have the same canonical address.
+
+			./find_qry_addr_aliases.sh > qry.aliases
+
+8. find_unused_addrs_in_runs.sh:
+
+	This script takes a file of addresses and a list of runs-files and writes out those addresses that are not
+	used in any of those runs-files.  It is used to find addresses in the sqlite3 db dd_maps.db that have been
+	corrected, so they can then be deleted insuring that the db stays in sync with the raw data.
+
+	usage:
+
+		./find_unused_addrs_in_runs.sh [ -help ] -a addrs-file [ runs-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		-a addrs-file	-- addrs-file contains all raw addresses in the sqlite3 db dd_maps.db.
+		runs-file	-- Runs file. Default: stdin.
+
+	example:
+
+		If the file addrs.tsv contains all addresses in the dd_maps.db, then use this command to find 
+		and write any address in addrs.tsv that is not used in any runs-file.
+
+			cat $DD_DATA/runs*.tsv | ./find_unused_addrs_in_runs.sh -a addrs.tsv > unused.addrs
+
+9. get_addrs_from_runs.sh:
+
+	usage:
+		./get_addrs_from_runs.sh [ -help ] [ -c addr-info-file ] -at { src | dst } [ runs-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		-c addr-info-file
+				-- use the tables in addr-info-file to canonicalize the addresses. Default:
+				-- $DM_HOME/etc/address.info.
 		-at { src | dst }
-				-- Select the address type to analyze.
-		runs-file	-- input data.  Use stdin if missing.
+				-- runs files contain all delivery information.  And every delivery has both
+				-- a src and a dst address.  Use -at src to get src address information and
+				-- -at dst to get dst address information.  Default: none.
+		runs-file	-- the runs-file that will provide the addresses.  To get addresses from 
+				-- more than one runs use cat runs-file ... | ./get_addrs_from_runs.sh ...
 
-scripts/combine_time_and_addr.sh:
+	example:
 
-	This script combines delivery time and location lat/lng info.  The data can be colored by average delivery time/location
-	and displayed on a map, possibly revealiing dash source/destinations are take a long/short delievery time.
+		To extract dst addresses from runs.20170101.tsv use:
 
-	        Adding lat/lng to addresses is slow, so addresses with lat/lng are collected into two files.  The file src.addrs
-        holds resolved source addresses and the file dst.addrs holds destination addresses. These files are located in
-        $DD_HOME/maps, where DD_HOME is a symbol that points to the root of the doordash file hierarchy.  The command
-        argument -at { src | dst } is used to select whether source (-at src) or destination (-at dst) locations will be
-        used.
+			./get_addrs_from_runs.sh -at dst runs.20170101.tsv > dst.addrs
 
-        Pay information is taken from $DD_HOME/data/breakdownofpay.20150904.tsv.  Pay information is on a per shift not
-        per dash basis and includes the number of dashes/shift and the pay/shift.  These are combined as
+		To extract src addresses from all runs files in $DD_DATA, use
 
-                dash-delievery-time = (time/shift) / (dashes/shift)
+			cat $DD_DATA/runs*.tsv | ./get_addrs_from_runs.sh -at src
 
-        which is the average dash-delivery-time for all dashes in a shift.
+10. get_freshness_info.sh:
 
-        usage:
+	This script computes the freshness of the addresses in the specified runs-file(s).  Freshness is 
+	the amount time that has past since an address was either a src or a dst.
 
-		./combine_time_and_addr.sh [ -help ] [ -dh doordash-home ] -at { src | dst } [ runs-file ]
+	usage:
+
+		./get_freshness_info.sh [ -help ] -at { src | dst } -ts { day | week | month* } [ runs-file ]
 
 	arguments:
-		-help		-- print the usage message.  Default: false.
-		-dh doordash-home
-				-- The base doordash directory.  Data to be checked must be in a "runs-file" in $DD_HOME/data.
-				-- Default: the value of $DD_HOME.  If DD_HOME is not defined, you must set this value on the
-				-- command line.
+
+		-help		-- print usage message. Default: false.
 		-at { src | dst }
-				-- Select the address type to analyze.
-		runs-file	- input data.  Use stdin if missing.
+				-- Use -at src to gather src freshness or -at dst to get dst freshness infomation.
+				-- Default: none.
+		-ts { day | week | month }
+				-- Select the time step between freshness calculations.  Default: month.  However,
+				-- week might be better.
+		runs-file	-- The source of the addresses.  To compute freshness on more than one runs-file,
+				-- use cat runs-files | ./get_freshness -at src 
 
-scripts/fmt_geo_errors.sh:
+	example:
 
-	This script is used to convert the variable line error messages produced by add_geo_to_addresses.sh to single tsv file
-	with column headers suitable for display as a table in a web browser.
+		Use this command to gather weekly dst freshness information for all addresses in $DD_DATA:
 
-        usage:
+			cat $DD_DATA/runs*.tsv | ./get_freshness -at dst -ts week > dst.freshness.tsv
 
-		./fmt_geo_errors.sh [ -help ] geo-error-file
+11. get_geo_for_addrs.sh:
+
+	This script queries opencagedata.com to add lat/lng to either a single address or a list of addresses
+	in a file.  If query is successful the result is written to stdout as a geo-line-file; if the query
+	fails the result is written to stderr as a geo-error-file.
+
+	usage:
+
+		./get_geo_for_addrs.sh [ -help ] { -a address | [ address-file ] }
 
 	arguments:
-		-help		-- print the usage message.  Default: false.
-		geo-error-file	-- error data to format.  Use stdin if mmissing.
 
-scripts/get_actual_hours.sh:
+		-help		-- print ussage message. Default: false.
+		-a addr		-- get geo information for addr and exit. Default: false.
+		address-file	-- get geo information for addresses in address-file. Default: stdin.
 
-scripts/get_addresses.sh:
+	example:
 
-	This script is used to extract addresses from runs files and cononicalize so they can be submitted to opencagedata.com
-	to get their latitudes and longitudes.
+		Uses these command to look an address or all addresses in a file:
 
-scripts/get_job_times.sh:
+			./get_geo_for_addrs.sh -a "Crepevine, 367 University Ave., PA"
 
-scripts/get_latlong.sh:
+			./get_geo_for_addrs.sh addrs.tsv > addrs.geo 2> addrs.err
 
-scripts/get_new_sources.sh:
 
-scripts/get_pay_data.sh:
+12. get_geo_for_new_db_addrs.sh:
 
-scripts/get_src_times.sh:
+	This scripts selects all addresses with a_stat = "G" and as_reason = "new" and queries 
+	opencagedata.com for their lat/lng. For each successful query the result is written to stdout
+	as a line in a geo-line-file; for each failed query a line is written to stderr as a geo-error-file.
 
-scripts/mk_dash_summary.sh:
+	usage:
 
-scripts/mk_dash_totals.sh:
+		./get_geo_for_new_db_addrs.sh [ -help ] geo-dir
 
-scripts/mk_geojson.sh:
+	arguments:
 
-scripts/mk_map.sh:
+		-help		-- print usage message. Default false.
+		geo-dir		-- The directory that will hold the results as 
+				-- 	good: addrs.YYYYmmddTHHMMSS.tsv and
+				--	bad:  addrs.YYYYmmddTHHMMSS.err
 
-scripts/mk_map_data.sh:
+	example:
 
-scripts/mk_pay_summary.sh:
+		./get_geo_for_new_db_addrs.sh geo
 
-scripts/plot_pay_rates.sh:
+13. get_latlong.sh:
 
-scripts/plot_src_info.sh:
+	This script makes the call to opencagedata.com to get lat/lng for the canonical-address.  The result is
+	returned as json with each suggested match an element in an array.  The script unpacks this array into
+	lines of a tsv file for subsequent processing.
+
+	usage:
+
+		./get_latlong.sh [ -help ] [ -limit N ] canonical-address
+
+	arguments:
+
+		-help		-- prints usage message.  Default: false.
+		-limit N	-- return up to N suggested matches.  Default: use opencagesdata.com's default of 10.
+		canonical-address
+				-- the address to get lat/lng.
+
+	example:
+
+		This command gets the lat/lng for 367 University Avenue, Palo Alto, CA
+
+			./get_latlong "367 University Avenue, Palo Alto, CA"
+
+14. get_new_sources.sh:
+
+	This command creates a tsv file of number of new sources visited for each shift.
+
+	usage:
+
+		./get_new_sources.sh [ -help ] [ runs-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		runs-file	-- The runs-file of interest.  For more than one runs-file use 
+				-- cat runs-file ... | ./get_new_sources.sh
+
+	example:
+
+		This command will create a tsv of new sources/dash for all runs-files in $DD_HOME:
+
+			cat $DD_HOME/runs*.tsv | ./get_new_sources.sh > new_src.tsv
+
+15. get_pay_rates.sh:
+
+	usage:
+
+		./get_pay_rates.sh [ -help ] [ payments-flle ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+
+	example:
+
+16. insert_new_addrs.sh:
+
+	usage:
+
+		./insert_new_addrs.sh [ -help ] -at { src | dst } [ query-line-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		-at { src | dst }
+				--
+		query-line-file
+				--
+
+	example:
+
+17. insert_new_dashes.sh:
+
+	usage:
+
+		./insert_new_dashes.sh [ -help ] [ breakdown-of-pay-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		breakdown-of-pay-file
+				--
+
+	example:
+
+18. insert_new_jobs.sh:
+
+	usage:
+
+		usage: ./insert_new_jobs.sh [ -help ] [ runs-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		runs-file	--
+
+	example:
+
+19. make_geojson.sh:
+
+	usage:
+
+		usage: ./make_geojson.sh [ -help ] -c conf-file -gt { points | lines } [ -t title ] [ address-data-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default false.
+		-c conf-file	--
+		-gt { points | lines }
+				--
+		-t title	--
+		address-data-file
+				--
+
+	example:
+
+20. map_by_dash_rate.sh:
+
+	usage:
+
+		./map_by_dash_rate.sh [ -help ] -d dashes-file -a addr-file -at { src | dst } [ -stats stats-file ] [ runs-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		-d dashes-file	--
+		-a addr-file	--
+		-at { src | dst }
+				--
+		-stats stats-file
+				--
+		runs-file	--
+
+	example:
+
+21. map_by_date.sh:
+
+	usage:
+
+		./map_by_date.sh [ -help ] -a addr-file -at { src | dst } [ -cnt ] [ -rev ] [ -unit { day | week | month } ] [ -stats stats-file ] [ runs-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		-a addr-file	--
+		-at { src | dst }
+				--
+		-cnt		--
+		-rev		--
+		-unit { day | week | month }
+				--
+		-stats stats-file
+				--
+		runs-file	--
+
+	example:
+
+22. plot_all_stats.sh:
+
+	usage:
+
+		./plot_all_stats.sh [ -help ] data-dir
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		data-dir	--
+
+	example:
+
+23. plot_freshness_info.sh:
+
+	usage:
+
+		./plot_freshness_info.sh [ -help ] -at { src | dst } site-evolution-file
+
+	arguments:
+
+		-help		-- print usage message. Default false.
+		-at { src | dst }
+				--
+		site-evolution-file
+				--
+
+	example:
+
+24. plot_pay_rates.sh:
+
+	usage:
+
+		./plot_pay_rates.sh [ -help ] pay-summary-file
+
+	arguments:
+
+		-help		-- print usage message. Default false.
+		pay-summary-file
+				-- 
+
+	example:
+
+25. plot_src_info.sh:
+
+	usage:
+
+		./plot_src_info.sh [ -help ] source-file
+
+	arguments:
+
+		-help		-- print usage message. Default false.
+		source-file	--
+
+	example:
+
+26. update_addrs_with_geo_errors.sh:
+
+	usage:
+
+		./update_addrs_with_geo_loc.sh [ -help ] -at { src | dst } [ addr-geo-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		-at { src | dst }
+				-- 
+		addr-geo-file	--
+
+	example:
+
+27. update_addrs_with_geo_loc.sh:
+
+	usage:
+
+		./update_addrs_with_geo_errors.sh [ -help ] [ addr-geo-error-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		addr-geo-error-file
+				-- file containing addresses that could not be found by opencagedata.com
+
+	example:

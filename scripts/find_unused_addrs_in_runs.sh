@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] -a chk-addrs-file [ runs-file ]"
+U_MSG="usage: $0 [ -help ] -a addrs-file [ runs-file ]"
 
 AFILE=
 FILE=
