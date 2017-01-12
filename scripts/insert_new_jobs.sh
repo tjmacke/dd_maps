@@ -68,7 +68,11 @@ fi
 #
 # sqlite3 $DM_DB > $TMP_JFILE <<_EOF_
 # .mode tabs
-# SELECT time_start, src_addr_id, dst_addr_id FROM jobs ;
+# PRAGMA foreign_keys = on ;
+# SELECT time_start, src.address, dst.address
+# FROM jobs
+# INNER JOIN addresses src ON src.address_id = jobs.src_addr_id
+# INNER JOIN addresses dst ON dst.address_id = jobs.dst_addr_id ;
 # _EOF_
 
 touch $TMP_JFILE
