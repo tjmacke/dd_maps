@@ -71,6 +71,8 @@ fi
 # SELECT time_start, src_addr_id, dst_addr_id FROM jobs ;
 # _EOF_
 
+touch $TMP_JFILE
+
 awk -F'\t' '$5 == "Job"' $FILE	|\
 while read line ; do
 	# get the src_addr_id
@@ -96,8 +98,8 @@ while read line ; do
 	fi
 
 	# get the dst_addr_id
-	src="$(echo "$line" | awk -F'\t' '{ print $7 }')"
-	sel_stmt="$(echo "$src" |\
+	dst="$(echo "$line" | awk -F'\t' '{ print $7 }')"
+	sel_stmt="$(echo "$dst" |\
 	awk -F'\t' 'BEGIN {
 		apos = sprintf("%c", 39)
 	}
@@ -155,11 +157,10 @@ while read line ; do
 	}
 	{
 		t_start = $1 "T" $2
-		t_end = $2 "T" $3
+		t_end = $1 "T" $3
 		printf(".log stderr\\n")
-		printf("INSERT INTO jobs (dash_id, time_start, time_end, src_addr_id, dst_addr_id, amount, payment")
-		if($10 != ".")
-			printf(", notes")
+		printf("PRAGMA foreign_keys = on;\\n")
+		printf("INSERT INTO jobs (dash_id, time_start, time_end, src_addr_id, dst_addr_id, amount, payment, notes")
 		printf(") VALUES (")
 		printf("%d", dash_id)
 		printf(", %s", esc_string(t_start))
@@ -168,8 +169,7 @@ while read line ; do
 		printf(", %d", dst_addr_id)
 		printf(", %s", $8)
 		printf(", %s", esc_string($9))
-		if($10 != ".")
-			printf(", %s", esc_string($10))
+		printf(", %s", esc_string($10 != "." ? $10 : ""))
 		printf(");\n")
 	}
 	function esc_string(str,   work) {
@@ -177,6 +177,8 @@ while read line ; do
 		gsub(apos, apos apos, work)
 		return apos work apos
 	}')"
+
+	# Do the insert.
 	sql_msg="$(echo -e "$ins_stmt" | sqlite3 $DM_DB 2>&1)"
 	if [ ! -z "$sql_msg" ] ; then
 		err="$(echo "$sql_msg"	|\
@@ -187,6 +189,7 @@ while read line ; do
 			}')"
 		LOG ERROR "$err: $line"
 	fi
+
 done
 
 rm -f $TMP_DFILE $TMP_AFILE $TMP_JFILE

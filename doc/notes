@@ -306,7 +306,7 @@
 
 14. get_new_sources.sh:
 
-	This command creates a tsv file of number of new sources visited for each shift.
+	This script creates a tsv file of the number of new sources visited for each shift.
 
 	usage:
 
@@ -320,11 +320,13 @@
 
 	example:
 
-		This command will create a tsv of new sources/dash for all runs-files in $DD_HOME:
+		This command will create a tsv file of new sources/dash for all runs-files in $DD_HOME:
 
 			cat $DD_HOME/runs*.tsv | ./get_new_sources.sh > new_src.tsv
 
 15. get_pay_rates.sh:
+
+	This script creates a tsv file of 3 pay rates: dollars/hour, dollars/dash and dashes/hour
 
 	usage:
 
@@ -333,10 +335,19 @@
 	arguments:
 
 		-help		-- print usage message. Default: false.
+		payments-file	-- tsv file of weekly stats: amount, hours, dashes and date
 
 	example:
 
+		This command will create a tsv file of pay rates from a payments file
+
+			./get_pay_rates.sh payments.tsv > p.tsv
+
 16. insert_new_addrs.sh:
+
+	This script insert new addresses along with the parsed query address and a_type into 
+	the addresses table of the sqlite3 db, dd_maps.db.  Fields a_stat and as_reason are
+	set to 'G' and 'new'.
 
 	usage:
 
@@ -346,13 +357,25 @@
 
 		-help		-- print usage message. Default: false.
 		-at { src | dst }
-				--
+				-- Due to historical reasons query-line-files contain both the 
+				-- src and dst address of each delivery.  However only one of these
+				-- addresses has been parsed.  Use -at src for parse src addresses 
+				-- and -at dst for parsed dst addresses.  Default: none.
 		query-line-file
-				--
+				-- one or more lines of parsed addresses.
 
 	example:
 
+		If the file addrs.nogeo.20170101.tsv contains canonicalized src addresses that require lat/lng information, use
+		this command to insert them into the addresses table:
+
+			./insert_new_addrs.sh -at src addrs.nogeo.20170101.tsv
+
 17. insert_new_dashes.sh:
+
+	This script inserts new dash data into the dashes table of the sqlite3 db dd_maps.db.  This data
+	consists of the dash's start and end times, the number of dashes, then number of hours (from
+	doordash) and pay details: base, tips, extra.  
 
 	usage:
 
@@ -366,7 +389,19 @@
 
 	example:
 
+		If the raw dash data is in the file bdp.tsv, this command will new values to thedb:
+
+			./insert_new_dashes dbp.tsv
+
 18. insert_new_jobs.sh:
+
+	This command will (if I ever use it) insert new jobs (ie single deliveries) into the jobs table
+	of the sqlite3 db dd_maps.db.
+
+	NOTE: This script is still inactive.  The jobs tables contains foreign keys to entries in the 
+	addresses and dashes tables and while this is the correct thing to do, foreign key support in 
+	sqlite3 is off by default, so I need make sure I enable it everytime I use this table.  Also,
+	I'm not exactly sure what I'd do with the jobs table so ...
 
 	usage:
 
@@ -379,7 +414,15 @@
 
 	example:
 
+		If the runs-file runs.20170101.tsv contains new jobs, this command will insert them
+		into the jobs table:
+
+			./insert_new_jobs. runs.20170101.tsv
+
 19. make_geojson.sh:
+
+	This script takes an address-geo-file which is a set of addresses with lat/lon that have been prependded with
+	marker color and size information and converts this file to geojson that can displayed on a map.
 
 	usage:
 
@@ -388,14 +431,22 @@
 	arguments:
 
 		-help		-- print usage message. Default false.
-		-c conf-file	--
+		-c conf-file	-- json conf-file that contains information about the data and marker colors and size
+				-- that can be converted to d3.json map legends. Default: none.
 		-gt { points | lines }
-				--
-		-t title	--
+				-- specifiies whether the input file contains points (-gt points) or lines (-gt lines).
+				-- The input must be one or the other.  Default: none.
+		-t title	-- If present, add it as the value of metadata.title in the geojson. Default: none.
 		address-data-file
-				--
+				-- A file of points or lines with size and color information for then endpoints.
+				-- Default: stdin.
 
 	example:
+
+		If the file src.17.tsv contains mapping data about a set of source points, then this command will
+		convert that file into json:
+
+			./make_geojson -c src_cfg.json -gt points -t "Sources 2017-01" src.17.tsv > src.17.json
 
 20. map_by_dash_rate.sh:
 
@@ -440,6 +491,8 @@
 
 22. plot_all_stats.sh:
 
+	This script creates a single pdf with the four plots: pay rates, new sources, src and dst freshness.
+
 	usage:
 
 		./plot_all_stats.sh [ -help ] data-dir
@@ -447,27 +500,43 @@
 	arguments:
 
 		-help		-- print usage message. Default: false.
-		data-dir	--
+		data-dir	-- data containing the runs-files. Default: none.
 
 	example:
 
+		If the runs files are in $DD_HOME, then this command will create a single page pdf with 
+		four plots:  The output will be left in $DD_HOME as allStats.YYYY-MM-DD.pdf.
+
+			./plot_all_stats.sh $DD_HOME.
+
 23. plot_freshness_info.sh:
+
+	This scripts plots address freshness data.  Here freshness is varying percents of addresses that
+	have been active in the last 1, 2, 4, 8, 12, 26, 52 and 52+ weeks.
 
 	usage:
 
-		./plot_freshness_info.sh [ -help ] -at { src | dst } site-evolution-file
+		./plot_freshness_info.sh [ -help ] -at { src | dst } freshness-file
 
 	arguments:
 
 		-help		-- print usage message. Default false.
 		-at { src | dst }
-				--
+				-- Use -at src to indicate this plot contains src freshness; use -at dst
+				-- to indicate that this plot contains dst freshness.  Default: none.
 		site-evolution-file
-				--
+				-- A tsv file containing either src or dst freshness data.  Default: none. 
 
 	example:
 
+		If the file sf.tsv contains src freshness data, this command will plot it, writing the 
+		results as PDF to srcFreshness.YYYY-MM-DD.pdf in the current directory.
+
+			./plot_freshness -at src sf.tsv
+
 24. plot_pay_rates.sh:
+
+	This script plots pay rate data.
 
 	usage:
 
@@ -477,11 +546,18 @@
 
 		-help		-- print usage message. Default false.
 		pay-summary-file
-				-- 
+				-- A tsv file contaning pay rate data. Default: none.
 
 	example:
 
+		If the file p.tsv contains pay data, this command will plot it writing the results
+		as PDF to payRates.YYYY-MM-DD.pdf.
+
+			./plot_pay_rates.sh p.tsv
+
 25. plot_src_info.sh:
+
+	This script plots new source data.
 
 	usage:
 
@@ -490,26 +566,19 @@
 	arguments:
 
 		-help		-- print usage message. Default false.
-		source-file	--
+		source-file	-- A tsv file containing source data. Default: none.
 
 	example:
+
+		IF the file s.tsv contains source data, this command will plot it writing the
+		results as PDF to newSources.YYYY-MM-DD.pdf
+
+			./plot_src_info.sh s.tsv
 
 26. update_addrs_with_geo_errors.sh:
 
-	usage:
-
-		./update_addrs_with_geo_loc.sh [ -help ] -at { src | dst } [ addr-geo-file ]
-
-	arguments:
-
-		-help		-- print usage message. Default: false.
-		-at { src | dst }
-				-- 
-		addr-geo-file	--
-
-	example:
-
-27. update_addrs_with_geo_loc.sh:
+	This script updates the addresses in the sqlite3 db dd_maps.db with the results of failed
+	requests for geo location.
 
 	usage:
 
@@ -520,5 +589,39 @@
 		-help		-- print usage message. Default: false.
 		addr-geo-error-file
 				-- file containing addresses that could not be found by opencagedata.com
+				-- Default: stdin.
 
 	example:
+
+		If the file addrs.20170111T092317.err contains failed geolocation results for a set of
+		addresses (src, dst does not matter here), this command will update the addresses in the
+		db with the new data
+
+			./update_addrs_with_geo_errors.sh addrs.20170111T092317.err
+
+27. update_addrs_with_geo_loc.sh:
+
+	This script is used to update addresses either w/o geo information or corrected geo information.
+
+	usage:
+
+		./update_addrs_with_geo_loc.sh [ -help ] -at { src | dst } [ addr-geo-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		-at { src | dst }
+				-- Due to historical reason, query-file, contain both the src and dst addresses 
+				-- for a job, but only one has been canonicalized and will be submit for geo
+				-- location. Which means that results files also contain both src and dst addresses,
+				-- but, again only one was geo located.  Use -at src if geo location was for
+				-- src addresses, or -at dst for dst addresses.  Default: none.
+		addr-geo-file	-- file containing geo data returned by opencagedata.com for successful
+				-- queries: reply address, lat, long.  Default: stdin.
+
+	example:
+
+		If the file addrs.20170111T092317.tsv contains successful geolocation results for a set of
+		src addresses, then this command will update the addresses in the db with the new data:
+
+			./update_addrs_with_loc_info.sh -at src addrs.20170111T092317.tsv
