@@ -448,7 +448,13 @@
 
 			./make_geojson -c src_cfg.json -gt points -t "Sources 2017-01" src.17.tsv > src.17.json
 
-20. map_by_dash_rate.sh:
+20. map_by_dash_rate.sh:p
+
+	This scripts computes an average pay/dash for each src or dst address in the input runs-file.  The average is 
+	based on the break down of pay that doordash provides after each shift which for this fucntion is pay/shift
+	and jobs/shift which gives and average pay/job  = (pay/shift)/(jobs/shift).  This assigns equal values of
+	pay/job to each job in a shift, but average of many shifts each with a different mix of src or dst addresses
+	and some trends do emerge, in that some srcs are consistantly above or below the global average.
 
 	usage:
 
@@ -457,17 +463,27 @@
 	arguments:
 
 		-help		-- print usage message. Default: false.
-		-d dashes-file	--
-		-a addr-file	--
+		-d dashes-file	-- This file contains the pay and job details for each shift.  Default: none.
+		-a addr-file	-- A tsv file of address, lng, lat selected from the sqlite db dd_maps.db.  Default: none.
 		-at { src | dst }
-				--
+				-- Use -at src to use source addresses or -at dst to use dest. addresses. Default: none.
 		-stats stats-file
-				--
-		runs-file	--
+				-- If present write various stats to it so they can be used to color and size the 
+				-- markers on the map.  Default: none.
+		runs-file	-- A file containing the jobs whose addresses are to be analyzed.  Default: stdin.
 
 	example:
 
+		If the file addrs.tsv contains addrs + lng/lat data and bdp.tsv contains the pay details, then this
+		command will compute the average pay for source addrs for all jobs in the directory $DD_HOME.  Stats
+		will be appended to stats.file:
+
+			cat $DD_HOME/runs*.tsv | ./map_by_dash_rate.sh -d dbp.tsv -a addrs.tsv -at src -stats stats.file > dr.tsv
+
 21. map_by_date.sh:
+
+	This script computes the freshness (ie time since most recent pick-up or delivery) and total visits to/from each address
+	in the input runs-file.  Time since last activity is shown by marker color and number of visits by marker size.
 
 	usage:
 
@@ -476,18 +492,25 @@
 	arguments:
 
 		-help		-- print usage message. Default: false.
-		-a addr-file	--
+		-a addr-file	-- A tsv file of address, lng, lat selected from the sqlite db dd_maps.db. Default: none.
 		-at { src | dst }
-				--
-		-cnt		--
-		-rev		--
+				-- Use -at src to work on src addresses; use -at dst to work on dest. addresses. Default: none.
+		-cnt		-- Count the number of visits.  Default: false.
+		-rev		-- Reverse the time to last-date - date of job.  Default: false.
 		-unit { day | week | month }
-				--
+				-- The frequency of freshness values.  Default: month.
 		-stats stats-file
-				--
-		runs-file	--
+				-- If present, write various stats to it so they can be used to color and size the 
+				-- markers on the map.  Default none.
+		runs-file	-- A file containing the jobs whose addresses are to be analyzed.  Default: stdin.
 
 	example:
+
+		If the file addres.tsv contains addrs + lng/lat data, this this command will compute the weekly freshness data for
+		all jobs in $DD_HOME as weeks since last action.  The -cnt will write the total visits to date for each point.
+		Stats will be appended to stats.file:
+
+			cat $DD_HOME/runs*.ts | ./map_by_date -a addrs.tsv -at src -cnt -rev -unit week -stats stats.file > sf.tsv
 
 22. plot_all_stats.sh:
 
