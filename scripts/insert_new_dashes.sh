@@ -51,6 +51,7 @@ fi
 
 sqlite3 $DM_DB > $TMP_DFILE <<_EOF_
 .mode tabs
+PRAGMA foreign_keys = on ;
 SELECT time_start FROM dashes ;
 _EOF_
 
@@ -76,6 +77,7 @@ while read line ; do
 	}
 	{
 		printf(".log stderr\\n")
+		printf("PRAGMA foreign_keys = on ;\\n")
 		printf("INSERT INTO dashes (time_start, time_end, deliveries, hours, delivery_pay, boost_pay, tip_amount, deductions, extras, total_pay) VALUES ")
 		printf("(")
 		printf("%s", esc_string($1 "T" $2))

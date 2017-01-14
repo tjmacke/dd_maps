@@ -88,6 +88,7 @@ while read line ; do
 	{
 		printf(".log stderr\\n")
 		printf(".mode tabs\\n")
+		printf("PRAGMA foreign_keys = on ;\\n")
 		printf("SELECT address_id FROM addresses WHERE address = %s ;\n", esc_string($1))
 	}
 	function esc_string(str,   work) {
@@ -110,6 +111,7 @@ while read line ; do
 	{
 		printf(".log stderr\\n")
 		printf(".mode tabs\\n")
+		printf("PRAGMA foreign_keys = on ;\\n")
 		printf("SELECT address_id FROM addresses WHERE address = %s ;\n", esc_string($1))
 	}
 	function esc_string(str,   work) {
@@ -133,6 +135,7 @@ while read line ; do
 	{
 		printf(".log stderr\\n")
 		printf(".mode tabs\\n")
+		printf("PRAGMA foreign_keys = on ;\\n")
 		printf("SELECT dash_id, time_start, time_end FROM dashes WHERE time_start LIKE %s%s%%%s;\n", apos, $1, apos)
 	}')"
 	dash_id="$(echo -e "$sel_stmt" | sqlite3 $DM_DB 2> /dev/null	|\
@@ -163,7 +166,7 @@ while read line ; do
 		t_start = $1 "T" $2
 		t_end = $1 "T" $3
 		printf(".log stderr\\n")
-		printf("PRAGMA foreign_keys = on;\\n")
+		printf("PRAGMA foreign_keys = on ;\\n")
 		printf("INSERT INTO jobs (dash_id, time_start, time_end, src_addr_id, dst_addr_id, amount, payment, notes")
 		printf(") VALUES (")
 		printf("%d", dash_id)

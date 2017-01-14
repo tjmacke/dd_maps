@@ -38,7 +38,7 @@ while [ $# -gt 0 ] ; do
 	esac
 done
 
-echo -e ".mode tabs\nSELECT qry_address, address FROM addresses WHERE qry_address != '' ORDER BY qry_address, address ;"	|\
+echo -e ".mode tabs\nPRAGMA foreign_keys = on ;\nSELECT qry_address, address FROM addresses WHERE qry_address != '' ORDER BY qry_address, address ;"	|\
 sqlite3 $DM_DB															|\
 awk -F'\t' '{
 	if($1 != l_1){

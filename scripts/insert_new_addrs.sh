@@ -72,6 +72,7 @@ fi
 
 sqlite3 $DM_DB > $TMP_AFILE <<_EOF_
 .mode tabs
+PRAGMA foreign_keys = on ;
 SELECT address FROM addresses ;
 _EOF_
 
@@ -104,6 +105,7 @@ while read line ; do
 			sub(/ *$/, "", ary[i])
 		} 
 		printf(".log stderr\\n")
+		printf("PRAGMA foreign_keys = on ;\\n")
 		printf("INSERT INTO addresses (a_stat, as_reason, address, a_type, qry_address) VALUES ")
 		printf("(")
 		printf("%s", esc_string(ary[1]))

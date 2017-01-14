@@ -216,6 +216,7 @@ END {
 			}else
 				sg_count++
 		}
+		# put last group
 		n_pgroups = GU_find_pgroups(sg_start, sg_count, longs_2, lats_2, pg_starts, pg_counts)
 		put_src = 1
 		for(i = 1; i <= n_pgroups; i++){

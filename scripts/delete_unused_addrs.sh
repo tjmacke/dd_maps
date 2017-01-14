@@ -56,6 +56,7 @@ while read line ; do
 	}
 	{
 		printf(".log stderr\\n")
+		printf("PRAGMA foreign_keys = on ;\n")
 		printf("DELETE FROM addresses WHERE address = %s ;\n", esc_string($1))
 	}
 	function esc_string(str,   work) {

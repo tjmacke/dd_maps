@@ -52,7 +52,7 @@ fi
 
 NOW="$(date +%Y%m%dT%H%M%S)"
 
-echo -e ".mode tabs\nSELECT * FROM addresses WHERE a_stat = 'G' AND as_reason = 'new' ; "	|\
+echo -e ".mode tabs\nPRAGMA foreign_keys = on ;\nSELECT * FROM addresses WHERE a_stat = 'G' AND as_reason = 'new' ;"	|\
 sqlite3 $DM_DB										|\
 awk -F'\t' 'BEGIN {
 	pr_hdr = 1
