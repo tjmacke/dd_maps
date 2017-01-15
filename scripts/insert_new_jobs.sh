@@ -35,7 +35,6 @@ fi
 
 FILE=
 
-TMP_DFILE=/tmp/dashes.$$
 TMP_JFILE=/tmp/jobs.$$
 
 while [ $# -gt 0 ] ; do
@@ -63,22 +62,22 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
-# TODO:
 # get the jobs, adjust awk script to only add new jobs
-#
-# sqlite3 $DM_DB > $TMP_JFILE <<_EOF_
-# .mode tabs
-# PRAGMA foreign_keys = on ;
-# SELECT time_start, src.address, dst.address
-# FROM jobs
-# INNER JOIN addresses src ON src.address_id = jobs.src_addr_id
-# INNER JOIN addresses dst ON dst.address_id = jobs.dst_addr_id ;
-# _EOF_
-
-touch $TMP_JFILE
+sqlite3 $DM_DB > $TMP_JFILE <<_EOF_
+.mode tabs
+PRAGMA foreign_keys = on ;
+SELECT time_start, src.address, dst.address
+FROM jobs
+INNER JOIN addresses src ON src.address_id = jobs.src_addr_id
+INNER JOIN addresses dst ON dst.address_id = jobs.dst_addr_id ;
+_EOF_
 
 awk -F'\t' '$5 == "Job"' $FILE	|\
 while read line ; do
+	# has this job been inserted?
+	job="$(echo "$line" | awk -F'\t' '{ printf("%s\t%s\t%s\n", $1 "T" $2, $6, $7) }')"
+	grep "$job" $TMP_JFILE > /dev/null 2>&1 && continue
+	
 	# get the src_addr_id
 	src="$(echo "$line" | awk -F'\t' '{ print $6 }')"
 	sel_stmt="$(echo "$src" |\
@@ -185,6 +184,8 @@ while read line ; do
 		return apos work apos
 	}')"
 
+#	echo "ins_stmt = $ins_stmt"
+
 	# Do the insert.
 	sql_msg="$(echo -e "$ins_stmt" | sqlite3 $DM_DB 2>&1)"
 	if [ ! -z "$sql_msg" ] ; then
@@ -199,4 +200,4 @@ while read line ; do
 
 done
 
-rm -f $TMP_DFILE $TMP_AFILE $TMP_JFILE
+rm -f $TMP_JFILE
