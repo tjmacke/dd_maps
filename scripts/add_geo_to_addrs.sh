@@ -99,6 +99,8 @@ while read line ; do
 	# skip the header
 	if [ $lcnt -eq 1 ] ; then
 		continue
+	elif [ $lcnt -gt 2 ] ; then
+		sleep 5
 	fi
 	astat="$(echo "$line" | awk -F'\t' '{ print $1 ~ /^B/ ? "bad" : "good" }')"
 	if [ "$astat" == "bad" ] ; then
@@ -225,7 +227,7 @@ while read line ; do
 			exit err
 		}' $LL_FILE
 	fi
-	sleep 5
+#	sleep 5
 done
 
 rm -f $LL_FILE
