@@ -36,6 +36,7 @@ fi
 FILE=
 
 TMP_JFILE=/tmp/jobs.$$
+TMP_FILE=/tmp/file.$$
 
 while [ $# -gt 0 ] ; do
 	case $1 in
@@ -62,7 +63,7 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
-# get the jobs, adjust awk script to only add new jobs
+# get the jobs
 sqlite3 $DM_DB > $TMP_JFILE <<_EOF_
 .mode tabs
 PRAGMA foreign_keys = on ;
@@ -72,12 +73,21 @@ INNER JOIN addresses src ON src.address_id = jobs.src_addr_id
 INNER JOIN addresses dst ON dst.address_id = jobs.dst_addr_id ;
 _EOF_
 
-awk -F'\t' '$5 == "Job"' $FILE	|\
+# find new jobs
+awk -F'\t' 'BEGIN {
+	jfile = "'"$TMP_JFILE"'"
+	for(n_jtab = 0; (getline < jfile) > 0; ){
+		n_jtab++
+		jtab[$0] = 1
+	}
+	close(jfile)
+}
+$5 == "Job" {
+	job = sprintf("%s\t%s\t%s", $1 "T" $2, $6, $7)
+	if(!(job in jtab))
+		printf("%s\n", $0)
+}' $FILE	|\
 while read line ; do
-	# has this job been inserted?
-	job="$(echo "$line" | awk -F'\t' '{ printf("%s\t%s\t%s\n", $1 "T" $2, $6, $7) }')"
-	grep "$job" $TMP_JFILE > /dev/null 2>&1 && continue
-	
 	# get the src_addr_id
 	src="$(echo "$line" | awk -F'\t' '{ print $6 }')"
 	sel_stmt="$(echo "$src" |\
@@ -125,6 +135,8 @@ while read line ; do
 	fi
 
 	# get the dash id
+	# dashes, at this point are always contained in 1 calendar day: [00:00, 23:59], which 
+	# is why the query checks only the date part of the time_start
 	date="$(echo "$line" | awk -F'\t' '{ print $1 }')"
 	tstart="$(echo "$line" | awk -F'\t' '{ print $2 }')"
 	sel_stmt="$(echo "$date" |\
@@ -184,8 +196,6 @@ while read line ; do
 		return apos work apos
 	}')"
 
-#	echo "ins_stmt = $ins_stmt"
-
 	# Do the insert.
 	sql_msg="$(echo -e "$ins_stmt" | sqlite3 $DM_DB 2>&1)"
 	if [ ! -z "$sql_msg" ] ; then
@@ -197,7 +207,6 @@ while read line ; do
 			}')"
 		LOG ERROR "$err: $line"
 	fi
-
 done
 
-rm -f $TMP_JFILE
+rm -f $TMP_JFILE $TMP_FILE
