@@ -49,21 +49,33 @@ fi
 
 grep '^ERROR' $FILE	|\
 awk -F: '{
-	work = $4
-	sub(/^ */, "", work)
-	sub(/ *$/, "", work)
-	print work
+#	work = $4
+#	sub(/^ */, "", work)
+#	sub(/ *$/, "", work)
+#	print work
+	addr = $4
+	sub(/^ */, "", addr)
+	sub(/ *$/, "", addr)
+	reason = $5
+	sub(/^ */, "", reason)
+	sub(/ *$/, "", reason)
+	if(reason == "not found")
+		reason = "geo.fail"
+	else if(substr(reason, 1, 3) == "B, "){
+		reason = substr(reason, 4)
+	}
+	printf("%s\t%s\n", reason, addr)
 }'			|\
 while read line ; do
 	upd_stmt="$(echo "$line" |\
-	awk 'BEGIN {
+	awk -F'\t' 'BEGIN {
 		apos = sprintf("%c", 39)
 	}
 	{
 		printf(".log stderr\\n")
 		printf("PRAGMA foreign_keys = on ;\\n")
 		printf("UPDATE addresses SET a_stat = %s, as_reason = %s WHERE address = %s AND a_stat = %s AND as_reason = %s;\n",
-			esc_string("B"), esc_string("geo.fail"), esc_string($0), esc_string("G"), esc_string("new"))
+			esc_string("B"), esc_string($1), esc_string($2), esc_string("G"), esc_string("new"))
 	}
 	function esc_string(str,   work) {
 		work = str

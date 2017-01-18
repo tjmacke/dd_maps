@@ -83,7 +83,7 @@ while read line ; do
 		printf("%s", esc_string($1 "T" $2))
 		printf(", %s", esc_string($1 "T" $3))
 		printf(", %d", $4)
-		printf(", %d", $5)
+		printf(", %s", $5)
 		printf(", %s", $6)
 		printf(", %s", $7)
 		printf(", %s", $8)

@@ -80,7 +80,7 @@ while read line ; do
 		printf(".log stderr\\n")
 		printf("PRAGMA foreign_keys = on ;\\n")
 		printf("UPDATE addresses SET a_stat = %s, as_reason = %s, lng = %s, lat = %s, rply_address = %s WHERE address = %s ;\n", 
-			esc_string("G"), esc_string("geo.ok.ocg"), $4, $5, esc_string($6), esc_string($f_addr))
+			esc_string("G"), esc_string("geo.ok.ocd"), $4, $5, esc_string($6), esc_string($f_addr))
 	}
 	function esc_string(str,   work) {
 		work = str
