@@ -141,6 +141,9 @@ while read line ; do
 				exit err
 			}
 
+			pq_options["rply"] = 0
+			pq_options["do_subs"] = 0
+
 			n_towns_2qry = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
 			if(n_towns_2qry == 0){
 				printf("ERROR: %s: no \"towns_2qry\" data\n", ai_file) > "/dev/stderr"
@@ -167,7 +170,11 @@ while read line ; do
 			}
 
 			# split the input address into fields. No need to test, as it must be good to get here
-			AU_parse(0, 0, addr, addr_ary, towns_2qry, st_types_2qry, "", dirs_2qry, ords_2qry)
+			AU_parse(pq_options, addr, addr_ary, towns_2qry, st_types_2qry, "", dirs_2qry, ords_2qry)
+
+
+			pr_options["rply"] = 1
+			pr_options["do_subs"] = 1
 
 			n_towns_2std = AU_get_addr_data(addr_info, "towns_2std", towns_2std)
 			if(n_towns_2std == 0){
@@ -195,7 +202,7 @@ while read line ; do
 			}
 		}
 		{
-			if(AU_parse(1, 1, $2, result, towns_2std, st_types_2std, "", dirs_2std, ords_2std)){
+			if(AU_parse(pr_options, $2, result, towns_2std, st_types_2std, "", dirs_2std, ords_2std)){
 				n_lines++
 				lines[n_lines] = sprintf("emsg  = %s", result["emsg"])
 				n_lines++

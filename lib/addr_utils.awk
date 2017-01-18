@@ -1,4 +1,4 @@
-function AU_parse(rply, do_subs, addr, result, towns, st_types, st_quals, dirs, st_ords,   nf, ary, i, f_st, nf2, ary2, i1, name, street, quals, town, k) {
+function AU_parse(options, addr, result, towns, st_types, st_quals, dirs, st_ords,   nf, ary, i, f_st, nf2, ary2, i1, name, street, quals, town, k) {
 
 	result["status"] = "B"
 	result["emsg"  ] = ""
@@ -14,7 +14,7 @@ function AU_parse(rply, do_subs, addr, result, towns, st_types, st_quals, dirs, 
 		sub(/ *$/, "", ary[i])
 	}
 
-	if(rply){
+	if(options["rply"]){
 		# TODO: generalize to all states?
 		if(ary[nf] != "United States of America"){
 			result["emsg"] = "not.usa"
@@ -46,7 +46,7 @@ function AU_parse(rply, do_subs, addr, result, towns, st_types, st_quals, dirs, 
 		result["emsg"] = "bad.town"
 		return 1
 	}
-	town = do_subs ? towns[ary[nf]] : ary[nf]
+	town = options["do_subs"] ? towns[ary[nf]] : ary[nf]
 
 	# find the street.
 	# street is 1) 1st elt of ary[1:nf-1] that begins w/number & ends w/st_type or 2) last elt of ary[1:nf-1] that begins w/number
@@ -93,7 +93,7 @@ function AU_parse(rply, do_subs, addr, result, towns, st_types, st_quals, dirs, 
 	# Street Hacks: Probably should just compare ignore case but not ready for that step yet
 	# change el Camino X to El Camino X
 	# change el Monte X  to El Monte X
-	if(do_subs){
+	if(options["do_subs"]){
 		if(nf2 > 3){
 			if(ary2[nf2-2] == "el" && ary2[nf2-1] == "Camino")
 				ary2[nf2-2] = "El"
@@ -104,7 +104,7 @@ function AU_parse(rply, do_subs, addr, result, towns, st_types, st_quals, dirs, 
 
 	# Street should be num [ dir ] str [ st ]
 	street = ary2[1]
-	if(do_subs){
+	if(options["do_subs"]){
 		# This is amusing.  What is South Court? Is is S. Court or South Ct.  No idea so, leave such streets in long form
 		if(nf2 == 3 && (ary2[2] in dirs) && (ary2[3] in st_types)){
 			for(i = 2; i <= nf2; i++)

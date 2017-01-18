@@ -100,6 +100,9 @@ BEGIN {
 		exit err
 	}
 
+	pq_options["rply"] = 0
+	pq_options["do_subs"] = 1
+
 	n_towns_2qry = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
 	if(n_towns_2qry == 0){
 		printf("ERROR: %s: no \"towns_2qry\" data\n", ai_file) > "/dev/stderr"
@@ -125,23 +128,6 @@ BEGIN {
 		exit err
 	}
 
-#tm 	for(k in config){
-#tm 		split(k, keys, SUBSEP)
-#tm 		if(keys[1] == "dirs")
-#tm 			dirs[keys[2]] = config[k]
-#tm 		else if(keys[1] == "st_abbrevs")
-#tm 			st_abbrevs[keys[2]] = config[k]
-#tm 		else if(keys[1] == "st_quals")
-#tm 			st_quals[keys[2]] = config[k]
-#tm 		else if(keys[1] == "towns")
-#tm 			towns[keys[2]] = config[k]
-#tm 		else{
-#tm 			printf("ERROR: unknown table %s in config file %s\n", keys[1], cfile) > "/dev/stderr"
-#tm 			err = 1 
-#tm 			exit 1
-#tm 		}
-#tm 	}
-
 	pr_hdr = 1
 }
 $5 == "Job" {
@@ -149,7 +135,7 @@ $5 == "Job" {
 	src = $6
 	dst = $7
 
-	err = AU_parse(0, 1, atype == "src" ? src : dst, result, towns_2qry, st_types_2qry, "", dirs_2qry, ords_2qry)
+	err = AU_parse(pq_options, atype == "src" ? src : dst, result, towns_2qry, st_types_2qry, "", dirs_2qry, ords_2qry)
 	if(pr_hdr){
 		pr_hdr = 0
 		if(atype == "src")
