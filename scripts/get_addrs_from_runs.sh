@@ -102,6 +102,7 @@ BEGIN {
 
 	pq_options["rply"] = 0
 	pq_options["do_subs"] = 1
+	pq_options["no_name"] = "Residence"
 
 	n_towns_2qry = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
 	if(n_towns_2qry == 0){

@@ -66,9 +66,9 @@ function AU_parse(options, addr, result, towns, st_types, st_quals, dirs, st_ord
 		return 1
 	}
 	
-	# The name is what precedes f_st.  if f_st == 1, set name to "Residence"
+	# The name is what precedes f_st.  if f_st == 1, set name to user supplied default value
 	if(f_st == 1)
-		name = "Residence"
+		name = options["no_name"]
 	else{
 		name = ary[1]
 		for(i = 2; i < f_st; i++)
@@ -149,32 +149,51 @@ function AU_get_addr_data(addr_info, key, data,   k, keys, nk, i) {
 	}
 	return n_data
 }
-function AU_match(cand, ref,   n_cand_fields, cand_fields, n_ref_fields, ref_fields, i, n_cand_rtab, cand_rtab, n_ref_rtab, ref_rtab) {
+function AU_match(options, cand, ref,   nc_fields, c_fields, nr_fields, r_fields, i, nc_rtab, c_rtab, nr_rtab, r_rtab, nr_nwords, r_nwords, nc_nwords, c_nwords) {
+
+	if(options["verbose"]){
+		printf("ref.name    = %s\n", ref["name"]) > "/dev/stderr"
+		printf("ref.street  = %s\n", ref["street"]) > "/dev/stderr"
+		printf("cand.name   = %s\n", cand["name"]) > "/dev/stderr"
+		printf("cand.street = %s\n", cand["street"]) > "/dev/stderr"
+	}
 
 	# street numbers and/or ranges, etc is 1st field
-	n_cand_fields = split(cand["street"], cand_fields, /  */)
-	n_ref_fields = split(ref["street"], ref_fields, /  */)
+	nc_fields = split(cand["street"], c_fields, /  */)
+	nr_fields = split(ref["street"], r_fields, /  */)
 
 	# check that non-number parts of streets agree
-	if(n_cand_fields != n_ref_fields)
+	if(nc_fields != nr_fields)
 		return 0
-	for(i = 2; i <= n_cand_fields; i++){
-		if(cand_fields[i] != ref_fields[i])
+	for(i = 2; i <= nc_fields; i++){
+		if(c_fields[i] != r_fields[i])
 			return 0
 	}
 
-	n_cand_rtab = AU_get_rtab(cand_fields[1], cand_rtab)
-	if(n_cand_rtab == 0)
+	nc_rtab = AU_get_rtab(c_fields[1], c_rtab)
+	if(nc_rtab == 0)
 		return 0
 
-	n_ref_rtab = AU_get_rtab(ref_fields[1], ref_rtab)
-	if(n_ref_rtab == 0)
+	nr_rtab = AU_get_rtab(r_fields[1], r_rtab)
+	if(nr_rtab == 0)
 		return 0
 
-	if(!AU_rtabs_intersect(n_cand_rtab, cand_rtab, n_ref_rtab, ref_rtab))
+	if(!AU_rtabs_intersect(nc_rtab, c_rtab, nr_rtab, r_rtab))
 		return 0
 
-	return cand["town"] == ref["town"]
+	if(cand["town"] != ref["town"])
+		return 0
+	else if(cand["name"] == ref["name"]){
+		return 3
+	}else if(cand["name"] == ""){	# this is unannotated address
+		return 1
+	}else if(ref["name"] == "Residence"){	# many destinations are just street, town
+		return 1
+	}else{	# check if 1st words match
+		nc_nwords = split(cand["name"], c_nwords, /  */)
+		nr_nwords = split(ref["name"], r_nwords, /  */)
+		return c_nwords[1] == r_nwords[1] ? 2 : 0
+	}
 }
 function AU_get_rtab(street, rtab,   n_rtab, i, nw, work) {
 

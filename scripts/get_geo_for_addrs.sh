@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] { -a address | [ address-file ] }"
+U_MSG="usage: $0 [ -help ] [ -v ] { -a address | [ address-file ] }"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -15,6 +15,7 @@ DM_SCRIPTS=$DM_HOME/scripts
 
 NOW="$(date +%Y%m%d_%H%M%S)"
 
+VERBOSE=
 ADDR=
 FILE=
 
@@ -23,6 +24,10 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-v)
+		VERBOSE="-v"
+		shift
 		;;
 	-a)
 		shift
@@ -65,4 +70,4 @@ awk -F'\t' 'BEGIN {
 	printf("%s\t.\t.\t.\tJob\t%s\t.\n", strftime("%Y-%m-%d"), $1)
 }'												|\
 $DM_SCRIPTS/get_addrs_from_runs.sh -at src							|\
-$DM_SCRIPTS/add_geo_to_addrs.sh -at src
+$DM_SCRIPTS/add_geo_to_addrs.sh $VERBOSE -at src

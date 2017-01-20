@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -c conf-file ] -at { src | dst } [ extracted-address-file ]"
+U_MSG="usage: $0 [ -help ] [ -v ] [ -c conf-file ] -at { src | dst } [ extracted-address-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -33,6 +33,7 @@ else
 	exit 1
 fi
 
+VERBOSE=
 AI_FILE=$DM_ETC/address.info
 ATYPE=
 FILE=
@@ -42,6 +43,10 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-v)
+		VERBOSE="yes"
+		shift
 		;;
 	-c)
 		shift
@@ -117,7 +122,7 @@ while read line ; do
 	dst="$(echo "$line" | awk -F'\t' '{ print $4 }')"
 	query="$(echo "$line" | awk -F'\t' '{ print $5 }')"
 	name="$(echo "$line" | awk -F'\t' '{ print $6 }')"
-	$DM_SCRIPTS/get_latlong.sh "$query" > $LL_FILE
+	$DM_SCRIPTS/get_latlong.sh -limit 20 "$query" > $LL_FILE
 	if [ ! -s $LL_FILE ] ; then
 		LOG ERROR "get_latlong.sh failed for $query"
 	else
@@ -128,6 +133,7 @@ while read line ; do
 		BEGIN {
 			today = "'"$TODAY"'"
 
+			verbose = "'"$VERBOSE"'" == "yes"
 			atype = "'"$ATYPE"'"
 			src = "'"$src"'"
 			dst = "'"$dst"'"
@@ -143,6 +149,7 @@ while read line ; do
 
 			pq_options["rply"] = 0
 			pq_options["do_subs"] = 0
+			pq_options["no_name"] = "Residence"
 
 			n_towns_2qry = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
 			if(n_towns_2qry == 0){
@@ -175,6 +182,7 @@ while read line ; do
 
 			pr_options["rply"] = 1
 			pr_options["do_subs"] = 1
+			pr_options["no_name"] = ""
 
 			n_towns_2std = AU_get_addr_data(addr_info, "towns_2std", towns_2std)
 			if(n_towns_2std == 0){
@@ -209,10 +217,14 @@ while read line ; do
 				lines[n_lines] = sprintf("reply = %s", $2)
 				err = 1
 			}else{
-				if(AU_match(result, addr_ary)){
-					printf("%s\t%s\t%s\t%s\t%s\t%s\n", today, src, dst, $4, $3, $2)
-					err = 0
-					exit err
+				# get the match score, retain the first of the highest
+				mt_options["verbose"] = verbose
+				m_score = AU_match(mt_options, result, addr_ary)
+				if(m_score > 0){
+					if(m_score > b_score){
+						b_score = m_score
+						b_match = sprintf("%s\t%s\t%s\t%s\t%s\t%s", today, src, dst, $4, $3, $2)
+					}
 				}else{
 					n_lines++
 					lines[n_lines] = sprintf("emsg  = %s\t%s", "no.match", $0)
@@ -223,7 +235,10 @@ while read line ; do
 			}
 		}
 		END {
-			if(err && n_lines > 0){
+			if(b_match != ""){
+				printf("%s\n", b_match)
+				err = 0
+			}else if(err && n_lines > 0){
 				printf("ERROR: %s: addr: %s: not found:\n", today, addr) > "/dev/stderr"
 				printf("{\n") > "/dev/stderr"
 				printf("\tquery = %s\n", query) > "/dev/stderr"
@@ -234,7 +249,6 @@ while read line ; do
 			exit err
 		}' $LL_FILE
 	fi
-#	sleep 5
 done
 
 rm -f $LL_FILE

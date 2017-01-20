@@ -74,8 +74,7 @@ while read line ; do
 	{
 		printf(".log stderr\\n")
 		printf("PRAGMA foreign_keys = on ;\\n")
-		printf("UPDATE addresses SET a_stat = %s, as_reason = %s WHERE address = %s AND a_stat = %s AND as_reason = %s;\n",
-			esc_string("B"), esc_string($1), esc_string($2), esc_string("G"), esc_string("new"))
+		printf("UPDATE addresses SET a_stat = %s, as_reason = %s WHERE address = %s ;\n", esc_string("B"), esc_string($1), esc_string($2))
 	}
 	function esc_string(str,   work) {
 		work = str
