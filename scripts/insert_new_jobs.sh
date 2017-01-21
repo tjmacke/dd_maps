@@ -88,6 +88,9 @@ $5 == "Job" {
 		printf("%s\n", $0)
 }' $FILE	|\
 while read line ; do
+
+#LOG DEBUG "line = $line"
+
 	# get the src_addr_id
 	src="$(echo "$line" | awk -F'\t' '{ print $6 }')"
 	sel_stmt="$(echo "$src" |\
@@ -156,7 +159,10 @@ while read line ; do
 		tstart = "'"$tstart"'"
 	}
 	{
-		if(DU_job_in_dash(js_min, "", ds_min, de_min)){
+		dstart = substr($2, 12)
+		dend = substr($3, 12)
+
+		if(DU_job_in_dash(tstart, "", dstart, dend)){
 			printf("%d\n", $1)
 			exit 0
 		}
