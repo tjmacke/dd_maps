@@ -1,4 +1,4 @@
-function AU_parse(options, addr, result, towns, st_types, st_quals, dirs, st_ords,   nf, ary, i, f_st, nf2, ary2, i1, name, street, quals, town, k) {
+function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,   nf, ary, i, f_st, f_twn, nf2, ary2, b1, e1, name, street, quals, town, state, k) {
 
 	result["status"] = "B"
 	result["emsg"  ] = ""
@@ -14,44 +14,55 @@ function AU_parse(options, addr, result, towns, st_types, st_quals, dirs, st_ord
 		sub(/ *$/, "", ary[i])
 	}
 
-	if(options["rply"]){
-		# TODO: generalize to all states?
-		if(ary[nf] != "United States of America"){
-			result["emsg"] = "not.usa"
-			return 1
-		}else
-			nf--
-		if(ary[nf] == "CA")
-			nf--
-		else if(ary[nf] ~ /CA [0-9]{5}$/)
-			nf--
-		else if(ary[nf] ~ /CA [0-9]{5}-[0-9]{4}$/)
-			nf--
-		else if(ary[nf] == "California")
-			nf--
-		else{
-			result["emsg"] = "not.CA"
-			return 1
-		}
-	}
+	# US only for now
+	if(ary[nf] == "United States of America")
+		nf--
 
-	# minimal address has 2 fields: street, town
+	# Every address for now must after possible "town expansion" match this pattern:
+	#
+	# 	[ name, ] street, [ quals, ] town, state
+	#
+	# Since most of the addresses sent to this parser are from a small set of towns,
+	# the user can define town abbreviations that will be expanded into town, state,
+	# which means that the mininal input address must have at least two fields.
+	#
 	if(nf < 2){
 		result["emsg"] = "short.addr"
 		return 1
 	}
-
-	# check that we have a known town
-	if(!(ary[nf] in towns)){
-		result["emsg"] = "bad.town"
+	# expand town if needed
+	if(ary[nf] in towns){
+		nf2 = split(towns[ary[nf]], ary2, ",")
+		if(nf2 != 2){
+			result["emsg"] = "bad.town"
+			return  1
+		}
+		for(i = 1; i <= nf2; i++){
+			sub(/^  */, "", ary2[i])
+			sub(/  *$/, "", ary2[i])
+		}
+		ary[nf] = ary2[1]
+		ary[nf+1] = ary2[2]
+		nf++
+	}
+	# At this point, all addresses must have at least three fields.
+	if(nf < 3){
+		result["emsg"] = "short.addr"
 		return 1
 	}
-	town = options["do_subs"] ? towns[ary[nf]] : ary[nf]
+
+	# check for a valid state:
+	if(!(ary[nf] in states)){
+		result["emsg"] = "not.US"
+		return 1
+	}else
+		state = ary[nf]
+	town = ary[nf-1]
 
 	# find the street.
-	# street is 1) 1st elt of ary[1:nf-1] that begins w/number & ends w/st_type or 2) last elt of ary[1:nf-1] that begins w/number
+	# street is 1) 1st elt of ary[1:nf-2] that begins w/number & ends w/st_type or 2) last elt of ary[1:nf-2] that begins w/number
 	f_st = 0
-	for(i = 1; i < nf; i++){
+	for(i = 1; i < nf - 1; i++){
 		if(ary[i] ~ /^[1-9]/){
 			nf2 = split(ary[i], ary2, /  */)
 			if(ary2[nf2] in st_types){
@@ -76,9 +87,9 @@ function AU_parse(options, addr, result, towns, st_types, st_quals, dirs, st_ord
 	}
 
 	# Street qualifiers are those fields, if any, that follow f_st and precede nf
-	if(nf - f_st > 1){
+	if(nf - f_st > 2){
 		quals = ary[f_st+1]
-		for(i = f_st+2; i < nf; i++)
+		for(i = f_st+2; i < nf - 1; i++)
 			quals = quals ", " ary[i]
 	}else
 		quals = ""
@@ -102,7 +113,7 @@ function AU_parse(options, addr, result, towns, st_types, st_quals, dirs, st_ord
 		}
 	}
 
-	# Street should be num [ dir ] str [ st ]
+	# Street should be num [ dir ] str [ st ] [ dir ]
 	street = ary2[1]
 	if(options["do_subs"]){
 		# This is amusing.  What is South Court? Is is S. Court or South Ct.  No idea so leave such streets in long form
@@ -110,18 +121,24 @@ function AU_parse(options, addr, result, towns, st_types, st_quals, dirs, st_ord
 			for(i = 2; i <= nf2; i++)
 				street = street " " ary2[i]
 		}else{
+			# handle any leading direction
 			if(ary2[2] in dirs){
 				street = street " " dirs[ary2[2]]
-				i1 = 3
+				b1 = 3
 			}else
-				i1 = 2
-			for(i = i1; i < nf2; i++){
-				if(i == i1)
-					street = street ((ary2[i] in st_ords) ? (" " st_ords[ary2[i]]) : (" "ary2[i]))
+				b1 = 2
+			# detect trailing direction
+			e1 = ary2[nf2] in dirs ? nf2-1 : nf2
+			for(i = b1; i < e1; i++){
+				if(i == b1)
+					street = street ((ary2[i] in st_ords) ? (" " st_ords[ary2[i]]) : (" " ary2[i]))
 				else
 					street = street " " ary2[i]
 			}
-			street = street ((ary2[nf2] in st_types) ? (" " st_types[ary2[nf2]]) : (" " ary2[nf2]))
+			street = street ((ary2[e1] in st_types) ? (" " st_types[ary2[e1]]) : (" " ary2[e1]))
+			# handle any trailing direction
+			if(e1 < nf2)
+				street = street " " dirs[ary2[nf2]]
 		}
 	}else{
 		for(i = 2; i <= nf2; i++)
@@ -132,8 +149,8 @@ function AU_parse(options, addr, result, towns, st_types, st_quals, dirs, st_ord
 	result["name"  ] = name
 	result["street"] = street
 	result["quals" ] = quals
-	result["town"  ] = town
-	result["state" ] = "CA"
+	result["town"  ] = town 
+	result["state" ] = state
 
 	return 0
 }
