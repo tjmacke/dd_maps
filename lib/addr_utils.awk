@@ -105,7 +105,7 @@ function AU_parse(options, addr, result, towns, st_types, st_quals, dirs, st_ord
 	# Street should be num [ dir ] str [ st ]
 	street = ary2[1]
 	if(options["do_subs"]){
-		# This is amusing.  What is South Court? Is is S. Court or South Ct.  No idea so, leave such streets in long form
+		# This is amusing.  What is South Court? Is is S. Court or South Ct.  No idea so leave such streets in long form
 		if(nf2 == 3 && (ary2[2] in dirs) && (ary2[3] in st_types)){
 			for(i = 2; i <= nf2; i++)
 				street = street " " ary2[i]
