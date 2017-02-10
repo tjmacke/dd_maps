@@ -78,26 +78,26 @@ towns_2qry = {
 	Woodside        = Woodside, CA
 }
 towns_2std = {
-	Atherton            = Atherton
-	Belmont             = Belmont
-	Cupertino           = Cupertino
-	East Palo Alto      = East PA
-	Escondido Village   = Stanford
-	Foster City         = Foster City
-	Ladera              = Ladera
-	Los Altos           = Los Altos
-	Los Altos Hills     = Los Altos Hills
-	Menlo Park          = MP
-	Mountain View       = MV
-	Palo Alto           = PA
-	Portola Valley      = Portola Valley
-	Redwood City        = RWC
-	San Carlos          = San Carlos
-	Santa Clara         = Santa Clara
-	Stanford            = Stanford
-	Stanford University = Stanford
-	Sunnyvale           = Sunnyvale
-	Woodside            = Woodside
+	Atherton, CA            = Atherton
+	Belmont, CA             = Belmont
+	Cupertino, CA           = Cupertino
+	East Palo Alto, CA      = East PA
+	Escondido Village, CA   = Stanford
+	Foster City, CA         = Foster City
+	Ladera, CA              = Ladera
+	Los Altos, CA           = Los Altos
+	Los Altos Hills, CA     = Los Altos Hills
+	Menlo Park, CA          = MP
+	Mountain View, CA       = MV
+	Palo Alto, CA           = PA
+	Portola Valley, CA      = Portola Valley
+	Redwood City, CA        = RWC
+	San Carlos, CA          = San Carlos
+	Santa Clara, CA         = Santa Clara
+	Stanford, CA            = Stanford
+	Stanford University, CA = Stanford
+	Sunnyvale, CA           = Sunnyvale
+	Woodside, CA            = Woodside
 }
 
 # Valid street types. Street types must be in these maps.  If so, replace the key with its value

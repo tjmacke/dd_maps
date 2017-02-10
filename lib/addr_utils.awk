@@ -14,37 +14,40 @@ function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,
 		sub(/ *$/, "", ary[i])
 	}
 
-	# US only for now
-	if(ary[nf] == "United States of America")
-		nf--
+	# US only for now, so queries never have a country, but replies do
+	if(options["rply"]){
+		if(ary[nf] == "United States of America")
+			nf--
+	}
 
-	# Every address for now must after possible "town expansion" match this pattern:
-	#
-	# 	[ name, ] street, [ quals, ] town, state
-	#
-	# Since most of the addresses sent to this parser are from a small set of towns,
-	# the user can define town abbreviations that will be expanded into town, state,
-	# which means that the mininal input address must have at least two fields.
-	#
-	if(nf < 2){
-		result["emsg"] = "short.addr"
-		return 1
-	}
-	# expand town if needed
-	if(ary[nf] in towns){
-		nf2 = split(towns[ary[nf]], ary2, ",")
-		if(nf2 != 2){
-			result["emsg"] = "bad.town"
-			return  1
+	if(!options["rply"]){
+		# As a convenience to the user, given that nearly all the addresses
+		# are in small set of nearby towns, the minimal query address can be 
+		#
+		#	street, TOWN
+		#
+		# where TOWN is an abbreviation for town, state. Example: PA -> Palo Alto, CA
+		if(nf < 2){
+			result["emsg"] = "short.addr"
+			return 1
 		}
-		for(i = 1; i <= nf2; i++){
-			sub(/^  */, "", ary2[i])
-			sub(/  *$/, "", ary2[i])
+		# expand town if needed
+		if(ary[nf] in towns){
+			nf2 = split(towns[ary[nf]], ary2, ",")
+			if(nf2 != 2){
+				result["emsg"] = "bad.town"
+				return  1
+			}
+			for(i = 1; i <= nf2; i++){
+				sub(/^  */, "", ary2[i])
+				sub(/  *$/, "", ary2[i])
+			}
+			ary[nf] = ary2[1]
+			ary[nf+1] = ary2[2]
+			nf++
 		}
-		ary[nf] = ary2[1]
-		ary[nf+1] = ary2[2]
-		nf++
 	}
+
 	# At this point, all addresses must have at least three fields.
 	if(nf < 3){
 		result["emsg"] = "short.addr"
@@ -144,6 +147,8 @@ function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,
 		for(i = 2; i <= nf2; i++)
 			street = street " " ary2[i]
 	}
+
+	# TODO: if this is a reply, then see if the town, state has an abbrev and do something
 
 	result["status"] = "G"
 	result["name"  ] = name
