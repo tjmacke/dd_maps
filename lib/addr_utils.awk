@@ -20,6 +20,7 @@ function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,
 			nf--
 	}
 
+	# TODO: move this to a separate function, may AU_expand()
 	if(!options["rply"]){
 		# As a convenience to the user, given that nearly all the addresses
 		# are in small set of nearby towns, the minimal query address can be 
@@ -148,13 +149,10 @@ function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,
 			street = street " " ary2[i]
 	}
 
-	# TODO: if this is a reply, then see if the town, state has an abbrev and do something
-	if(options["abbrev"]){
-		work = town ", " state
-		if(work in towns){
-			town = towns[work]
-			state = ""
-		}
+	# TODO: this belongs in a separate function
+	if(options["rply"]){
+		if(town in towns)
+			town = towns[town]
 	}
 
 	result["status"] = "G"
