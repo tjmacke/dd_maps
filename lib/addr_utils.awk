@@ -1,4 +1,4 @@
-function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,   nf, ary, i, f_st, f_twn, nf2, ary2, b1, e1, name, street, quals, town, state, k) {
+function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,   nf, ary, i, f_st, f_twn, nf2, ary2, b1, e1, name, street, quals, town, state, work) {
 
 	result["status"] = "B"
 	result["emsg"  ] = ""
@@ -48,14 +48,14 @@ function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,
 		}
 	}
 
-	# At this point, all addresses must have at least three fields.
+	# At this point, all addresses must have at least three fields: street, town, state
 	if(nf < 3){
 		result["emsg"] = "short.addr"
 		return 1
 	}
 
-	# check for a valid state:
-	if(!(ary[nf] in states)){
+	# check for a valid state, ignoring zip code
+	if(!(substr(ary[nf], 1, 2) in states)){
 		result["emsg"] = "not.US"
 		return 1
 	}else
@@ -149,6 +149,13 @@ function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,
 	}
 
 	# TODO: if this is a reply, then see if the town, state has an abbrev and do something
+	if(options["abbrev"]){
+		work = town ", " state
+		if(work in towns){
+			town = towns[work]
+			state = ""
+		}
+	}
 
 	result["status"] = "G"
 	result["name"  ] = name
@@ -176,9 +183,24 @@ function AU_match(options, cand, ref,   nc_fields, c_fields, nr_fields, r_fields
 	if(options["verbose"]){
 		printf("ref.name    = %s\n", ref["name"]) > "/dev/stderr"
 		printf("ref.street  = %s\n", ref["street"]) > "/dev/stderr"
+		printf("ref.town    = %s\n", ref["town"]) > "/dev/stderr"
+		printf("ref.state   = %s\n", ref["state"]) > "/dev/stderr"
 		printf("cand.name   = %s\n", cand["name"]) > "/dev/stderr"
 		printf("cand.street = %s\n", cand["street"]) > "/dev/stderr"
+		printf("cand.town   = %s\n", cand["town"]) > "/dev/stderr"
+		printf("cand.state  = %s\n", cand["state"]) > "/dev/stderr"
 	}
+
+	if(cand["state"] != ref["state"]){
+		if(options["ign_zip"]){
+			if(substr(cand["state"], 1, 2) != substr(ref["state"], 1, 2))
+				return 0
+		}else
+			return 0
+	}
+
+	if(cand["town"] != ref["town"])
+		return 0
 
 	# street numbers and/or ranges, etc is 1st field
 	nc_fields = split(cand["street"], c_fields, /  */)
@@ -203,18 +225,17 @@ function AU_match(options, cand, ref,   nc_fields, c_fields, nr_fields, r_fields
 	if(!AU_rtabs_intersect(nc_rtab, c_rtab, nr_rtab, r_rtab))
 		return 0
 
-	if(cand["town"] != ref["town"])
-		return 0
-	else if(cand["name"] == ref["name"]){
+	# deal with names
+	if(cand["name"] == ref["name"]){
 		return 3
-	}else if(cand["name"] == ""){	# this is unannotated address
+	}else if(cand["name"] == ""){	# this is an unannotated address
 		return 1
-	}else if(ref["name"] == "Residence"){	# many destinations are just street, town
+	}else if(ref["name"] == options["no_name"]){	# many destinations are just street, town, state
 		return 1
-	}else{	# check if 1st words match
+	}else{	# check if 1st words match; but no matter what this is a match
 		nc_nwords = split(cand["name"], c_nwords, /  */)
 		nr_nwords = split(ref["name"], r_nwords, /  */)
-		return c_nwords[1] == r_nwords[1] ? 2 : 0
+		return c_nwords[1] == r_nwords[1] ? 2 : 1
 	}
 }
 function AU_get_rtab(street, rtab,   n_rtab, i, nw, work) {
