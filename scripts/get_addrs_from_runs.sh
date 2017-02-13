@@ -100,6 +100,8 @@ BEGIN {
 		exit err
 	}
 
+	n_states = AU_get_addr_data(addr_info, "us_states", states)
+
 	pq_options["rply"] = 0
 	pq_options["do_subs"] = 1
 	pq_options["no_name"] = "Residence"
@@ -136,7 +138,7 @@ $5 == "Job" {
 	src = $6
 	dst = $7
 
-	err = AU_parse(pq_options, atype == "src" ? src : dst, result, towns_2qry, st_types_2qry, "", dirs_2qry, ords_2qry)
+	err = AU_parse(pq_options, atype == "src" ? src : dst, result, states, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
 	if(pr_hdr){
 		pr_hdr = 0
 		if(atype == "src")

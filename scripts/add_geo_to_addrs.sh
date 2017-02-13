@@ -147,6 +147,8 @@ while read line ; do
 				exit err
 			}
 
+			n_states = AU_get_addr_data(addr_info, "us_states", states)
+
 			pq_options["rply"] = 0
 			pq_options["do_subs"] = 0
 			pq_options["no_name"] = "Residence"
@@ -177,8 +179,7 @@ while read line ; do
 			}
 
 			# split the input address into fields. No need to test, as it must be good to get here
-			AU_parse(pq_options, addr, addr_ary, towns_2qry, st_types_2qry, "", dirs_2qry, ords_2qry)
-
+			AU_parse(pq_options, addr, addr_ary, states, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
 
 			pr_options["rply"] = 1
 			pr_options["do_subs"] = 1
@@ -210,15 +211,17 @@ while read line ; do
 			}
 		}
 		{
-			if(AU_parse(pr_options, $2, result, towns_2std, st_types_2std, "", dirs_2std, ords_2std)){
-				n_lines++
-				lines[n_lines] = sprintf("emsg  = %s", result["emsg"])
+			if(AU_parse(pr_options, $2, result, states, towns_2std, st_types_2std, dirs_2std, ords_2std)){
 				n_lines++
 				lines[n_lines] = sprintf("reply = %s", $2)
+				n_lines++
+				lines[n_lines] = sprintf("emsg  = %s", result["emsg"])
 				err = 1
 			}else{
 				# get the match score, retain the first of the highest
 				mt_options["verbose"] = verbose
+				mt_options["ign_zip"] = 1
+				mt_options["no_name"] = "Residence"
 				m_score = AU_match(mt_options, result, addr_ary)
 				if(m_score > 0){
 					if(m_score > b_score){
@@ -227,9 +230,9 @@ while read line ; do
 					}
 				}else{
 					n_lines++
-					lines[n_lines] = sprintf("emsg  = %s\t%s", "no.match", $0)
-					n_lines++
 					lines[n_lines] = sprintf("reply = %s", $2)
+					n_lines++
+					lines[n_lines] = sprintf("emsg  = %s\t%s", "no.match", $0)
 					err = 1
 				}
 			}
