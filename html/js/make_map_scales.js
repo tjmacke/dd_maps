@@ -63,7 +63,7 @@ function makeMapScales(scaleData) {
   var sizeScaleProps = {};
   // properties that define the scale
   sizeScaleProps.sp_tick_font_size = fontSize;
-  sizeScaleProps.sp_xoff           = 5;
+  sizeScaleProps.sp_xoff           = 9;	// will work up to 999
   sizeScaleProps.sp_width          = 75;
   sizeScaleProps.sp_height         = 15;
   sizeScaleProps.sp_tick_len       = 5;
