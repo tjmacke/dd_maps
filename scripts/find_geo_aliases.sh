@@ -52,16 +52,18 @@ awk -F'\t' 'BEGIN {
 		if(!key_isempty(l_key)){
 			if(n_lines > 1){
 				printf("geo(%s, %s) = %d {\n", l_key[1], l_key[2], n_lines)
+				asorti(lines, lines_idx)
 				for(i = 1; i <= n_lines; i++)
-					printf("\t%s\n", lines[i])
+					printf("\t%s\n", lines_idx[i])
 				printf("}\n")
 			}
 			delete lines
+			delete line_idx
 			n_lines = 0
 		}
 	}
 	n_lines++
-	lines[n_lines] = $1
+	lines[$1] = n_lines
 	l_key[1] = key[1]
 	l_key[2] = key[2]
 }
@@ -69,11 +71,13 @@ END {
 	if(!key_isempty(l_key)){
 		if(n_lines > 1){
 			printf("geo(%s, %s) = %d {\n", l_key[1], l_key[2], n_lines)
+			asorti(lines, lines_idx)
 			for(i = 1; i <= n_lines; i++)
-				printf("\t%s\n", lines[i])
+				printf("\t%s\n", lines_idx[i])
 			printf("}\n")
 		}
 		delete lines
+		delete lines_idx
 		n_lines = 0
 	}
 }

@@ -44,28 +44,32 @@ awk -F'\t' '{
 	if($1 != l_1){
 		if(l_1 != ""){
 			if(n_addrs > 1){
+				asorti(addrs, addrs_idx)
 				printf("qry = %s {\n", l_1)
 				for(i = 1; i <= n_addrs; i++)
-					printf("\t%s\n", addrs[i])
+					printf("\t%s\n", addrs_idx[i])
 				printf("}\n")
 			}
 			delete addrs
+			delete addrs_idx
 			n_addrs = 0
 		}
 	}
 	n_addrs++
-	addrs[n_addrs] = $2
+	addrs[$2] = n_addrs
 	l_1 = $1
 }
 END {
 	if(l_1 != ""){
 		if(n_addrs > 1){
+			asorti(addrs, addrs_idx)
 			printf("qry = %s {\n", l_1)
 			for(i = 1; i <= n_addrs; i++)
-				printf("\t%s\n", addrs[i])
+				printf("\t%s\n", addrs_idx[i])
 			printf("}\n")
 		}
 		delete addrs
+		delete addrs_idx
 		n_addrs = 0
 	}
 }'
