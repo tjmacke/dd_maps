@@ -101,6 +101,11 @@ BEGIN {
 	}
 
 	n_states = AU_get_addr_data(addr_info, "us_states", states)
+	if(n_states == 0){
+		printf("ERROR: %s: no \"us_states\" data\n", ai_file) > "/dev/stderr"
+		err = 1
+		exit err
+	}
 
 	pq_options["rply"] = 0
 	pq_options["do_subs"] = 1
