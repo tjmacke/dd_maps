@@ -64,8 +64,9 @@ E_ADDR="$(echo "$ADDR" |\
 			e_addr = ""
 		}else{
 			e_addr = $0
-			gsub(apos, "%27", e_addr)
 			gsub(" ", "+", e_addr)
+			gsub(apos, "%27", e_addr)
+			gsub(",", "%2C", e_addr)
 		}
 		print e_addr
 	}'
