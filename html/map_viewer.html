@@ -62,9 +62,9 @@
         r.onload = function(e) {
           var contents = e.target.result;
           var json = JSON.parse(contents);
-        //  makeMap(json.geojson.features);
           makeMap(json.geojson);
-          makeMapScales(json.config);
+          if(json.config != null)
+            makeMapScales(json.config);
         };
         r.readAsText(f);
   

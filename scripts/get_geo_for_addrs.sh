@@ -52,9 +52,15 @@ while [ $# -gt 0 ] ; do
 	esac
 done
 
+if [ $# -ne 0 ] ; then
+	LOG ERROR "extra arguments $*"
+	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
 if [ ! -z "$ADDR" ] ; then
 	if [ ! -z "$FILE" ] ; then
-		LOG ERROR "-a addr not allowed with address-file"
+		LOG ERROR "-a address not allowed with address-file"
 		echo "$U_MSG" 1>&2
 		exit 1
 	fi
