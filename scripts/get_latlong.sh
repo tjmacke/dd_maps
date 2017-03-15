@@ -82,6 +82,6 @@ if [ ! -z "$LIMIT" ] ; then
 fi
 
 curl -s -S https://api.opencagedata.com/geocode/v1/json?"$PARMS"		|\
-$JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng}'	|\
+$JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'	|\
 sort -k 1rn,1
 exit 0
