@@ -18,6 +18,7 @@ insert_new_addrs.sh	yes	yes	.	.
 insert_new_dashes.sh	yes	yes	.	.
 insert_new_jobs.sh	yes	yes	.	.
 make_geojson.sh	no	no	.	.
+map_addrs.sh	no	no	.	.
 map_by_dash_rate.sh	yes	no	.	.
 map_by_date.sh	yes	no	.	.
 plot_all_stats.sh	yes	no	get_pay_rates.sh, get_new_sources.sh, get_freshness_info.sh	.
