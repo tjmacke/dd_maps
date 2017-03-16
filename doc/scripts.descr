@@ -448,9 +448,33 @@
 
 			./make_geojson -c src_cfg.json -gt points -t "Sources 2017-01" src.17.tsv > src.17.json
 
-20. map_by_dash_rate.sh:p
+20. map_addrs.sh:p
 
-	This scripts computes an average pay/dash for each src or dst address in the input runs-file.  The average is 
+	This script converts the addresses in a geo-line file to geojson points that can be displayed using
+	map_viewer.html.  This makes it easy to determined if the returned addresses are correct.
+
+	usage:
+
+		./map_addrs.sh [ -help ] -at { src | dst } [ geo-line-file ]
+
+	arguments:
+
+		-help		-- print usage message. Default: false.
+		-at { src | dst }
+				-- Use -at src to use source addresses or -at dst to use dets. addresses.  Default: none.
+		geo-lins-file	-- A file containing found addresses returned by get_geo_for_addrs.sh.  Default: stdin.
+
+	example:
+
+		If the file addrs.tsv contains addresses found by opencagedata.com, then this command will convert those
+		addresses to geojson
+
+			./map_addrs.sh addrs.tsv > addrs.json
+	
+
+21. map_by_dash_rate.sh:p
+
+	This script computes an average pay/dash for each src or dst address in the input runs-file.  The average is 
 	based on the break down of pay that doordash provides after each shift which for this fucntion is pay/shift
 	and jobs/shift which gives and average pay/job  = (pay/shift)/(jobs/shift).  This assigns equal values of
 	pay/job to each job in a shift, but average of many shifts each with a different mix of src or dst addresses
@@ -480,7 +504,7 @@
 
 			cat $DD_HOME/runs*.tsv | ./map_by_dash_rate.sh -d dbp.tsv -a addrs.tsv -at src -stats stats.file > dr.tsv
 
-21. map_by_date.sh:
+22. map_by_date.sh:
 
 	This script computes the freshness (ie time since most recent pick-up or delivery) and total visits to/from each address
 	in the input runs-file.  Time since last activity is shown by marker color and number of visits by marker size.
@@ -512,7 +536,7 @@
 
 			cat $DD_HOME/runs*.ts | ./map_by_date -a addrs.tsv -at src -cnt -rev -unit week -stats stats.file > sf.tsv
 
-22. plot_all_stats.sh:
+23. plot_all_stats.sh:
 
 	This script creates a single pdf with the four plots: pay rates, new sources, src and dst freshness.
 
@@ -532,7 +556,7 @@
 
 			./plot_all_stats.sh $DD_HOME.
 
-23. plot_freshness_info.sh:
+24. plot_freshness_info.sh:
 
 	This scripts plots address freshness data.  Here freshness is varying percents of addresses that
 	have been active in the last 1, 2, 4, 8, 12, 26, 52 and 52+ weeks.
@@ -557,7 +581,7 @@
 
 			./plot_freshness -at src sf.tsv
 
-24. plot_pay_rates.sh:
+25. plot_pay_rates.sh:
 
 	This script plots pay rate data.
 
@@ -578,7 +602,7 @@
 
 			./plot_pay_rates.sh p.tsv
 
-25. plot_src_info.sh:
+26. plot_src_info.sh:
 
 	This script plots new source data.
 
@@ -598,7 +622,7 @@
 
 			./plot_src_info.sh s.tsv
 
-26. update_addrs_with_geo_errors.sh:
+27. update_addrs_with_geo_errors.sh:
 
 	This script updates the addresses in the sqlite3 db dd_maps.db with the results of failed
 	requests for geo location.
@@ -622,7 +646,7 @@
 
 			./update_addrs_with_geo_errors.sh addrs.20170111T092317.err
 
-27. update_addrs_with_geo_loc.sh:
+28. update_addrs_with_geo_loc.sh:
 
 	This script is used to update addresses either w/o geo information or corrected geo information.
 
