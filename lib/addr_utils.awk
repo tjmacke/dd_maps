@@ -236,7 +236,7 @@ function AU_match(options, cand, ref,   nc_fields, c_fields, nr_fields, r_fields
 		return c_nwords[1] == r_nwords[1] ? 2 : 1
 	}
 }
-function AU_get_rtab(street, rtab,   n_rtab, i, nw, work) {
+function AU_get_rtab(street, rtab,   n_rtab, i, nw, work, l_pfx, e_work2) {
 
 	n_rtab = split(street, rtab, ";")
 	for(i = 1; i <= n_rtab; i++){
@@ -244,6 +244,22 @@ function AU_get_rtab(street, rtab,   n_rtab, i, nw, work) {
 		if(nw > 1){
 			rtab[i, 1] = work[1] + 0	# force number
 			rtab[i, 2] = work[2] + 0	# force number
+
+			if(rtab[i,1] > rtab[i,2]){
+				# Is this a "delta" range where the 2d value shows only the different address suffix?
+				# If so try to fix it
+				# For example 945-51 would be expanded to 945-951 which is good, but
+				# 945-37 would be expanded to 945-937 which is still wrong.
+				l_pfx = length(work[1]) - length(work[2])
+				e_work2 = ((l_pfx > 0) ? ((substr(work[1], 1, l_pfx) work[2])) : work[2]) + 0
+				# did we fix it?
+				if(rtab[i, 1] > e_work2){
+					printf("ERROR: bad range 1st precedes 2nd: %d-%d\n", rtab[i, 1], rtab[i, 2]) > "/dev/stderr"
+					return 0
+				}else
+					rtab[i, 2] = e_work2
+			}
+
 			rtab[i, "rng"] = 1
 			if(rtab[i, 1] % 2 != rtab[i, 2] % 2){
 				printf("ERROR: bad range: odd/even %d-%d\n", rtab[i, 1], rtab[i, 2]) > "/dev/stderr"
