@@ -63,8 +63,8 @@ for f in $DIR/r*.tsv ; do
 	cat $f >> $TMP_RFILE
 	$DM_SCRIPTS/count_addrs.sh -at src $TMP_RFILE	|\
 	awk -F'\t' 'BEGIN {
-		split("'"$f"'", ary, ".")
-		date = sprintf("%s-%s-%s", substr(ary[2], 1, 4), substr(ary[2], 5, 2), substr(ary[2], 7, 2))
+		nf = split("'"$f"'", ary, ".")
+		date = sprintf("%s-%s-%s", substr(ary[nf-1], 1, 4), substr(ary[nf-1], 5, 2), substr(ary[nf-1], 7, 2))
 		p10 = p20 = p30 = p40 = p50 = 0
 	}
 	NR > 1 {
