@@ -3,6 +3,7 @@ add_geo_to_addrs.sh	yes	no	get_latlong.sh	uses DM_ETC/address.info
 add_new_addrs.sh	yes	no	get_addrs_from_runs.sh, insert_new_addrs.sh	.
 cfg_to_json.sh	no	no	.	.
 color_map_data.sh	yes	no	.	.
+count_addrs.sh	yes	no	.	.
 delete_unused_addrs.sh	yes	yes	.	.
 find_geo_aliases.sh	yes	yes	.	.
 find_qry_aliases.sh	yes	yes	.	.
@@ -24,6 +25,7 @@ map_by_date.sh	yes	no	.	.
 plot_all_stats.sh	yes	no	get_pay_rates.sh, get_new_sources.sh, get_freshness_info.sh	.
 plot_freshness_info.sh	yes	no	$DM_LIB/plotFreshnessInfoMain.R	Requires R, Rscript
 plot_pay_rates.sh	yes	no	$DM_LIB/plotPayRatesMain.R	Requires R, Rscript
+plot_src_diversity.sh	yes	no	count_addrs.sh, $DM_LIB/plotSrcDiversityMain.R	Requires R, Rscript
 plot_src_info.sh	yes	no	$DM_LIB/plotSrcInfoMain.R	Requires R, Rscript
 update_addrs_with_geo_errors.sh	yes	yes	.	.
 update_addrs_with_geo_loc.sh	yes	yes	.	.

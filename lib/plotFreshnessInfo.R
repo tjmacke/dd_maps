@@ -47,8 +47,7 @@ plotFreshnessInfo <- function(df, stype, multi) {
 	lines(as.Date(df$date, '%Y-%m-%d'), df$le52, lwd=1.5, col='gray')
 	lines(as.Date(df$date, '%Y-%m-%d'), df$gt52, lwd=1.5, col='black')
 
-	lgnd = c('<= 1 week', '<= 2 weeks', '<= 4 weeks', '<= 8 weeks', '<= 12 weeks', '<= 26 weeks', '<= 52 weeks', '> 52 weeks')
 	legend('topleft', inset=c(0.08, 0.02), bg='white',
-		legend=lgnd,
+		legend=c('<= 1 week', '<= 2 weeks', '<= 4 weeks', '<= 8 weeks', '<= 12 weeks', '<= 26 weeks', '<= 52 weeks', '> 52 weeks'),
 		col=c('red', 'orange', 'yellow', 'green', 'cyan', 'lightblue', 'gray', 'black'), lty=1, cex=ifelse(multi, 0.4, 0.7))
 }

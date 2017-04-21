@@ -39,17 +39,22 @@ while [ $# -gt 0 ] ; do
 	esac
 done
 
+if [ $# -ne 0 ] ; then
+	LOG ERROR "extra arguments $*"
+	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
 if [ -z "$DIR" ] ; then
 	LOG ERROR "missing data-dir argument"
 	echo "$U_MSG" 1>&2
 	exit 1
-elif [ ! -d "$DIR" ] ; then
+elif [ ! -d $DIR ] ; then
 	LOG ERROR "data-dir $DIR does not exist or is not a directory"
-	echo "$U_MSG"
 	exit 1
 fi
 
-n_rfiles=$(ls $DIR/r*tsv 2> /dev/null | wc -l)
+n_rfiles=$(ls $DIR/r*.tsv 2> /dev/null | wc -l)
 if [ $n_rfiles -eq 0 ] ; then
 	LOG ERROR "data-dir $DIR has no runs-files"
 	exit 1
