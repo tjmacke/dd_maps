@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -limit N ] canonical-address"
+U_MSG="usage: $0 [ -help ] [ -limit N ] [ -json json-file ] canonical-address"
 
 # TODO: fix this evil dependency
 JU_HOME=~
@@ -12,6 +12,7 @@ JU_BIN=$JU_HOME/bin
 KEY=$(cat ~/etc/opencagedata.key)
 
 LIMIT=
+JFILE=
 ADDR=
 
 while [ $# -gt 0 ] ; do
@@ -28,6 +29,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		LIMIT=$1
+		shift
+		;;
+	-json)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-json requries json-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		JFILE=$1
 		shift
 		;;
 	-*)
@@ -47,6 +58,12 @@ if [ $# -ne 0 ] ; then
 	LOG ERROR "extra arguments $*"
 	echo "$U_MSG" 1>&2
 	exit 1
+fi
+
+if [ ! -z "$JFILE" ] ; then
+	TEE="tee $JFILE"
+else
+	TEE=cat
 fi
 
 if [ -z "$ADDR" ] ; then
@@ -81,7 +98,8 @@ if [ ! -z "$LIMIT" ] ; then
 	PARMS="${PARMS}&limit=$LIMIT" 
 fi
 
-curl -s -S https://api.opencagedata.com/geocode/v1/json?"$PARMS"		|\
+curl -s -S https://api.opencagedata.com/geocode/v1/json?"$PARMS"	|\
+$TEE									|\
 $JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'	|\
 sort -k 1rn,1
 exit 0

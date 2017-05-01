@@ -237,7 +237,7 @@ while read line ; do
 					n_lines++
 					lines[n_lines] = sprintf("reply = %s", $2)
 					n_lines++
-					lines[n_lines] = sprintf("emsg  = %s\t%s", "no.match", $0)
+					lines[n_lines] = sprintf("emsg  = %s\t%s", result["emsg"], $0)
 					err = 1
 				}
 			}

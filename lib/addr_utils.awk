@@ -18,6 +18,10 @@ function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,
 	if(options["rply"]){
 		if(ary[nf] == "United States of America")
 			nf--
+		else{
+			result["emsg"] = "not.US"
+			return 1
+		}
 	}
 
 	# TODO: move this to a separate function, may AU_expand()
@@ -57,7 +61,7 @@ function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,
 
 	# check for a valid state, ignoring zip code
 	if(!(substr(ary[nf], 1, 2) in states)){
-		result["emsg"] = "not.US"
+		result["emsg"] = "bad.US.state"
 		return 1
 	}else
 		state = ary[nf]
@@ -77,7 +81,7 @@ function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,
 		}
 	}
 	if(f_st == 0){
-		result["emsg"] = "no.street"
+		result["emsg"] = "no.street.num"
 		return 1
 	}
 	
@@ -189,39 +193,56 @@ function AU_match(options, cand, ref,   nc_fields, c_fields, nr_fields, r_fields
 		printf("cand.state  = %s\n", cand["state"]) > "/dev/stderr"
 	}
 
+	cand["emsg"] = ""
 	if(cand["state"] != ref["state"]){
 		if(options["ign_zip"]){
-			if(substr(cand["state"], 1, 2) != substr(ref["state"], 1, 2))
+			if(substr(cand["state"], 1, 2) != substr(ref["state"], 1, 2)){
+				cand["emsg"] = "states.ign_zip.diff"
 				return 0
-		}else
+			}
+		}else{
+			cand["emsg"] = "states.diff"
 			return 0
+		}
 	}
 
-	if(cand["town"] != ref["town"])
+	if(cand["town"] != ref["town"]){
+		cand["emsg"] = "towns.diff"
 		return 0
+	}
 
 	# street numbers and/or ranges, etc is 1st field
 	nc_fields = split(cand["street"], c_fields, /  */)
 	nr_fields = split(ref["street"], r_fields, /  */)
 
 	# check that non-number parts of streets agree
-	if(nc_fields != nr_fields)
+	if(nc_fields != nr_fields){
+		cand["emsg"] = "num.st.fields.diff"
 		return 0
+	}
 	for(i = 2; i <= nc_fields; i++){
-		if(c_fields[i] != r_fields[i])
+		if(c_fields[i] != r_fields[i]){
+			cand["emsg"] = sprintf("st.field.%d|%s|%s.diff", i, c_fields[i], r_fields[i])
 			return 0
+		}
 	}
 
 	nc_rtab = AU_get_rtab(c_fields[1], c_rtab)
-	if(nc_rtab == 0)
+	if(nc_rtab == 0){
+		cand["emsg"] = "nc_rtab.is.zero"
 		return 0
+	}
 
 	nr_rtab = AU_get_rtab(r_fields[1], r_rtab)
-	if(nr_rtab == 0)
+	if(nr_rtab == 0){
+		cand["emsg"] = "nr_rtab.is.zero"
 		return 0
+	}
 
-	if(!AU_rtabs_intersect(nc_rtab, c_rtab, nr_rtab, r_rtab))
+	if(!AU_rtabs_intersect(nc_rtab, c_rtab, nr_rtab, r_rtab)){
+		cand["emsg"] = "rtab.no.ovlp"
 		return 0
+	}
 
 	# deal with names
 	if(cand["name"] == ref["name"]){
