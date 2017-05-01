@@ -1,4 +1,4 @@
-function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,   nf, ary, i, f_st, f_twn, nf2, ary2, b1, e1, name, street, quals, town, state, work) {
+function AU_parse(options, addr, result, states, states_long, towns, st_types, dirs, st_ords,   nf, ary, i, f_st, f_twn, nf2, ary2, b1, e1, name, street, quals, town, state, work) {
 
 	result["status"] = "B"
 	result["emsg"  ] = ""
@@ -60,11 +60,15 @@ function AU_parse(options, addr, result, states, towns, st_types, dirs, st_ords,
 	}
 
 	# check for a valid state, ignoring zip code
-	if(!(substr(ary[nf], 1, 2) in states)){
-		result["emsg"] = "bad.US.state"
-		return 1
-	}else
+	if(substr(ary[nf], 1, 2) in states)
 		state = ary[nf]
+	else if(ary[nf] in states_long)
+		state = ary[nf]
+	else{
+		result["emsg"] = sprintf("bad.US.state.%s", ary[nf])
+		return 1
+	}
+
 	town = ary[nf-1]
 
 	# find the street.

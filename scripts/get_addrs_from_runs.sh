@@ -100,41 +100,30 @@ BEGIN {
 		exit err
 	}
 
-	n_states = AU_get_addr_data(addr_info, "us_states", states)
-	if(n_states == 0){
-		printf("ERROR: %s: no \"us_states\" data\n", ai_file) > "/dev/stderr"
-		err = 1
-		exit err
-	}
+ 	# check that we got all the data we need
+ 	ad_counts["n_us_states"] = AU_get_addr_data(addr_info, "us_states", us_states)
+ 
+ 	ad_counts["n_towns_2qry"] = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
+ 	ad_counts["n_st_types_2qry"] = AU_get_addr_data(addr_info, "st_types_2qry", st_types_2qry)
+ 	ad_counts["n_dirs_2qry"] = AU_get_addr_data(addr_info, "dirs_2qry", dirs_2qry)
+ 	ad_counts["n_ords_2qry"] = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
+ 
+ 	for(ad in ad_counts){
+ 		if(ad_counts[ad] == 0){
+ 			printf("ERROR: %s no \"%s\" data\n", ai_file, substr(ad, 3)) > "/dev/stderr"
+ 			err = 1
+ 		}
+ 	}
+ 	if(err)
+ 		exit err
+
+	# create a map of full state names
+	for(s in us_states)
+		us_states_long[us_states[s]] = s
 
 	pq_options["rply"] = 0
 	pq_options["do_subs"] = 1
 	pq_options["no_name"] = "Residence"
-
-	n_towns_2qry = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
-	if(n_towns_2qry == 0){
-		printf("ERROR: %s: no \"towns_2qry\" data\n", ai_file) > "/dev/stderr"
-		err = 1
-		exit err
-	}
-	n_st_types_2qry = AU_get_addr_data(addr_info, "st_types_2qry", st_types_2qry)
-	if(n_st_types_2qry == 0){
-		printf("ERROR: %s: no \"st_types_2qry\" data\n", ai_file) > "/dev/stderr"
-		err = 1
-		exit err
-	}
-	n_dirs_2qry = AU_get_addr_data(addr_info, "dirs_2qry", dirs_2qry)
-	if(n_dirs_2qry == 0){
-		printf("ERROR: %s: no \"dirs_2qry\" data\n", ai_file) > "/dev/stderr"
-		err = 1
-		exit err
-	}
-	n_ords_2qry = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
-	if(n_ords_2qry == 0){
-		printf("ERROR: %s: no \"ords_2qry\" data\n", ai_file) > "/dev/stderr"
-		err = 1
-		exit err
-	}
 
 	pr_hdr = 1
 }
@@ -143,7 +132,7 @@ $5 == "Job" {
 	src = $6
 	dst = $7
 
-	err = AU_parse(pq_options, atype == "src" ? src : dst, result, states, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
+	err = AU_parse(pq_options, atype == "src" ? src : dst, result, us_states, us_states_long, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
 	if(pr_hdr){
 		pr_hdr = 0
 		if(atype == "src")

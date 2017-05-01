@@ -147,76 +147,44 @@ while read line ; do
 				exit err
 			}
 
-			n_states = AU_get_addr_data(addr_info, "us_states", states)
-			if(n_states == 0){
-				printf("ERROR: %s no \"us_states\" data\n", ai_file) > "/dev/stderr"
-				err = 1
-				exit err
+			# check that we got all the data we need
+			ad_counts["n_us_states"] = AU_get_addr_data(addr_info, "us_states", us_states)
+		 
+			ad_counts["n_towns_2qry"] = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
+			ad_counts["n_st_types_2qry"] = AU_get_addr_data(addr_info, "st_types_2qry", st_types_2qry)
+			ad_counts["n_dirs_2qry"] = AU_get_addr_data(addr_info, "dirs_2qry", dirs_2qry)
+			ad_counts["n_ords_2qry"] = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
+		 
+			ad_counts["n_towns_2std"] = AU_get_addr_data(addr_info, "towns_2std", towns_2std)
+			ad_counts["n_st_types_2std"] = AU_get_addr_data(addr_info, "st_types_2std", st_types_2std)
+			ad_counts["n_dirs_2std"] = AU_get_addr_data(addr_info, "dirs_2std", dirs_2std)
+			ad_counts["n_ords_2std"] = AU_get_addr_data(addr_info, "ords_2std", ords_2std)
+		 
+			for(ad in ad_counts){
+				if(ad_counts[ad] == 0){
+					printf("ERROR: %s no \"%s\" data\n", ai_file, substr(ad, 3)) > "/dev/stderr"
+					err = 1
+				}
 			}
+			if(err)
+				exit err
 
+			# create a map of full state names
+			for(s in us_states)
+				us_states_long[us_states[s]] = s
+
+			# split the input address into fields. No need to test, as it must be good to get here
 			pq_options["rply"] = 0
 			pq_options["do_subs"] = 0
 			pq_options["no_name"] = "Residence"
-
-			n_towns_2qry = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
-			if(n_towns_2qry == 0){
-				printf("ERROR: %s: no \"towns_2qry\" data\n", ai_file) > "/dev/stderr"
-				err = 1
-				exit err
-			}
-			n_st_types_2qry = AU_get_addr_data(addr_info, "st_types_2qry", st_types_2qry)
-			if(n_st_types_2qry == 0){
-				printf("ERROR: %s: no \"st_types_2qry\" data\n", ai_file) > "/dev/stderr"
-				err = 1
-				exit err
-			}
-			n_dirs_2qry = AU_get_addr_data(addr_info, "dirs_2qry", dirs_2qry)
-			if(n_dirs_2qry == 0){
-				printf("ERROR: %s: no \"dirs_2qry\" data\n", ai_file) > "/dev/stderr"
-				err = 1
-				exit err
-			}
-			n_ords_2qry = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
-			if(n_ords_2qry == 0){
-				printf("ERROR: %s: no \"ords_2qry\" data\n", ai_file) > "/dev/stderr"
-				err = 1
-				exit err
-			}
-
-			# split the input address into fields. No need to test, as it must be good to get here
-			AU_parse(pq_options, addr, addr_ary, states, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
+			AU_parse(pq_options, addr, addr_ary, us_states, us_states_long, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
 
 			pr_options["rply"] = 1
 			pr_options["do_subs"] = 1
 			pr_options["no_name"] = ""
-
-			n_towns_2std = AU_get_addr_data(addr_info, "towns_2std", towns_2std)
-			if(n_towns_2std == 0){
-				printf("ERROR: %s: no \"towns_2std\" data\n", ai_file) > "/dev/stderr"
-				err = 1
-				exit err
-			}
-			n_st_types_2std = AU_get_addr_data(addr_info, "st_types_2std", st_types_2std)
-			if(n_st_types_2std == 0){
-				printf("ERROR: %s: no \"st_types_2std\" data\n", ai_file) > "/dev/stderr"
-				err = 1
-				exit err
-			}
-			n_dirs_2std = AU_get_addr_data(addr_info, "dirs_2std", dirs_2std)
-			if(n_dirs_2std == 0){
-				printf("ERROR: %s: no \"dirs_2std\" data\n", ai_file) > "/dev/stderr"
-				err = 1
-				exit err
-			}
-			n_ords_2std = AU_get_addr_data(addr_info, "ords_2std", ords_2std)
-			if(n_ords_2std == 0){
-				printf("ERROR: %s: no \"ords_2std\" data\n", ai_file) > "/dev/stderr"
-				err = 1
-				exit err
-			}
 		}
 		{
-			if(AU_parse(pr_options, $2, result, states, towns_2std, st_types_2std, dirs_2std, ords_2std)){
+			if(AU_parse(pr_options, $2, result, us_states, us_states_long, towns_2std, st_types_2std, dirs_2std, ords_2std)){
 				n_lines++
 				lines[n_lines] = sprintf("reply = %s", $2)
 				n_lines++
