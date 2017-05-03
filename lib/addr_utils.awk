@@ -14,13 +14,15 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 		sub(/ *$/, "", ary[i])
 	}
 
-	# US only for now, so queries never have a country, but replies do
+	# Some geocoders are US only so the last field is the state or state zip
 	if(options["rply"]){
-		if(ary[nf] == "United States of America")
-			nf--
-		else{
-			result["emsg"] = "not.US"
-			return 1
+		if(!options["us_only"]){
+			if(ary[nf] == "United States of America")
+				nf--
+			else{
+				result["emsg"] = "not.US"
+				return 1
+			}
 		}
 	}
 
@@ -226,7 +228,7 @@ function AU_match(options, cand, ref,   nc_fields, c_fields, nr_fields, r_fields
 	}
 	for(i = 2; i <= nc_fields; i++){
 		if(c_fields[i] != r_fields[i]){
-			cand["emsg"] = sprintf("st.field.%d|%s|%s.diff", i, c_fields[i], r_fields[i])
+			cand["emsg"] = sprintf("st.field.%d.diff|%s|%s", i, c_fields[i], r_fields[i])
 			return 0
 		}
 	}

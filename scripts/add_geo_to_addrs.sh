@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -v ] [ -c conf-file ] -at { src | dst } [ extracted-address-file ]"
+U_MSG="usage: $0 [ -help ] [ -v ] [ -c conf-file ] [ -geo geocoder ] -at { src | dst } [ extracted-address-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -35,6 +35,7 @@ fi
 
 VERBOSE=
 AI_FILE=$DM_ETC/address.info
+GEO=
 ATYPE=
 FILE=
 
@@ -56,6 +57,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		AI_FILE=$1
+		shift
+		;;
+	-geo)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-geo requires geocoder argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		GEO=$1
 		shift
 		;;
 	-at)
@@ -85,6 +96,10 @@ if [ $# -ne 0 ] ; then
 	LOG ERROR "extra arguments $*"
 	echo "$U_MSG" 1>&2
 	exit 1
+fi
+
+if [ ! -z "$GEO" ] ; then
+	GEO="-geo $GEO"
 fi
 
 if [ -z "$ATYPE" ] ; then
@@ -122,7 +137,7 @@ while read line ; do
 	dst="$(echo "$line" | awk -F'\t' '{ print $4 }')"
 	query="$(echo "$line" | awk -F'\t' '{ print $5 }')"
 	name="$(echo "$line" | awk -F'\t' '{ print $6 }')"
-	$DM_SCRIPTS/get_latlong.sh -limit 20 "$query" > $LL_FILE
+	$DM_SCRIPTS/get_latlong.sh -limit 20 $GEO "$query" > $LL_FILE
 	if [ ! -s $LL_FILE ] ; then
 		LOG ERROR "get_latlong.sh failed for $query"
 	else
@@ -135,6 +150,11 @@ while read line ; do
 
 			verbose = "'"$VERBOSE"'" == "yes"
 			atype = "'"$ATYPE"'"
+			geo = "'"$GEO"'"
+			if(geo != ""){
+				split(geo, ary, /  */)
+				geo = ary[2]
+			}
 			src = "'"$src"'"
 			dst = "'"$dst"'"
 			addr = atype == "src" ? src : dst
@@ -180,6 +200,8 @@ while read line ; do
 			AU_parse(pq_options, addr, addr_ary, us_states, us_states_long, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
 
 			pr_options["rply"] = 1
+			# TODO: this will need to be generalized!
+			pr_options["us_only"] = geo == "geocodio"
 			pr_options["do_subs"] = 1
 			pr_options["no_name"] = ""
 		}

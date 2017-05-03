@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -limit N ] [ -json json-file ] canonical-address"
+U_MSG="usage: $0 [ -help ] [ -limit N ] [ -json json-file ] [ -geo geocoder ] canonical-address"
 
 # TODO: fix this evil dependency
 JU_HOME=~
@@ -13,6 +13,7 @@ KEY=$(cat ~/etc/opencagedata.key)
 
 LIMIT=
 JFILE=
+GEO=ocd
 ADDR=
 
 while [ $# -gt 0 ] ; do
@@ -39,6 +40,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		JFILE=$1
+		shift
+		;;
+	-geo)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-geo requires geocoder argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		GEO=$1
 		shift
 		;;
 	-*)
@@ -93,13 +104,26 @@ if [ -z "$E_ADDR" ] ; then
 	echo ""
 	exit 1
 fi
-PARMS="query=$E_ADDR&key=$KEY"
-if [ ! -z "$LIMIT" ] ; then
-	PARMS="${PARMS}&limit=$LIMIT" 
+
+if [ "$GEO" == "ocd" ] ; then
+	KEY=$(cat ~/etc/opencagedata.key)
+	PARMS="query=$E_ADDR&key=$KEY"
+	if [ ! -z "$LIMIT" ] ; then
+		PARMS="${PARMS}&limit=$LIMIT" 
+	fi
+	curl -s -S https://api.opencagedata.com/geocode/v1/json?"$PARMS"	|\
+	$TEE									|\
+	$JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'	|\
+	sort -k 1rn,1
+elif [ "$GEO" == "geocodio" ] ; then
+	KEY=$(cat ~/etc/geocodio.key)
+	PARMS="q=$E_ADDR&api_key=$KEY"
+	curl -s -S https://api.geocod.io/v1/geocode?"$PARMS"	|\
+	$TEE							|\
+	$JU_BIN/json_get -g '{results}[1]{accuracy_type, formatted_address, location}{lat, lng}'
+else 
+	LOG ERROR "unknown geocoder $GEO"
+	exit 1
 fi
 
-curl -s -S https://api.opencagedata.com/geocode/v1/json?"$PARMS"	|\
-$TEE									|\
-$JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'	|\
-sort -k 1rn,1
 exit 0
