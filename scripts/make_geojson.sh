@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -c conf-file -gt { points | lines } [ -t title ] [ address-data-file ]"
+U_MSG="usage: $0 [ -help ] -c conf-file -gt { points | lines } [ -p polygon-file ] [ -t title ] [ address-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -13,6 +13,9 @@ DM_ADDRS=$DM_HOME/addrs
 DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
+
+JU_HOME=$HOME/json_utils
+JU_BIN=$JU_HOME/bin
 
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
@@ -27,8 +30,11 @@ else
 	exit 1
 fi
 
+PTMP_FILE=/tmp/polys.$$
+
 CFILE=
 GTYPE=
+PFILE=
 TITLE=
 FILE=
 
@@ -56,6 +62,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		GTYPE=$1
+		shift
+		;;
+	-p)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-p requries polygon-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		PFILE=$1
 		shift
 		;;
 	-t)
@@ -107,11 +123,21 @@ else
 	skeys="-k 3,3 -k 9,9 -k 10,10"
 fi
 
+if [ ! -z "$PFILE" ] ; then
+	$JU_BIN/json_get -g '{geojson}{features}[1:$]' $PFILE > $PTMP_FILE
+fi
+
 sort -t $'\t' $skeys $FILE |\
 $AWK -F'\t' '
 @include '"$GEO_UTILS"'
 BEGIN {
 	cfile = "'"$CFILE"'"
+	pfile = "'"$PTMP_FILE"'"
+	for(n_polys = 0; (getline < pfile) > 0; ){
+		n_polys++
+		polys[n_polys] = $0
+	}
+	close(pfile)
 	title = "'"$TITLE"'"
 }
 {
@@ -169,6 +195,11 @@ END {
 	printf("  \"count\": %d\n", n_points)
 	printf("},\n")
 	printf("\"features\": [\n")
+
+	# add any polygons
+	for(p = 1; p <= n_polys; p++)
+		printf("%s,\n", polys[p])
+
 	if(n_fields == 5){
 		# code for points
 		# points have been sorted on geo so points w/same geo are consecutive
@@ -242,3 +273,5 @@ END {
 	printf("}\n")
 	printf("}\n")
 }'
+
+rm -f $PTMP_FILE

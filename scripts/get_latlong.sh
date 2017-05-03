@@ -115,12 +115,21 @@ if [ "$GEO" == "ocd" ] ; then
 	$TEE									|\
 	$JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'	|\
 	sort -k 1rn,1
-elif [ "$GEO" == "geocodio" ] ; then
+elif [ "$GEO" == "geo" ] ; then
 	KEY=$(cat ~/etc/geocodio.key)
 	PARMS="q=$E_ADDR&api_key=$KEY"
 	curl -s -S https://api.geocod.io/v1/geocode?"$PARMS"	|\
 	$TEE							|\
 	$JU_BIN/json_get -g '{results}[1]{accuracy_type, formatted_address, location}{lat, lng}'
+elif [ "$GEO" == "liq" ] ; then
+	# TODO:
+	# Add &addressdetails=1 to parms to get an address obj that can be used to produce a simpler address?
+	# This will require some testing to see what happens on incomplete addresses?
+	KEY=$(cat ~/etc/locationiq.key)
+	PARMS="key=$KEY&format=json&q=$E_ADDR"
+	curl -s -S http://locationiq.org/v1/search.php?"$PARMS"	|\
+	$TEE							|\
+	$JU_BIN/json_get -g '[1:$]{importance, display_name, lat, lon}'
 else 
 	LOG ERROR "unknown geocoder $GEO"
 	exit 1
