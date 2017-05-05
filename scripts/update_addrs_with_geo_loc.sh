@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -at { src | dst } [ addr-geo-file ]"
+U_MSG="usage: $0 [ -help ] [ -geo geocoder ] -at { src | dst } [ addr-geo-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -20,6 +20,7 @@ if [ ! -s $DM_DB ] ; then
 	exit 1
 fi
 
+GEO=
 ATYPE=
 FILE=
 
@@ -28,6 +29,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 1
+		;;
+	-geo)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-geo requires geocoder argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		GEO=$1
+		shift
 		;;
 	-at)
 		shift
@@ -68,10 +79,27 @@ elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
 	exit 1
 fi
 
+if [ -z "$FILE" ] ; then
+	if [ -z "$GEO" ] ; then
+		LOG ERROR "-geo geocoder must be specified when reading from stdin"
+		exit 1
+	fi
+else
+	f_GEO="$(echo $FILE | awk -F. '{ print $3 }')"
+fi
+
+if [ -z "$GEO" ] ; then
+	GEO=$f_GEO
+elif [ "$GEO" != "$f_GEO" ] ; then
+	LOG ERROR "specified geo, $GEO, does not match file geo, $f_GEO"
+	exit 1
+fi
+
 cat $FILE	|\
 while read line ; do
 	upd_stmt="$(echo "$line" |\
 	awk -F'\t' 'BEGIN {
+		geo = "'"$GEO"'"
 		atype = "'"$ATYPE"'"
 		f_addr = atype == "src" ? 2 : 3
 		apos = sprintf("%c", 39)
@@ -79,8 +107,9 @@ while read line ; do
 	{
 		printf(".log stderr\\n")
 		printf("PRAGMA foreign_keys = on ;\\n")
+		# Status is geo.ok.$GEO, where $GEO is the name of the geocoder that was used to resolve the address.
 		printf("UPDATE addresses SET a_stat = %s, as_reason = %s, lng = %s, lat = %s, rply_address = %s WHERE address = %s ;\n", 
-			esc_string("G"), esc_string("geo.ok.ocd"), $4, $5, esc_string($6), esc_string($f_addr))
+			esc_string("G"), esc_string(sprintf("geo.ok.%s", geo)), $4, $5, esc_string($6), esc_string($f_addr))
 	}
 	function esc_string(str,   work) {
 		work = str

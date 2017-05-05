@@ -30,7 +30,7 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
-	;;
+		;;
 	-at)
 		shift
 		if [ $# -eq 0 ] ; then

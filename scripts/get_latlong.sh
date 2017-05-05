@@ -13,7 +13,7 @@ KEY=$(cat ~/etc/opencagedata.key)
 
 LIMIT=
 JFILE=
-GEO=ocd
+GEO=
 ADDR=
 
 while [ $# -gt 0 ] ; do
@@ -105,7 +105,8 @@ if [ -z "$E_ADDR" ] ; then
 	exit 1
 fi
 
-if [ "$GEO" == "ocd" ] ; then
+# default geocoder is opencagedata.com, symbol "ocd"
+if [ -z "$GEO" ] ; then
 	KEY=$(cat ~/etc/opencagedata.key)
 	PARMS="query=$E_ADDR&key=$KEY"
 	if [ ! -z "$LIMIT" ] ; then

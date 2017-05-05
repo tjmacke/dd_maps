@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] geo-dir"
+U_MSG="usage: $0 [ -help ] [ -geo geocoder ] geo-dir"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -20,6 +20,10 @@ if [ ! -s $DM_DB ] ; then
 	exit 1
 fi
 
+rval=0
+NOW="$(date +%Y%m%dT%H%M%S)"
+
+GEO=
 GEO_DIR=
 
 while [ $# -gt 0 ] ; do
@@ -27,6 +31,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-geo)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-geo requires geocoder"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		GEO=$1
+		shift
 		;;
 	-*)
 		LOG ERROR "unknown option $1"
@@ -41,6 +55,22 @@ while [ $# -gt 0 ] ; do
 	esac
 done
 
+if [ $# -ne 0 ] ; then
+	LOG ERROR "extra arguments $*"
+	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
+# keep track of which geocoder we're using.  opencagedata.com (ocd) is still default
+if [ ! -z "$GEO" ] ; then
+	GC_NAME=$GEO
+	GEO="-geo $GEO"		# set flag for add_geo_to_addrs.sh
+else
+	GC_NAME="ocd"
+fi
+GEO_TSV_FNAME=addrs.$NOW.$GC_NAME.tsv
+GEO_ERR_FNAME=addrs.$NOW.$GC_NAME.err
+
 if [ -z "$GEO_DIR" ] ; then
 	LOG ERROR "missing geo-dir"
 	echo "$U_MSG" 1>&2
@@ -49,8 +79,6 @@ elif [ ! -d $GEO_DIR ] ; then
 	LOG ERROR "geo-dir $GEO_DIR does not exit or is not a directory"
 	exit 1
 fi
-
-NOW="$(date +%Y%m%dT%H%M%S)"
 
 echo -e ".mode tabs\nPRAGMA foreign_keys = on ;\nSELECT * FROM addresses WHERE a_stat = 'G' AND as_reason = 'new' ;"	|\
 sqlite3 $DM_DB										|\
@@ -63,4 +91,15 @@ awk -F'\t' 'BEGIN {
 		printf("%s\t%s\t%s\t%s\t%s\t%s\n", "status", "date", "src", "dst", "qSrc", "sName")
 	}
 	printf("%s\t%s\t%s\t%s\t%s\t%s\n", $2, ".", $4, ".", $6, $5)
-}'	| $DM_SCRIPTS/add_geo_to_addrs.sh -at src > $GEO_DIR/addrs.$NOW.tsv 2> $GEO_DIR/addrs.$NOW.err
+}'	| $DM_SCRIPTS/add_geo_to_addrs.sh $GEO -at src > $GEO_DIR/$GEO_TSV_FNAME 2> $GEO_DIR/$GEO_ERR_FNAME
+
+n_tsv=$(cat $GEO_DIR/$GEO_TSV_FNAME | wc -l)
+n_err=$(grep '^ERROR:' $GEO_DIR/$GEO_ERR_FNAME | wc -l)
+n_addr=$((n_tsv + n_err))
+LOG INFO "geocoder $GC_NAME: $n_tsv/$n_addr addresses were resolved: details in $GEO_DIR/$GEO_TSV_FNAME"
+if [ $n_err -gt 0 ] ; then
+	LOG ERROR "geocoder $GC_NAME: $n_err/$n_addr addresses were not resolved: details in $GEO_DIR/$GEO_ERR_FNAME"
+	rval=1
+fi
+
+exit $rval
