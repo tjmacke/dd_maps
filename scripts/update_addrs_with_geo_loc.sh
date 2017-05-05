@@ -86,6 +86,10 @@ if [ -z "$FILE" ] ; then
 	fi
 else
 	f_GEO="$(echo $FILE | awk -F. '{ print $3 }')"
+	if [ "$f_GEO" != "ocd" ] && [ "$f_GEO" != "geo" ] ; then
+		LOG ERROR "input file uses unknown geocoder \"$f_GEO\", must be ocd or geo"
+		exit 1
+	fi
 fi
 
 if [ -z "$GEO" ] ; then
