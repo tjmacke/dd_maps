@@ -217,7 +217,7 @@ while read line ; do
 				mt_options["verbose"] = verbose
 				mt_options["ign_zip"] = 1
 				mt_options["no_name"] = "Residence"
-				m_score = AU_match(mt_options, result, addr_ary)
+				m_score = AU_match(mt_options, addr_ary, result)
 				if(m_score > 0){
 					if(m_score > b_score){
 						b_score = m_score

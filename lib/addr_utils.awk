@@ -186,7 +186,7 @@ function AU_get_addr_data(addr_info, key, data,   k, keys, nk, i) {
 	}
 	return n_data
 }
-function AU_match(options, cand, ref,   nc_fields, c_fields, nr_fields, r_fields, i, nc_rtab, c_rtab, nr_rtab, r_rtab, nr_nwords, r_nwords, nc_nwords, c_nwords) {
+function AU_match(options, ref, cand,   nc_fields, c_fields, nr_fields, r_fields, i, nc_rtab, c_rtab, nr_rtab, r_rtab, nr_nwords, r_nwords, nc_nwords, c_nwords) {
 
 	if(options["verbose"]){
 		printf("ref.name    = %s\n", ref["name"]) > "/dev/stderr"
