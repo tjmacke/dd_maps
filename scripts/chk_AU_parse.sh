@@ -177,16 +177,28 @@ BEGIN {
 	pr_options["us_only"] = geo == "geo"
 	AU_parse(pr_options, rply_addr, rply_ary, us_states, us_states_long, towns_2std, st_types_2qry, dirs_2qry, ords_2qry)
 
-	ar_match = AU_match(mt_options, qry_ary, rply_ary)
+	qr_match = AU_match(mt_options, qry_ary, rply_ary)
 
-	if(!aq_match || !ar_match){
-		n_err++
+	if(!aq_match || !qr_match){
+		n_errors++
 		printf("%s: %s = {\n", geo, addr)
 		if(!aq_match){
-			printf("\taq_match = %d, %s\n", aq_match, qry_ary["emsg"] != "" ? qry_ary["emsg"] : "OK")
+			printf("\taq_match = %d, %s\n", aq_match, qry_ary["emsg"])
+			printf("\taddr = {\n")
+			printf("\t\tname   = %s\n", addr_ary["name"])
+			printf("\t\tstreet = %s\n", addr_ary["street"])
+			printf("\t\ttown   = %s\n", addr_ary["town"])
+			printf("\t\tstate  = %s\n", addr_ary["state"])
+			printf("\t}\n")
+			printf("\tqry  = {\n")
+			printf("\t\tname   = %s\n", qry_ary["name"])
+			printf("\t\tstreet = %s\n", qry_ary["street"])
+			printf("\t\ttown   = %s\n", qry_ary["town"])
+			printf("\t\tstate  = %s\n", qry_ary["state"])
+			printf("\t}\n")
 		}
-		if(!ar_match){
-			printf("\tar_match = %d, %s\n", ar_match, rply_ary["emsg"])
+		if(!qr_match){
+			printf("\tqr_match = %d, %s\n", qr_match, rply_ary["emsg"])
 			printf("\tqry  = {\n")
 			printf("\t\tname   = %s\n", qry_ary["name"])
 			printf("\t\tstreet = %s\n", qry_ary["street"])
@@ -205,7 +217,7 @@ BEGIN {
 		n_ok++
 }
 END {
-	printf("INFO: %d addrs, %d OK, %d err\n", NR, n_ok, n_err) > "/dev/stderr"
+	printf("%s: %d addrs, %d OK, %d errors\n", n_errors > 0 ? "ERROR" : "INFO", NR, n_ok, n_errors) > "/dev/stderr"
 }' $FILE
 
 rm -f $TMP_DFILE
