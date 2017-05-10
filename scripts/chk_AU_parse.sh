@@ -116,15 +116,12 @@ BEGIN {
  	# check that we got all the data we need
  	ad_counts["n_us_states"] = AU_get_addr_data(addr_info, "us_states", us_states)
  
- 	ad_counts["n_towns_2qry"] = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
+ 	ad_counts["n_towns_a2q"] = AU_get_addr_data(addr_info, "towns_a2q", towns_a2q)
  	ad_counts["n_st_types_2qry"] = AU_get_addr_data(addr_info, "st_types_2qry", st_types_2qry)
  	ad_counts["n_dirs_2qry"] = AU_get_addr_data(addr_info, "dirs_2qry", dirs_2qry)
  	ad_counts["n_ords_2qry"] = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
 
- 	ad_counts["n_towns_2std"] = AU_get_addr_data(addr_info, "towns_2std", towns_2std)
- 	ad_counts["n_st_types_2std"] = AU_get_addr_data(addr_info, "st_types_2std", st_types_2std)
- 	ad_counts["n_dirs_2std"] = AU_get_addr_data(addr_info, "dirs_2std", dirs_2std)
- 	ad_counts["n_ords_2std"] = AU_get_addr_data(addr_info, "ords_2std", ords_2std)
+ 	ad_counts["n_towns_r2q"] = AU_get_addr_data(addr_info, "towns_r2q", towns_r2q)
  
  	for(ad in ad_counts){
  		if(ad_counts[ad] == 0){
@@ -163,10 +160,10 @@ BEGIN {
 	rply_addr = $5
 
 	# chk addr -> qry (std -> qry)
-	AU_parse(pa_options, addr, addr_ary, us_states, us_states_long, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
+	AU_parse(pa_options, addr, addr_ary, us_states, us_states_long, towns_a2q, st_types_2qry, dirs_2qry, ords_2qry)
 
 	# split the query address info fields
-	AU_parse(pq_options, qry_addr, qry_ary, us_states, us_states_long, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
+	AU_parse(pq_options, qry_addr, qry_ary, us_states, us_states_long, towns_a2q, st_types_2qry, dirs_2qry, ords_2qry)
 	qry_ary["name"] = a_type
 
 	aq_match = AU_match(mt_options, addr_ary, qry_ary)
@@ -175,7 +172,7 @@ BEGIN {
 	split(reason, ary, ".")
 	geo = ary[3]
 	pr_options["us_only"] = geo == "geo"
-	AU_parse(pr_options, rply_addr, rply_ary, us_states, us_states_long, towns_2std, st_types_2qry, dirs_2qry, ords_2qry)
+	AU_parse(pr_options, rply_addr, rply_ary, us_states, us_states_long, towns_r2q, st_types_2qry, dirs_2qry, ords_2qry)
 
 	qr_match = AU_match(mt_options, qry_ary, rply_ary)
 
@@ -217,7 +214,9 @@ BEGIN {
 		n_ok++
 }
 END {
-	printf("%s: %d addrs, %d OK, %d errors\n", n_errors > 0 ? "ERROR" : "INFO", NR, n_ok, n_errors) > "/dev/stderr"
+	if(!err)
+		printf("%s: %d addrs, %d OK, %d errors\n", n_errors > 0 ? "ERROR" : "INFO", NR, n_ok, n_errors) > "/dev/stderr"
+	exit err
 }' $FILE
 
 rm -f $TMP_DFILE

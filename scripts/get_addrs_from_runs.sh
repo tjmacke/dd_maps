@@ -103,7 +103,7 @@ BEGIN {
  	# check that we got all the data we need
  	ad_counts["n_us_states"] = AU_get_addr_data(addr_info, "us_states", us_states)
  
- 	ad_counts["n_towns_2qry"] = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
+ 	ad_counts["n_towns_a2q"] = AU_get_addr_data(addr_info, "towns_a2q", towns_a2q)
  	ad_counts["n_st_types_2qry"] = AU_get_addr_data(addr_info, "st_types_2qry", st_types_2qry)
  	ad_counts["n_dirs_2qry"] = AU_get_addr_data(addr_info, "dirs_2qry", dirs_2qry)
  	ad_counts["n_ords_2qry"] = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
@@ -132,7 +132,7 @@ $5 == "Job" {
 	src = $6
 	dst = $7
 
-	err = AU_parse(pq_options, atype == "src" ? src : dst, result, us_states, us_states_long, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
+	err = AU_parse(pq_options, atype == "src" ? src : dst, result, us_states, us_states_long, towns_a2q, st_types_2qry, dirs_2qry, ords_2qry)
 	if(pr_hdr){
 		pr_hdr = 0
 		if(atype == "src")

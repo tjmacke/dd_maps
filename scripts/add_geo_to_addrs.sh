@@ -170,15 +170,12 @@ while read line ; do
 			# check that we got all the data we need
 			ad_counts["n_us_states"] = AU_get_addr_data(addr_info, "us_states", us_states)
 		 
-			ad_counts["n_towns_2qry"] = AU_get_addr_data(addr_info, "towns_2qry", towns_2qry)
+			ad_counts["n_towns_a2q"] = AU_get_addr_data(addr_info, "towns_a2q", towns_a2q)
 			ad_counts["n_st_types_2qry"] = AU_get_addr_data(addr_info, "st_types_2qry", st_types_2qry)
 			ad_counts["n_dirs_2qry"] = AU_get_addr_data(addr_info, "dirs_2qry", dirs_2qry)
 			ad_counts["n_ords_2qry"] = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
 		 
-			ad_counts["n_towns_2std"] = AU_get_addr_data(addr_info, "towns_2std", towns_2std)
-			ad_counts["n_st_types_2std"] = AU_get_addr_data(addr_info, "st_types_2std", st_types_2std)
-			ad_counts["n_dirs_2std"] = AU_get_addr_data(addr_info, "dirs_2std", dirs_2std)
-			ad_counts["n_ords_2std"] = AU_get_addr_data(addr_info, "ords_2std", ords_2std)
+			ad_counts["n_towns_r2q"] = AU_get_addr_data(addr_info, "towns_r2q", towns_r2q)
 		 
 			for(ad in ad_counts){
 				if(ad_counts[ad] == 0){
@@ -195,9 +192,9 @@ while read line ; do
 
 			# split the input address into fields. No need to test, as it must be good to get here
 			pq_options["rply"] = 0
-			pq_options["do_subs"] = 0
+			pq_options["do_subs"] = 1
 			pq_options["no_name"] = "Residence"
-			AU_parse(pq_options, addr, addr_ary, us_states, us_states_long, towns_2qry, st_types_2qry, dirs_2qry, ords_2qry)
+			AU_parse(pq_options, addr, addr_ary, us_states, us_states_long, towns_a2q, st_types_2qry, dirs_2qry, ords_2qry)
 
 			pr_options["rply"] = 1
 			# TODO: this will need to be generalized!
@@ -206,7 +203,7 @@ while read line ; do
 			pr_options["no_name"] = ""
 		}
 		{
-			if(AU_parse(pr_options, $2, result, us_states, us_states_long, towns_2std, st_types_2std, dirs_2std, ords_2std)){
+			if(AU_parse(pr_options, $2, result, us_states, us_states_long, towns_r2q, st_types_2qry, dirs_2qry, ords_2qry)){
 				n_lines++
 				lines[n_lines] = sprintf("reply = %s", $2)
 				n_lines++
