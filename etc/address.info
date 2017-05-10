@@ -1,7 +1,11 @@
-# Addresses from runs.tsv are converted to queries via the *_a2q, *_2qry maps
-# Addresses returned from the geocoder  are converted back to runs.tsv addresses via the _r2q, *_2qry maps
+# This data is used to prepare addresses for geocoding and to check the geocoded results.
+#
+#	1) convert input addresses to query (canonical) addresses.
+#	2) convert reply addresses to query addresses.
+#
+# If the two canonical addresses are the same, the geocode worked.
 
-# US states. For now this code is US only
+# US states. For now this code is US only.
 us_states = {
 	AL = Alabama
 	AK = Alaska
@@ -56,7 +60,7 @@ us_states = {
 	WY = Wyoming
 }
 
-# town abbreviations
+# town abbreviations.
 towns_a2q = {
 	Atherton        = Atherton, CA
 	Belmont         = Belmont, CA
@@ -78,13 +82,13 @@ towns_a2q = {
 	Sunnyvale       = Sunnyvale, CA
 	Woodside        = Woodside, CA
 }
-# Special reply names for Stanford University
+# Special reply names for Stanford University.
 towns_r2q = {
 	Escondido Village   = Stanford University
 	Stanford            = Stanford University
 }
 
-# Known street types and their canonical forms
+# Known street types and their canonical forms.
 st_types_2qry = {
 	Ave       = Avenue
 	Ave.      = Avenue
@@ -131,7 +135,7 @@ st_types_2qry = {
 	Way       = Way
 }
 
-# Street directions and their canonical forms
+# Street directions and their canonical forms.
 dirs_2qry = {
 	N     = North
 	N.    = North
@@ -159,7 +163,7 @@ dirs_2qry = {
 	West  = West
 }
 
-# the first nine ordinal street names
+# The first nine ordinal street names.
 ords_2qry = {
 	First	= 1st
 	Second	= 2nd
