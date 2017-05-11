@@ -203,18 +203,18 @@ while read line ; do
 			pr_options["no_name"] = ""
 		}
 		{
-			if(AU_parse(pr_options, $2, result, us_states, us_states_long, towns_r2q, st_types_2qry, dirs_2qry, ords_2qry)){
+			if(AU_parse(pr_options, $2, rply_ary, us_states, us_states_long, towns_r2q, st_types_2qry, dirs_2qry, ords_2qry)){
 				n_lines++
 				lines[n_lines] = sprintf("reply = %s", $2)
 				n_lines++
-				lines[n_lines] = sprintf("emsg  = %s", result["emsg"])
+				lines[n_lines] = sprintf("emsg  = %s", rply_ary["emsg"])
 				err = 1
 			}else{
 				# get the match score, retain the first of the highest
 				mt_options["verbose"] = verbose
 				mt_options["ign_zip"] = 1
 				mt_options["no_name"] = "Residence"
-				m_score = AU_match(mt_options, addr_ary, result)
+				m_score = AU_match(mt_options, addr_ary, rply_ary)
 				if(m_score > 0){
 					if(m_score > b_score){
 						b_score = m_score
@@ -224,7 +224,7 @@ while read line ; do
 					n_lines++
 					lines[n_lines] = sprintf("reply = %s", $2)
 					n_lines++
-					lines[n_lines] = sprintf("emsg  = %s\t%s", result["emsg"], $0)
+					lines[n_lines] = sprintf("emsg  = %s\t%s", rply_ary["emsg"], $0)
 					err = 1
 				}
 			}
