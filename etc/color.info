@@ -1,6 +1,0 @@
-# A color range: [0,1] -> [start,end].  start, end are RGB.  
-# start, end are converted to HSV so range maps to continuous region on the HSV color wheel
-pcrange = {
-	start	= 1,0,0
-	end	= 0,0,1
-}
