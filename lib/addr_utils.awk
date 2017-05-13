@@ -26,7 +26,6 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 		}
 	}
 
-	# TODO: move this to a separate function, may AU_expand()
 	if(!options["rply"]){
 		# As a convenience to the user, given that nearly all the addresses
 		# are in small set of nearby towns, the minimal query address can be 
@@ -115,22 +114,16 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 		return 1
 	}
 
-	# Street Hacks: Probably should just compare ignore case but not ready for that step yet
-	# change el Camino X to El Camino X
-	# change el Monte X  to El Monte X
-	if(options["do_subs"]){
-		if(nf2 > 3){
-			if(ary2[nf2-2] == "el" && ary2[nf2-1] == "Camino")
-				ary2[nf2-2] = "El"
-			else if(ary2[nf2-2] == "el" && ary2[nf2-1] == "Monte")
-				ary2[nf2-2] =  "El"
-		}
+	# If a word in street begins w/lower case, upper case it.  Convert, say el Camino to El Camino, etc
+	for(i = 2; i <= nf2; i++){
+		if(substr(ary2[i], 1, 1) ~ /^[a-z]/)
+			ary2[i] = toupper(substr(ary2[i], 1, 1)) substr(ary2[i], 2)
 	}
 
 	# Street should be num [ dir ] str [ st ] [ dir ]
 	street = ary2[1]
 	if(options["do_subs"]){
-		# This is amusing.  What is South Court? Is is S. Court or South Ct.  No idea so leave such streets in long form
+		# This is amusing.  What is South Court? Is it S. Court or South Ct.  No idea so leave such streets in long form
 		if(nf2 == 3 && (ary2[2] in dirs) && (ary2[3] in st_types)){
 			for(i = 2; i <= nf2; i++)
 				street = street " " ary2[i]
@@ -159,7 +152,6 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 			street = street " " ary2[i]
 	}
 
-	# TODO: this belongs in a separate function
 	if(options["rply"]){
 		if(town in towns)
 			town = towns[town]
