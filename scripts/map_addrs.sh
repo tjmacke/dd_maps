@@ -33,7 +33,7 @@ else
 	exit 1
 fi
 
-CB_CFG==
+CB_CFG=
 ATYPE=
 FILE=
 
