@@ -6,7 +6,7 @@ export LC_ALL=C
 U_MSG="usage: $0 [ -help ] [ -limit N ] [ -json json-file ] [ -geo geocoder ] canonical-address"
 
 # TODO: fix this evil dependency
-JU_HOME=~
+JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
 
 KEY=$(cat ~/etc/opencagedata.key)

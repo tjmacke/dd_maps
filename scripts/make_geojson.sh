@@ -14,6 +14,7 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
+# TODO: fix this evil dependency
 JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
 
