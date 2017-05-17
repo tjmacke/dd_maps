@@ -9,8 +9,6 @@ U_MSG="usage: $0 [ -help ] [ -limit N ] [ -json json-file ] [ -geo geocoder ] ca
 JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
 
-KEY=$(cat ~/etc/opencagedata.key)
-
 LIMIT=
 JFILE=
 GEO=

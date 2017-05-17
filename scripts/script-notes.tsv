@@ -1,29 +1,29 @@
-script	uses DM_HOME	uses sqlite3	calls	notes
-add_geo_to_addrs.sh	yes	no	get_latlong.sh	uses DM_ETC/address.info
-add_new_addrs.sh	yes	no	get_addrs_from_runs.sh, insert_new_addrs.sh	.
+script	uses $DM_HOME	uses sqlite3	calls	notes
+add_geo_to_addrs.sh	yes	no	get_latlong.sh	uses $DM_ETC/address.info
+add_new_addrs.sh	yes	no	get_addrs_from_runs.sh, insert_new_addrs.sh	use last mod date $DM_DB to select runs file wth new addresses
 cfg_to_json.sh	no	no	.	.
-chk_AU_parse.sh	yes	yes	.	.
-color_map_data.sh	yes	no	.	.
+chk_AU_parse.sh	yes	yes	.	uses $DM_ETC/address.info, $DM_LIB/cfg_utils.awk, $DM_LIB/addr_utils.awk
+color_map_data.sh	yes	no	.	uses $DM_LIB/cfg_utils.awk, $DM_LIB/color_utils.awk, $DM_LIB/interp_utils.awk
 count_addrs.sh	no	no	.	.
 delete_unused_addrs.sh	yes	yes	.	.
 find_geo_aliases.sh	yes	yes	.	.
 find_qry_aliases.sh	yes	yes	.	.
 find_unused_addrs_in_runs.sh	no	no	.	.
-get_addrs_from_runs.sh	yes	no	.	uses $DM_ETC/address.info
+get_addrs_from_runs.sh	yes	no	.	uses $DM_ETC/address.info, $DM_LIB/cfg_utils.awk, $DM_LIB/addr_utils.awk
 get_freshness_info.sh	no	no	.	.
 get_geo_for_addrs.sh	yes	no	get_addrs_from_runs.sh, add_geo_to_addrs.sh	.
 get_geo_for_new_db_addrs.sh	yes	yes	add_geo_to_addrs.sh	.
-get_latlong.sh	no	no	.	uses ~/etc/opencagedata.key, $JU_BIN/json_get
+get_latlong.sh	no	no	.	uses ~/etc/opencagedata.key, ~/etc/geocodio.key, $JU_BIN/json_get
 get_new_sources.sh	no	no	.	.
 get_pay_rates.sh	no	no	.	.
 insert_new_addrs.sh	yes	yes	.	.
 insert_new_dashes.sh	yes	yes	.	.
-insert_new_jobs.sh	yes	yes	.	.
-make_geojson.sh	no	no	.	.
-map_addrs.sh	no	no	.	.
-map_by_dash_rate.sh	yes	no	.	.
-map_by_date.sh	yes	no	.	.
-plot_all_stats.sh	yes	no	get_pay_rates.sh, get_new_sources.sh, get_freshness_info.sh	.
+insert_new_jobs.sh	yes	yes	.	uses $DM_LIB/dash_utils.awk
+make_geojson.sh	no	no	.	uses $DM_LIB/geo_utils.awk
+map_addrs.sh	no	no	.	uses $DM_LIB/cfg_utils.awk, $JU_BIN/json_get, $CB_DATA/*, $CB_BIN/kml2geojson, $FM_BIN/getentry
+map_by_dash_rate.sh	yes	no	.	uses $DM_LIB/read_addresses.awk, $DM_LIB/dash_utils.awk
+map_by_date.sh	yes	no	.	uses $DM_LIB/read_addresses.awk
+plot_all_stats.sh	yes	no	get_pay_rates.sh, get_new_sources.sh, get_freshness_info.sh	Requires R, Rscript
 plot_freshness_info.sh	yes	no	$DM_LIB/plotFreshnessInfoMain.R	Requires R, Rscript
 plot_pay_rates.sh	yes	no	$DM_LIB/plotPayRatesMain.R	Requires R, Rscript
 plot_src_diversity.sh	yes	no	count_addrs.sh, $DM_LIB/plotSrcDiversityMain.R	Requires R, Rscript

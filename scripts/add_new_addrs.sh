@@ -14,6 +14,7 @@ DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 DM_DB=$DM_ADDRS/dd_maps.db
 
+# Use the last mod date of the DB to select which runs files need to be check for new addresses
 if [ ! -s $DM_DB ] ; then
 	LOG ERROR "database $DM_DB either does not exist or has zero size"
 	exit 1
