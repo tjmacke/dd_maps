@@ -23,7 +23,7 @@ make_geojson.sh	no	no	.	uses $DM_LIB/geo_utils.awk
 map_addrs.sh	no	no	.	uses $DM_LIB/cfg_utils.awk, $JU_BIN/json_get, $CB_DATA/*, $CB_BIN/kml2geojson, $FM_BIN/getentry
 map_by_dash_rate.sh	yes	no	.	uses $DM_LIB/read_addresses.awk, $DM_LIB/dash_utils.awk
 map_by_date.sh	yes	no	.	uses $DM_LIB/read_addresses.awk
-plot_all_stats.sh	yes	no	get_pay_rates.sh, get_new_sources.sh, get_freshness_info.sh	Requires R, Rscript
+plot_all_stats.sh	yes	no	get_pay_rates.sh, get_new_sources.sh, get_freshness_info.sh, $DM_LIB/plotAllStatsMain.R	Requires R, Rscript
 plot_freshness_info.sh	yes	no	$DM_LIB/plotFreshnessInfoMain.R	Requires R, Rscript
 plot_pay_rates.sh	yes	no	$DM_LIB/plotPayRatesMain.R	Requires R, Rscript
 plot_src_diversity.sh	yes	no	count_addrs.sh, $DM_LIB/plotSrcDiversityMain.R	Requires R, Rscript
