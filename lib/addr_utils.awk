@@ -1,12 +1,12 @@
-function AU_parse(options, addr, result, states, states_long, towns, st_types, dirs, st_ords,   nf, ary, i, f_st, f_twn, nf2, ary2, b1, e1, name, street, quals, town, state, work) {
+function AU_parse(options, addr, addr_ary, states, states_long, towns, st_types, dirs, st_ords,   nf, ary, i, f_st, f_twn, nf2, ary2, b1, e1, name, street, quals, town, state, work) {
 
-	result["status"] = "B"
-	result["emsg"  ] = ""
-	result["name"  ] = ""
-	result["street"] = ""
-	result["quals" ] = ""
-	result["town"  ] = ""
-	result["state" ] = ""
+	addr_ary["status"] = "B"
+	addr_ary["emsg"  ] = ""
+	addr_ary["name"  ] = ""
+	addr_ary["street"] = ""
+	addr_ary["quals" ] = ""
+	addr_ary["town"  ] = ""
+	addr_ary["state" ] = ""
 
 	nf = split(addr, ary, ",")
 	for(i = 1; i <= nf; i++){
@@ -20,7 +20,7 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 			if(ary[nf] == "United States of America")
 				nf--
 			else{
-				result["emsg"] = "not.US"
+				addr_ary["emsg"] = "not.US"
 				return 1
 			}
 		}
@@ -34,14 +34,14 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 		#
 		# where TOWN is an abbreviation for town, state. Example: PA -> Palo Alto, CA
 		if(nf < 2){
-			result["emsg"] = "short.addr"
+			addr_ary["emsg"] = "short.addr.1"
 			return 1
 		}
 		# expand town if needed
 		if(ary[nf] in towns){
 			nf2 = split(towns[ary[nf]], ary2, ",")
 			if(nf2 != 2){
-				result["emsg"] = "bad.town"
+				addr_ary["emsg"] = "bad.town"
 				return  1
 			}
 			for(i = 1; i <= nf2; i++){
@@ -56,7 +56,7 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 
 	# At this point, all addresses must have at least three fields: street, town, state
 	if(nf < 3){
-		result["emsg"] = "short.addr"
+		addr_ary["emsg"] = "short.addr.2"
 		return 1
 	}
 
@@ -66,7 +66,7 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 	else if(ary[nf] in states_long)
 		state = ary[nf]
 	else{
-		result["emsg"] = sprintf("bad.US.state.%s", ary[nf])
+		addr_ary["emsg"] = sprintf("bad.US.state.%s", ary[nf])
 		return 1
 	}
 
@@ -86,7 +86,7 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 		}
 	}
 	if(f_st == 0){
-		result["emsg"] = "no.street.num"
+		addr_ary["emsg"] = "no.street.num"
 		return 1
 	}
 	
@@ -99,7 +99,7 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 			name = name ", " ary[i]
 	}
 
-	# Street qualifiers are those fields, if any, that follow f_st and precede nf
+	# Street qualifiers are those fields, if any, that follow f_st and precede nf - 1
 	if(nf - f_st > 2){
 		quals = ary[f_st+1]
 		for(i = f_st+2; i < nf - 1; i++)
@@ -110,7 +110,7 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 	# clean up street
 	nf2 = split(ary[f_st], ary2, /  */)
 	if(nf2 < 2){
-		result["emsg"] = "short.street"
+		addr_ary["emsg"] = "short.street"
 		return 1
 	}
 
@@ -123,6 +123,7 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 	# Street should be num [ dir ] str [ st ] [ dir ]
 	street = ary2[1]
 	if(options["do_subs"]){
+		# TODO: generalize, as I've now seen an address w/3 words in dir, st_types
 		# This is amusing.  What is South Court? Is it S. Court or South Ct.  No idea so leave such streets in long form
 		if(nf2 == 3 && (ary2[2] in dirs) && (ary2[3] in st_types)){
 			for(i = 2; i <= nf2; i++)
@@ -134,6 +135,7 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 				b1 = 3
 			}else
 				b1 = 2
+
 			# detect trailing direction
 			e1 = ary2[nf2] in dirs ? nf2-1 : nf2
 			for(i = b1; i < e1; i++){
@@ -157,15 +159,16 @@ function AU_parse(options, addr, result, states, states_long, towns, st_types, d
 			town = towns[town]
 	}
 
-	result["status"] = "G"
-	result["name"  ] = name
-	result["street"] = street
-	result["quals" ] = quals
-	result["town"  ] = town 
-	result["state" ] = state
+	addr_ary["status"] = "G"
+	addr_ary["name"  ] = name
+	addr_ary["street"] = street
+	addr_ary["quals" ] = quals
+	addr_ary["town"  ] = town 
+	addr_ary["state" ] = state
 
 	return 0
 }
+
 function AU_get_addr_data(addr_info, key, data,   k, keys, nk, i) {
 
 	n_data = 0
@@ -178,6 +181,7 @@ function AU_get_addr_data(addr_info, key, data,   k, keys, nk, i) {
 	}
 	return n_data
 }
+
 function AU_match(options, ref, cand,   nc_fields, c_fields, nr_fields, r_fields, i, nc_rtab, c_rtab, nr_rtab, r_rtab, nr_nwords, r_nwords, nc_nwords, c_nwords) {
 
 	if(options["verbose"]){
@@ -255,6 +259,7 @@ function AU_match(options, ref, cand,   nc_fields, c_fields, nr_fields, r_fields
 		return c_nwords[1] == r_nwords[1] ? 2 : 1
 	}
 }
+
 function AU_get_rtab(street, rtab,   n_rtab, i, nw, work, l_pfx, e_work2) {
 
 	n_rtab = split(street, rtab, ";")
@@ -291,6 +296,7 @@ function AU_get_rtab(street, rtab,   n_rtab, i, nw, work, l_pfx, e_work2) {
 	}
 	return n_rtab
 }
+
 function AU_rtabs_intersect(n_rtab1, rtab1, n_rtab2, rtab2,   i, j) {
 
 	# the most common case: number v number
@@ -318,6 +324,7 @@ function AU_rtabs_intersect(n_rtab1, rtab1, n_rtab2, rtab2,   i, j) {
 	}
 	return 0
 }
+
 function AU_rtab_dump(file, n_rtab, rtab,   i) {
 	
 	printf("n_rtab = %d {\n", n_rtab) > file

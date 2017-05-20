@@ -19,6 +19,7 @@ function DU_read_dashes(dfile, dash_keys, dash_vals, dash_fields, dash_sizes,   
 
 	return n_dash_lines - 1
 }
+
 function DU_find_dash_cands(key, n_ktab, ktab, k_idx,   i, j, k, k1) {
 
 	k_idx["start"] = -1
@@ -52,6 +53,7 @@ function DU_find_dash_cands(key, n_ktab, ktab, k_idx,   i, j, k, k1) {
 	}
 	return 0
 }
+
 function DU_job_in_dash(b_job, e_job, b_dash, e_dash,   bj_min, ej_min, bd_min, ed_min) {
 
 	bj_min = 60 * substr(b_job, 1, 2) + substr(b_job, 3, 2)

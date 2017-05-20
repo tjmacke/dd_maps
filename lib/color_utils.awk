@@ -8,6 +8,7 @@ function CU_rgb_to_12bit_color(rgb,   work, r_max_cval, R, G, B) {
 	B = work[3] / r_max_cval
 	return sprintf("%x%x%x", R, G, B)
 }
+
 function CU_rgb_to_24bit_color(rgb,   work, r_max_cval, R, G, B) {
 
 	split(rgb, work, ",")
@@ -55,6 +56,7 @@ function CU_rgb2hsv(rgb, hsv,   min, max, delta) {
 		hsv["H"] += 360
 	return
 }
+
 function CU_hsv2rgb(hsv, rgb,    hh, p, q, t, ff, i) {
 
 	if(hsv["S"] <= 0){
@@ -120,6 +122,7 @@ function CU_desat_12bit_color(color, val,   r_max_cval, R, G, B, rgb, hsv) {
 	CU_hsv2rgb(hsv, rgb)
 	return sprintf("%x%x%x", rgb["R"]/r_max_cval, rgb["G"]/r_max_cval, rgb["B"]/r_max_cval)
 }
+
 function CU_desat_24bit_color(color, val,   r_max_cval, d1, d2, R, G, B, rgb, hsv) {
 
 	r_max_cval = 1.0/255
@@ -143,6 +146,7 @@ function CU_desat_24bit_color(color, val,   r_max_cval, d1, d2, R, G, B, rgb, hs
 	CU_hsv2rgb(hsv, rgb)
 	return sprintf("%02x%02x%02x", rgb["R"]/r_max_cval, rgb["G"]/r_max_cval, rgb["B"]/r_max_cval)
 }
+
 function CU_sigmoid(x, s_min, alpha,    x_min, x_max, f_min, f_max, f_range, f_val) {
 	x_min = 0 - 0.5
 	x_max = 1 - 0.5
@@ -227,6 +231,7 @@ function CU_init_colorInfo(crange, colorInfo,   nf, ary, nf2, ary2, R, G, B, rgb
 
 	return 0
 }
+
 function CU_set_12bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
 
 	hsv["H"] = frac * colorInfo["H_end"] + (1.0 - frac) * colorInfo["H_start"]
@@ -241,6 +246,7 @@ function CU_set_12bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
 
 	return sprintf("%x%x%x", R, G, B)
 }
+
 function CU_set_24bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
 
 	hsv["H"] = frac * colorInfo["H_end"] + (1.0 - frac) * colorInfo["H_start"]
@@ -255,4 +261,3 @@ function CU_set_24bit_color(frac, colorInfo,    r_max_cval, hsv, rgb, R, G, B) {
 
 	return sprintf("%02x%02x%02x", R, G, B)
 }
-

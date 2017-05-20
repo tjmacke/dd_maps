@@ -132,7 +132,7 @@ $5 == "Job" {
 	src = $6
 	dst = $7
 
-	err = AU_parse(pq_options, atype == "src" ? src : dst, result, us_states, us_states_long, towns_a2q, st_types_2qry, dirs_2qry, ords_2qry)
+	err = AU_parse(pq_options, atype == "src" ? src : dst, addr_ary, us_states, us_states_long, towns_a2q, st_types_2qry, dirs_2qry, ords_2qry)
 	if(pr_hdr){
 		pr_hdr = 0
 		if(atype == "src")
@@ -140,13 +140,13 @@ $5 == "Job" {
 		else
 			printf("status\tdate\tsrc\tdst\tqDst\tdName\n")
 	}
-	printf("%s", result["status"])
-	if(result["status"] == "B")
-		printf(", %s", result["emsg"])
+	printf("%s", addr_ary["status"])
+	if(addr_ary["status"] == "B")
+		printf(", %s", addr_ary["emsg"])
 	printf("\t%s\t%s\t%s", date, src, dst)
-	if(result["status"] == "B")
+	if(addr_ary["status"] == "B")
 		printf("\t\t")
 	else
-		printf("\t%s, %s, %s\t%s", result["street"], result["town"], result["state"], result["name"])
+		printf("\t%s, %s, %s\t%s", addr_ary["street"], addr_ary["town"], addr_ary["state"], addr_ary["name"])
 	printf("\n")
 }' $FILE

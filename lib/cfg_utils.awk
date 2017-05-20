@@ -37,6 +37,7 @@ function CFG_read(cfile, config,    err, n_cflines, cfline, nf, ary, i, tkey) {
 	close(cfile)
 	return err
 }
+
 function CFG_dump(file, config,   ng, k, keys, nk, k1tab, k1, nk2, k2tab, k2tab_srt, k2) {
 
 	ng = 0
