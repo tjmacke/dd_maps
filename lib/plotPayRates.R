@@ -5,6 +5,8 @@ plotPayRates <- function(df, multi) {
 	}
 	sfn <- paste(dm_home, 'lib', 'makeDateLabels.R', sep='/')
 	source(sfn, chdir=T)
+	sfn <- paste(dm_home, 'lib', 'getYaxisInfo.R', sep='/')
+	source(sfn, chdir=T)
 
 	if(length(df$date) >=2) {
 		if(length(df$date) >=3 ){
@@ -29,10 +31,11 @@ plotPayRates <- function(df, multi) {
 
 	dl <- makeDateLabels(df$date)
 
-	# TODO: replace c(0, 35) with a properly scaled Y-Axis
+	ya_info <- getYaxisInfo(max(max(df$hrate), max(df$drate), max(df$dph)))
+	y_max <- max(ya_info)
 	plot(
 		c(as.Date(dl$tk[1], '%Y-%m-%d'), as.Date(dl$tk[length(dl$tk)], '%Y-%m-%d')),
-		c(0, 35),
+		c(0, y_max),
 		type='n',
 		xlab='Month',
 		xaxt='n',
@@ -44,18 +47,18 @@ plotPayRates <- function(df, multi) {
 		y_adj <- 4
 		text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.7)
 		axis(1, at=dl$tk, labels=F)
-		axis(2, at=seq(from=0, to=35, by=5), labels=T, las=1)
+		axis(2, at=ya_info, labels=ya_info, las=1)
 		title(paste('Doordash Rates', l_date, sep=' through '), cex.main=1)
 	} else {
 		y_adj <- 2.7
 		text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.8)
 		axis(1, at=dl$tk, labels=F)
-		axis(2, at=seq(from=0, to=35, by=5), labels=T, las=1)
+		axis(2, at=ya_info, labels=ya_info, las=1)
 		title(paste('Doordash Rates', l_date, sep=' through '))
 	}
 
 	# draw a nice grid
-	abline(h=seq(from=0, to=35, by=5), lty=3, col='black')
+	abline(h=ya_info, lty=3, col='black')
 	abline(v=dl$tk, lty=3, col='black')
 
 	if(length(df$date) >= 2) {
