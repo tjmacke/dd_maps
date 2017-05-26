@@ -230,10 +230,10 @@ function get_drate(site, n_visits, visits, results,   i, k_idx, fnd, j, ary, nf,
 		fnd = 0
 		for(j = k_idx["start"]; j <= k_idx["end"]; j++){
 			nf = split(dashes_vals[j], ary, "\t")
-			if(DU_job_in_dash(visits[i, "tStart"], visits[i, "tEnd"], ary[dashes_fields["tstart"]], ary[dashes_fields["tend"]])){
+			if(DU_job_in_dash(visits[i, "tStart"], visits[i, "tEnd"], ary[dashes_fields["time_start"]], ary[dashes_fields["time_end"]])){
 				fnd = 1
 				d_cnt++
-				d_amt += ary[dashes_fields["totalpay"]]/ary[dashes_fields["deliveries"]]
+				d_amt += ary[dashes_fields["total_pay"]]/ary[dashes_fields["deliveries"]]
 				d_last = visits[i, "Date"]
 				break
 			}
