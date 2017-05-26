@@ -1,6 +1,6 @@
 dm_home <- Sys.getenv('DM_HOME')
 if (dm_home == '') {
-	stop('DM_HOME is not defined.', call.=T)
+	stop('DM_HOME is not defined.', call.=F)
 }
 sfn <- paste(dm_home, 'lib', 'plotSrcInfo.R', sep='/')
 source(sfn, chdir=T)
@@ -14,6 +14,6 @@ if (length(args) == 0) {
 }
 
 df <- read.csv(args[1], sep='\t')
-ofn = file = sprintf('newSources.%s.pdf', format(Sys.time(), '%Y-%m-%d'))
+ofn <- sprintf('newSources.%s.pdf', format(Sys.time(), '%Y-%m-%d'))
 pdf(file=ofn)
 plotSrcInfo(df, F)

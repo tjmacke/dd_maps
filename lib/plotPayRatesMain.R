@@ -1,4 +1,4 @@
-dm_home <- Sys.getenv(c('DM_HOME'))
+dm_home <- Sys.getenv('DM_HOME')
 if (dm_home == '') {
 	stop('DM_HOME is not defined.', call.=F)
 }
@@ -14,6 +14,6 @@ if (length(args) == 0) {
 }
 
 df <- read.csv(args[1], sep='\t')
-ofn=sprintf('payRates.%s.pdf', format(Sys.time(), '%Y-%m-%d'))
+ofn <- sprintf('payRates.%s.pdf', format(Sys.time(), '%Y-%m-%d'))
 pdf(file=ofn)
 plotPayRates(df, F)

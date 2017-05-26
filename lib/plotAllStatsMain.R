@@ -1,4 +1,4 @@
-dm_home <- Sys.getenv(c('DM_HOME'))
+dm_home <- Sys.getenv('DM_HOME')
 if (dm_home == '') {
 	stop('DM_HOME is not defined.', call.=F)
 }
@@ -42,7 +42,7 @@ while (i <= length(args)) {
 		}
 		df_fn <- args[i]
 	} else {
-		stop(paste('ERROR: unknown option', args[i], sep=': '))
+		stop(paste('ERROR: unknown option', args[i], sep=': '), call.=F)
 	}
 	i <- i + 1
 }
@@ -66,7 +66,7 @@ sf_df <- read.csv(sf_fn, sep='\t')
 df_df <- read.csv(df_fn, sep='\t')
 
 # All grafx must follow the pdf() stmt
-ofn= sprintf('allStats.%s.pdf', format(Sys.time(), '%Y-%m-%d'))
+ofn <- sprintf('allStats.%s.pdf', format(Sys.time(), '%Y-%m-%d'))
 pdf(file=ofn)
 
 par(mfcol=c(2,2), oma=c(0,0,3,0))
