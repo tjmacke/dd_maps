@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -c conf-file [ -stats stats-file ] [ map-data-file ]"
+U_MSG="usage: $0 [ -help ] -c conf-file [ -meta meta-file ] [ map-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -31,7 +31,7 @@ else
 	exit 1
 fi
 
-SFILE=
+MFILE=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -50,14 +50,14 @@ while [ $# -gt 0 ] ; do
 		CFILE=$1
 		shift
 		;;
-	-stats)
+	-meta)
 		shift
 		if [ $# -eq 0 ] ; then
-			LOG ERROR "-stats requires stats-file argument"
+			LOG ERROR "-meta requires meta-file argument"
 			echo "$U_MSG" 1>&2
 			exit 1
 		fi
-		SFILE=$1
+		MFILE=$1
 		shift
 		;;
 	-*)
@@ -114,7 +114,7 @@ BEGIN {
 	}else
 		use_size = 0
 
-	sfile = "'"$SFILE"'"
+	mfile = "'"$MFILE"'"
 }
 {
 	# Rules: 
@@ -233,24 +233,24 @@ END {
 		printf("\n")
 	}
 
-	if(sfile != ""){
+	if(mfile != ""){
 		if(use_color || use_color_2){
-			printf("color_min_value = %g\n", color_data_min) >> sfile
-			printf("color_max_value = %g\n", color_data_max) >> sfile
-			printf("color_stats = %d,%.1f", color["counts", 1], 100.0*color["counts", 1]/color["tcounts"]) >> sfile
+			printf("color_min_value = %g\n", color_data_min) >> mfile
+			printf("color_max_value = %g\n", color_data_max) >> mfile
+			printf("color_stats = %d,%.1f", color["counts", 1], 100.0*color["counts", 1]/color["tcounts"]) >> mfile
 			for(i = 2; i <= color["nvalues"]; i++)
-				printf(" | %d,%.1f", color["counts", i], 100.0*color["counts", i]/color["tcounts"]) >> sfile
-			printf("\n") >> sfile
+				printf(" | %d,%.1f", color["counts", i], 100.0*color["counts", i]/color["tcounts"]) >> mfile
+			printf("\n") >> mfile
 		}
 		if(use_size || use_size_2){
-			printf("size_min_value = %g\n", size_data_min) >> sfile
-			printf("size_max_value = %g\n", size_data_max) >> sfile
-			printf("size_stats = %d,%.1f", size["counts", 1], 100.0*size["counts", 1]/size["tcounts"]) >> sfile
+			printf("size_min_value = %g\n", size_data_min) >> mfile
+			printf("size_max_value = %g\n", size_data_max) >> mfile
+			printf("size_stats = %d,%.1f", size["counts", 1], 100.0*size["counts", 1]/size["tcounts"]) >> mfile
 			for(i = 2; i <= size["nvalues"]; i++)
-				printf(" | %d,%.1f", size["counts", i], 100.0*size["counts", i]/size["tcounts"]) >> sfile
-			printf("\n") >> sfile
+				printf(" | %d,%.1f", size["counts", i], 100.0*size["counts", i]/size["tcounts"]) >> mfile
+			printf("\n") >> mfile
 		}
-		close(sfile)
+		close(mfile)
 	}
 
 	exit 0

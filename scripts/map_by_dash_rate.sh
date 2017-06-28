@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -d dashes-file -a addr-file -at { src | dst } [ -stats stats-file ] [ runs-file ]"
+U_MSG="usage: $0 [ -help ] -d dashes-file -a addr-file -at { src | dst } [ -meta meta-file ] [ runs-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -32,7 +32,7 @@ fi
 DFILE=
 AFILE=
 ATYPE=
-SFILE=
+MFILE=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -71,14 +71,14 @@ while [ $# -gt 0 ] ; do
 		ATYPE=$1
 		shift
 		;;
-	-stats)
+	-meta)
 		shift
 		if [ $# -eq 0 ] ; then
 			LOG ERROR "-stats requires stats-file argument"
 			echo "$U_MSG" 1>&2
 			exit 1
 		fi
-		SFILE=$1
+		MFILE=$1
 		shift
 		;;
 	-*)
@@ -157,7 +157,7 @@ BEGIN {
 	}
 #	printf("INFO: %s: %d records\n", dfile, n_dashes_keys) > "/dev/stderr"
 
-	sfile = "'"$SFILE"'"
+	mfile = "'"$MFILE"'"
 }
 {
 	if($4 != l_4){
@@ -213,10 +213,10 @@ END {
 		delete visits
 	}
 
-	if(sfile){
-		# stats to json is stupid
-		printf("data_stats = %d %s&#44; %d dashes&#44; last &#61; %s\n", n_sites, atype == "src" ? "sources" : "dests", n_dashes, date_max) >> sfile
-		close(sfile)
+	if(mfile){
+		# meta to json is stupid
+		printf("data_stats = %d %s&#44; %d dashes&#44; last &#61; %s\n", n_sites, atype == "src" ? "sources" : "dests", n_dashes, date_max) >> mfile
+		close(mfile)
 	}
 }
 function get_drate(site, n_visits, visits, results,   i, k_idx, fnd, j, ary, nf, d_cnt, d_amt, d_last) {

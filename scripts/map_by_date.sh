@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -a addr-file -at { src | dst } [ -cnt ] [ -rev ] [ -unit { day | week | month } ] [ -stats stats-file ] [ runs-file ]"
+U_MSG="usage: $0 [ -help ] -a addr-file -at { src | dst } [ -cnt ] [ -rev ] [ -unit { day | week | month } ] [ -meta meta-file ] [ runs-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -32,7 +32,7 @@ ATYPE==
 CNT=
 REV=
 UNIT=
-SFILE=
+MFILE=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -79,14 +79,14 @@ while [ $# -gt 0 ] ; do
 		UNIT=$1
 		shift
 		;;
-	-stats)
+	-meta)
 		shift
 		if [ $# -eq 0 ] ; then
-			LOG ERROR "-stats requires stats-file argument"
+			LOG ERROR "-meta requires meta-file argument"
 			echo "$U_MSG"
 			exit 1
 		fi
-		SFILE=$1
+		MFILE=$1
 		shift
 		;;
 	-*)
@@ -187,7 +187,7 @@ $AWK -F'\t' 'BEGIN {
 		err = 1
 		exit err
 	}
-	sfile = "'"$SFILE"'"
+	mfile = "'"$MFILE"'"
 }
 {
 	n_addrs++
@@ -234,9 +234,18 @@ END {
 		}
 		printf("\t%s\t%s\t%s\t%s\t%s\n", cnt ? cnts[i] : ".", label, addrs[i], lngs[i], lats[i])
 	}
-	if(sfile){
+	if(mfile && n_addrs > 0){
 		# stats to json is stupid
-		printf("data_stats = %d %s&#44; %d dashes&#44; last &#61; %s\n", NR, atype == "src" ? "sources" : "dests", tcnt, rev ? date_max : date_min) >> sfile
-		close(sfile)
+		avg_lat = avg_lng = 0
+		for(i = 1; i <= n_addrs; i++){
+			avg_lat += lats[i]
+			avg_lng += lngs[i]
+		}
+		avg_lat /= n_addrs
+		avg_lng /= n_addrs
+
+		printf("data_stats = %d %s&#44; %d dashes&#44; last &#61; %s\n", n_addrs, atype == "src" ? "sources" : "dests", tcnt, rev ? date_max : date_min) >> mfile
+#		printf("center = %.7f,%.7f\n", avg_lng, avg_lat) >> mfile
+		close(mfile)
 	}
 }'
