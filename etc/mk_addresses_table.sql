@@ -8,6 +8,10 @@ CREATE TABLE addresses (
 	rply_address text NULL,
 	lat double NULL,
 	lng double NULL,
+-- Deal with address management
+--	date_first_use text NULL,	-- If this DB is recreated, then this field should NOT NULL
+--	date_geo_set text NULL,
+--	date_geo_checked text NULL,
 	PRIMARY KEY (address_id ASC)
 );
 
