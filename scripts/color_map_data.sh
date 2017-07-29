@@ -31,6 +31,7 @@ else
 	exit 1
 fi
 
+CFILE=
 MFILE=
 FILE=
 
