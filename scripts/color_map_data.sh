@@ -98,7 +98,7 @@ BEGIN {
  	}
 
 	if(("_globals", "color_values") in config){
-		if(IU_init(config, color, "color", "color_values", "color_breaks")){
+		if(IU_init(config, color, "color", "color_values", "color_breaks", "color_value_ob_low", "")){
 			err = 1;
 			exit err
 		}
@@ -107,7 +107,7 @@ BEGIN {
 		use_color = 0
 
 	if(("_globals", "size_values") in config){
-		if(IU_init(config, size, "size", "size_values", "size_breaks")){
+		if(IU_init(config, size, "size", "size_values", "size_breaks", "size_value_ob_low", "")){
 			err = 1
 			exit err
 		}
@@ -201,13 +201,13 @@ END {
 		hex_color_1 = hex_color_2 = "#FFE4E1"
 		if(use_color){
 			if(color_data[i] != "."){
-				rgb = IU_interpolate(color, color_data[i], color_data_min, color_data_max)
+				rgb = IU_interpolate(color, color_data[i]) #, color_data_min, color_data_max)
 				# TODO: figure out whehter CU_ should return #XXX or #XXXXXX
 				hex_color_1 = "#" CU_rgb_to_24bit_color(rgb)
 			}
 		}else if(use_color_2){
 			if(color_data_2[i] != "."){
-				rgb = IU_interpolate(color, color_data_2[i], color_data_min, color_data_max)
+				rgb = IU_interpolate(color, color_data_2[i]) #, color_data_min, color_data_max)
 				# TODO: figure out whehter CU_ should return #XXX or #XXXXXX
 				hex_color_2 = "#" CU_rgb_to_24bit_color(rgb)
 			}
@@ -218,12 +218,12 @@ END {
 		style_msg_1 = style_msg_2 = sprintf("\"marker-size\": \"%s\"", "small")
 		if(use_size){
 			if(size_data[i] != "."){
-				mrkr_size = IU_interpolate(size, size_data[i], size_data_min, size_data_max)
+				mrkr_size = IU_interpolate(size, size_data[i]) #, size_data_min, size_data_max)
 				style_msg_1 = sprintf("\"marker-size\": \"%s\"", mrkr_size)
 			}
 		}else if(use_size_2){
 			if(size_data_2[i] != "."){
-				mrkr_size = IU_interpolate(size, size_data_2[i], size_data_min, size_data_max)
+				mrkr_size = IU_interpolate(size, size_data_2[i]) #, size_data_min, size_data_max)
 				style_msg_2 = sprintf("\"marker-size\": \"%s\"", mrkr_size)
 			}
 		}

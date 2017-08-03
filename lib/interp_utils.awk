@@ -1,129 +1,135 @@
-function IU_init(config, interp, name, k_values, k_breaks,    work, n_ary, ary, c_cnt, i, nv) {
+function IU_init(config, interp, name, k_values, k_breaks, k_value_ob_low, k_value_ob_high,   work, n_ary, ary, c_rng, i, nv) {
 
+	interp["name"] = name
+
+	# get the values
 	work = config["_globals", k_values]
 	if(work == ""){
-		printf("ERROR: no key named \"%s\" in config\n", k_values) > "/dev/stderr"
+		printf("ERROR: IU_init: no key named \"%s\" in config\n", k_values) > "/dev/stderr"
 		return 1
 	}
-        interp["name"] = name
 	nv = n_ary = split(work, ary, "|")
 	interp["nvalues"] = n_ary
-	c_cnt = 0
+	c_rng = 0
 	for(i = 1; i <= n_ary; i++){
 		work = ary[i]
-		if(index(work, ":") != 0)	# continuous ranges have 2 values separated by a colon: start:end
-			c_cnt++
+		if(index(work, ":") != 0)
+			c_rng++
 		sub(/^[ \t]*/, "", work)
 		sub(/[ \t]*$/, "", work)
 		interp["values", i] = work
 	}
-	if(c_cnt == 0)
-		interp["continuous"] = 0
-	else if(c_cnt == n_ary)
-		interp["continuous"] = 1
+	if(c_rng == 0)
+		interp["is_grad"] = 0
+	else if(c_rng == n_ary)
+		interp["is_grad"] = 1
 	else{
-		printf("ERROR: mixed interpolator: %d continuous, %d discrete not allowed", c_cnt, n_ary - c_cnt) > "/dev/stderr"
+		printf("ERROR: IU_init: k_values can not include both gradient and bin values\n") > "/dev/stderr"
 		return 1
 	}
-	work = k_breaks != "" ? config["_globals", k_breaks] : ""
+	# get the out-of-bound values (if any)
+	interp["value_ob_low"] = config["_globals", k_value_ob_low]
+	interp["value_ob_high"] = config["_globals", k_value_ob_high]
+
+	# get the breaks
+	work = config["_globals", k_breaks]
 	if(work == ""){
-		for(i = 1; i < nv; i++){
-			interp["breaks", i] = i/(1.0*nv)
-			interp["types", i] = "frac";
-		}
-	}else{
-		n_ary = split(work, ary, "|")
-		if(n_ary != nv - 1){
-			printf("ERROR: wrong number of breaks %d, must be %d\n", n_ary, nv - 1) > "/dev/stderr"
-			return 1
-		}
-		for(i = 1; i <= n_ary; i++){
-			work = ary[i]
-			sub(/^[ \t]*/, "", work)
-			sub(/[ \t]*$/, "", work)
-			interp["breaks", i] = work + 0	# force to number
-			interp["types", i] = index(ary[i], ".") != 0 ? "frac" : "count"
-		}
+		printf("ERROR: IU_init: no key named \"%s\" in config\n", k_values) > "/dev/stderr"
+		return 1
 	}
+	nv = n_ary = split(work, ary, "|")
+	interp["nbreaks"] = n_ary
+	for(i = 1; i <= n_ary; i++){
+		work = ary[i]
+		sub(/^[ \t]*/, "", work)
+		sub(/[ \t]*$/, "", work)
+		interp["breaks", i] = work + 0	# force numeric
+	}
+	if(interp["nbreaks"] != interp["nvalues"] + 1){
+		printf("ERROR: IU_init: nbreaks (%d) != nvalues + 1 (%d)\n", interp["nbreaks"], interp["nvalues"] + 1) > "/dev/stderr"
+		return 1
+	}
+
+	# init all counts to 0
+	for(i = 0; i <= interp["nbreaks"] + 1; i++)
+		interp["counts", i] = 0
 	interp["tcounts"] = 0
+
 	return 0
 }
 
 function IU_dump(file, interp,   i, keys, nk) {
 
 	printf("interp = {\n") > file
-	printf("\tname      = %s\n", interp["name"]) > file
-	printf("\tcontinous = %d\n", interp["continuous"]) > file
-	printf("\tnvalues   = %d\n", interp["nvalues"]) > file
-	printf("\tvalues    = %s", interp["values", 1]) > file
+	printf("\tname          = %s\n", interp["name"]) > file
+	printf("\tis_grad       = %d\n", interp["is_grad"]) > file
+	printf("\tnvalues       = %d\n", interp["nvalues"]) > file
+	printf("\tvalues        = %s", interp["values", 1]) > file
 	for(i = 2; i <= interp["nvalues"]; i++)
 		printf(" | %s", interp["values", i]) > file
 	printf("\n") > file
-	printf("\tbreaks    = ") > file
-	if(interp["nvalues"] == 1){
-		printf("None")
-	}else{
-		printf("%s:%s", interp["breaks", 1], interp["types", 1]) > file
-		for(i = 2; i <= interp["nvalues"] - 1; i++)
-			printf(" | %s:%s", interp["breaks", i], interp["types", i]) > file
-	}
+	printf("\tvalue_ob_low  = %s\n", "value_ob_low" in interp ? interp["value_ob_low"] : "") > file
+	printf("\tvalue_ob_high = %s\n", "value_ob_high" in interp ? interp["value_ob_high"] : "_") > file
+	printf("\tnbreaks       = %d\n", interp["nbreaks"]) > file
+	printf("\tbreaks        = %s", interp["breaks", 1]) > file
+	for(i = 2; i <= interp["nbreaks"]; i++)
+		printf(" | %s", interp["breaks", i]) > file
 	printf("\n") > file
-	printf("\ttcounts   = %d\n", interp["tcounts"]) > file
-	if(interp["tcounts"] > 0){
-		printf("\tcounts    = %d", interp["counts", 1]) > file
-		for(i = 2; i <= interp["nvalues"]; i++)
-			printf(" | %d", interp["counts", i]) > file
-		printf("\n") > file
-	}
+	printf("\ttcounts       = %d\n", interp["tcounts"]) > file
+	printf("\tcounts        = %d", interp["counts", 0]) > file
+	for(i = 1; i <= interp["nbreaks"] + 1; i++)
+		printf(" | %d", interp["counts", i]) > file
+	printf("\n") > file
 	printf("}\n") > file
 }
 
-function IU_interpolate(interp, v, vmin, vmax,   v_idx, i, f, work, start, end, l_rvec, rvec, fb, bmin, bmax) {
+function IU_interpolate(interp, v,   idx) {
 
+	idx = IU_search(interp, v)
 	interp["tcounts"]++
-
-	# all values are the same, return the first value
-	if(vmin == vmax){
-		interp["counts", 1]++
-		if(interp["continuous"]){
-			split(interp["values", 1], work, ":")
-			return work[1]
-		}else
-			return interp["values", 1]
-	}
-
-	v_idx = interp["nvalues"]
-	for(i = 1; i < interp["nvalues"]; i++){
-		f = interp["types", i] == "count" ? v : (v - vmin)/(vmax - vmin)
-		if(f <= interp["breaks", i]){
-			v_idx = i
-			break
+	if(!interp["is_grad"]){
+		if(idx == 0){
+			interp["counts", 0]++
+			return ("value_ob_low" in interp) ? interp["value_ob_low"] : ""
+		}else if(idx > interp["nbreaks"]){
+			interp["counts", interp["nbreaks"] + 1]++
+			if(idx <= interp["nvalues"]) 
+				return interp["values", idx]
+			else
+				return ("value_ob_high" in interp) ? interp["value_ob_high"] : ""
+		}else{
+			interp["counts", idx]++
+			return interp["values", idx-1]
 		}
 	}
-	interp["counts", v_idx]++
 
-	if(!interp["continuous"])
-		return interp["values", v_idx]
+	return ""
+}
 
-	if(v_idx == 1){
-		bmin = 0.0
-		bmax = interp["breaks", v_idx]
-	}else if(v_idx == interp["nvalues"]){
-		bmin = interp["breaks", v_idx - 1]
-		bmax = 1.0
-	}else{
-		bmax = interp["breaks", v_idx - 1]
-		bmax = interp["breaks", v_idx]
+function IU_search(interp, v,   i, j, k, cv) {
+
+	# deal with out of range values here to simplify the binary interval search
+	if(v <= interp["breaks", 1])
+		return 0
+	else if(v > interp["breaks", interp["nbreaks"]])
+		return interp["nbreaks"] + 1
+
+	# binary search on intervals
+	i = 1 ; j = interp["nbreaks"];
+	for( ; i <= j ; ){
+		k = int((i+j)/2)
+		if(v == interp["breaks", k]){
+			return k
+		}else if(v < interp["breaks", k]){
+			if(v > interp["breaks", k-1])
+				return k
+			j = k - 1
+		}else{
+			if(v <= interp["breaks", k+1])
+				return k + 1
+			i = k + 1
+		}
 	}
-	fb = (f - bmin)/(bmax - bmin)
-
-	split(interp["values", v_idx], work, ":")
-	split(work[1], start, ",")
-	l_rvec = split(work[2], end, ",")
-	for(i = 1; i <= l_rvec; i++){
-		rvec[i] = (1-fb) * start[i] + fb*end[i]
-	}
-
-	# TODO: fix this
-	return sprintf("%g,%g,%g", rvec[1], rvec[2], rvec[3])
+	# should never get here!
+	return 0
 }
