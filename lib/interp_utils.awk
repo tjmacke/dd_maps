@@ -1,4 +1,4 @@
-function IU_init(config, interp, name, k_values, k_breaks, k_value_ob_low, k_value_ob_high,   work, n_ary, ary, c_rng, i, nv) {
+function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, c_rng, i, nv) {
 
 	interp["name"] = name
 
@@ -27,9 +27,6 @@ function IU_init(config, interp, name, k_values, k_breaks, k_value_ob_low, k_val
 		printf("ERROR: IU_init: k_values can not include both gradient and bin values\n") > "/dev/stderr"
 		return 1
 	}
-	# get the out-of-bound values (if any)
-	interp["value_ob_low"] = config["_globals", k_value_ob_low]
-	interp["value_ob_high"] = config["_globals", k_value_ob_high]
 
 	# get the breaks
 	work = config["_globals", k_breaks]
@@ -45,8 +42,8 @@ function IU_init(config, interp, name, k_values, k_breaks, k_value_ob_low, k_val
 		sub(/[ \t]*$/, "", work)
 		interp["breaks", i] = work + 0	# force numeric
 	}
-	if(interp["nbreaks"] != interp["nvalues"] + 1){
-		printf("ERROR: IU_init: nbreaks (%d) != nvalues + 1 (%d)\n", interp["nbreaks"], interp["nvalues"] + 1) > "/dev/stderr"
+	if(interp["nbreaks"] != interp["nvalues"] - 1){
+		printf("ERROR: IU_init: nbreaks (%d) != nvalues - 1 (%d)\n", interp["nbreaks"], interp["nvalues"] - 1) > "/dev/stderr"
 		return 1
 	}
 
@@ -68,16 +65,14 @@ function IU_dump(file, interp,   i, keys, nk) {
 	for(i = 2; i <= interp["nvalues"]; i++)
 		printf(" | %s", interp["values", i]) > file
 	printf("\n") > file
-	printf("\tvalue_ob_low  = %s\n", "value_ob_low" in interp ? interp["value_ob_low"] : "") > file
-	printf("\tvalue_ob_high = %s\n", "value_ob_high" in interp ? interp["value_ob_high"] : "_") > file
 	printf("\tnbreaks       = %d\n", interp["nbreaks"]) > file
 	printf("\tbreaks        = %s", interp["breaks", 1]) > file
 	for(i = 2; i <= interp["nbreaks"]; i++)
 		printf(" | %s", interp["breaks", i]) > file
 	printf("\n") > file
 	printf("\ttcounts       = %d\n", interp["tcounts"]) > file
-	printf("\tcounts        = %d", interp["counts", 0]) > file
-	for(i = 1; i <= interp["nbreaks"] + 1; i++)
+	printf("\tcounts        = %d", interp["counts", 1]) > file
+	for(i = 2; i <= interp["nbreaks"] + 1; i++)
 		printf(" | %d", interp["counts", i]) > file
 	printf("\n") > file
 	printf("}\n") > file
@@ -88,19 +83,8 @@ function IU_interpolate(interp, v,   idx) {
 	idx = IU_search(interp, v)
 	interp["tcounts"]++
 	if(!interp["is_grad"]){
-		if(idx == 0){
-			interp["counts", 0]++
-			return ("value_ob_low" in interp) ? interp["value_ob_low"] : ""
-		}else if(idx > interp["nbreaks"]){
-			interp["counts", interp["nbreaks"] + 1]++
-			if(idx <= interp["nvalues"]) 
-				return interp["values", idx]
-			else
-				return ("value_ob_high" in interp) ? interp["value_ob_high"] : ""
-		}else{
-			interp["counts", idx]++
-			return interp["values", idx-1]
-		}
+		interp["counts", idx]++
+		return interp["values", idx]
 	}
 
 	return ""
@@ -110,7 +94,7 @@ function IU_search(interp, v,   i, j, k, cv) {
 
 	# deal with out of range values here to simplify the binary interval search
 	if(v <= interp["breaks", 1])
-		return 0
+		return 1
 	else if(v > interp["breaks", interp["nbreaks"]])
 		return interp["nbreaks"] + 1
 

@@ -98,7 +98,7 @@ BEGIN {
  	}
 
 	if(("_globals", "color_values") in config){
-		if(IU_init(config, color, "color", "color_values", "color_breaks", "color_value_ob_low", "")){
+		if(IU_init(config, color, "color", "color_values", "color_breaks")){
 			err = 1;
 			exit err
 		}
@@ -107,7 +107,7 @@ BEGIN {
 		use_color = 0
 
 	if(("_globals", "size_values") in config){
-		if(IU_init(config, size, "size", "size_values", "size_breaks", "size_value_ob_low", "")){
+		if(IU_init(config, size, "size", "size_values", "size_breaks")){
 			err = 1
 			exit err
 		}
@@ -239,7 +239,7 @@ END {
 			printf("color_min_value = %g\n", color_data_min) >> mfile
 			printf("color_max_value = %g\n", color_data_max) >> mfile
 			printf("color_stats = %d,%.1f", color["counts", 1], 100.0*color["counts", 1]/color["tcounts"]) >> mfile
-			for(i = 2; i <= color["nvalues"]; i++)
+			for(i = 2; i <= color["nbreaks"] + 1; i++)
 				printf(" | %d,%.1f", color["counts", i], 100.0*color["counts", i]/color["tcounts"]) >> mfile
 			printf("\n") >> mfile
 		}
@@ -247,7 +247,7 @@ END {
 			printf("size_min_value = %g\n", size_data_min) >> mfile
 			printf("size_max_value = %g\n", size_data_max) >> mfile
 			printf("size_stats = %d,%.1f", size["counts", 1], 100.0*size["counts", 1]/size["tcounts"]) >> mfile
-			for(i = 2; i <= size["nvalues"]; i++)
+			for(i = 2; i <= size["nbreaks"] + 1; i++)
 				printf(" | %d,%.1f", size["counts", i], 100.0*size["counts", i]/size["tcounts"]) >> mfile
 			printf("\n") >> mfile
 		}
