@@ -1,4 +1,4 @@
-function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, c_rng, i, nv, v_pat) {
+function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, i, nv, v_pat, v_len) {
 
 	interp["name"] = name
 
@@ -10,20 +10,28 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, c
 	}
 	nv = n_ary = split(work, ary, "|")
 	interp["nvalues"] = n_ary
-	c_rng = 0
-	v_ob_info = ""
+	interp["is_grad"] = 0
+	interp["v_len"] = 0	# set only for grad elts
 	for(i = 1; i <= n_ary; i++){
-		work = ary[i]
-		if(index(work, ":") != 0){
-			c_rng++
+		sub(/^[ \t]*/, "", ary[i])
+		sub(/[ \t]*$/, "", ary[i])
+		if(index(ary[i], ":") != 0){
+			interp["is_grad"] = 1
 			v_pat = v_pat "g"
+			v_len = IU_check_grad(ary[i])
+			if(v_len == 0){
+				printf("ERROR: IU_init: IU_check_grad failed for value %d (%s)\n", i, ary[i]) > "/dev/stderr"
+				return 1
+			}else if(interp["v_len"] == 0){
+				interp["v_len"] = v_len
+			}else if(v_len != interp["v_len"]){
+				printf("ERROR: IU_init: v_len (%d) for value %d (%s) differs from current v_len (%d)\n", v_len, i, ary[i], interp["v_len"]) > "/dev/stderr"
+				return 1
+			}
 		}else
 			v_pat = v_pat "b"
-		sub(/^[ \t]*/, "", work)
-		sub(/[ \t]*$/, "", work)
-		interp["values", i] = work
+		interp["values", i] = ary[i]
 	}
-	interp["is_grad"] = c_rng > 0
 
 	# get the breaks
 	work = config["_globals", k_breaks]
@@ -34,10 +42,9 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, c
 	nv = n_ary = split(work, ary, "|")
 	interp["nbreaks"] = n_ary
 	for(i = 1; i <= n_ary; i++){
-		work = ary[i]
-		sub(/^[ \t]*/, "", work)
-		sub(/[ \t]*$/, "", work)
-		interp["breaks", i] = work + 0	# force numeric
+		sub(/^[ \t]*/, "", ary[i])
+		sub(/[ \t]*$/, "", ary[i])
+		interp["breaks", i] = ary[i] + 0	# force numeric
 	}
 	if(!interp["is_grad"]){
 		if(interp["nbreaks"] != interp["nvalues"] - 1){
@@ -68,6 +75,14 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, c
 		return 1
 	}
 
+	# check that breaks are strictly ascending, insures interp denoms are > 0
+	for(i = 2; i <= interp["nbreaks"]; i++){
+		if(interp["breaks", i] <= interp["breaks", i-1]){
+			printf("ERROR: IU_init: breaks must be strictly ascending: breaks[%d] (%g) <= breaks[%d] (%g)\n", i-1, interp["breaks", i-1], i, interp["breaks", i]) > "/dev/stderr"
+			return 1
+		}
+	}
+
 	# init all counts to 0
 	for(i = 0; i <= interp["nbreaks"] + 1; i++)
 		interp["counts", i] = 0
@@ -76,12 +91,34 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, c
 	return 0
 }
 
+function IU_check_grad(grad,   v_len, n_ary, ary, i, n_ary2, ary2, j) {
+
+	v_len = 0
+	n_ary = split(grad, ary, ":")
+	if(n_ary != 2){
+		printf("ERROR: IU_check_grad: grad %s has %d fields, must have %d\n", grad, n_ary, 2) > "/dev/stderr"
+		return 0
+	}
+	for(i = 1; i <= n_ary; i++){
+		n_ary2 = split(ary[i], ary2, ",")
+		if(v_len == 0)
+			v_len = n_ary2
+		else if(n_ary2 != v_len){
+			printf("ERROR: IU_check_grad: vector %s has %d elements, must have %d\n", ary[i], n_ary2, v_len) > "/dev/stderr"
+			return 0
+		}
+	}
+
+	return v_len
+}
+
 function IU_dump(file, interp,   i, keys, nk) {
 
 	printf("interp = {\n") > file
 	printf("\tname          = %s\n", interp["name"]) > file
 	printf("\tis_grad       = %d\n", interp["is_grad"]) > file
 	printf("\tv_ob_info     = %s\n", interp["v_ob_info"]) > file
+	printf("\tv_len         = %d\n", interp["v_len"]) > file
 	printf("\tnvalues       = %d\n", interp["nvalues"]) > file
 	printf("\tvalues        = %s", interp["values", 1]) > file
 	for(i = 2; i <= interp["nvalues"]; i++)
@@ -118,11 +155,8 @@ function IU_interpolate(interp, v,   idx, work, n_ary, ary, i) {
 				work = interp["values", interp["nvalues"]]
 				n_ary = split(work, ary, ":")
 				return ary[2]
-			}else{	
-				# TODO: do the actual interpolation
-				IU_interpolate_vec(interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
-				return interp["values", idx - 1]
-			}
+			}else	
+				return IU_interpolate_grad(interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
 		}else if(interp["v_ob_info"] == "^"){	# ^bgg*$, lower out of bounds specified, take higher ob from last grad element
 			if(idx == 1)
 				return interp["values", 1]
@@ -130,37 +164,43 @@ function IU_interpolate(interp, v,   idx, work, n_ary, ary, i) {
 				work = interp["values", interp["nvalues"]]
 				n_ary = split(work, ary, ":")
 				return ary[2]
-			}else{
-				# TODO: do the actual interpolation
-				return interp["values", idx]
-			}
+			}else
+				return IU_interpolate_grad(interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
 		}else if(interp["v_ob_info"] == "$"){	# ^gg*b$, upper out of bounds specified, take lower ob from first grad element
 			if(idx == 1){
 				work = interp["values", 1]
 				n_ary = split(work, ary, ":")
 				return ary[1]
-			}else if(idx == interp["nbreaks"] + 1){ 
+			}else if(idx == interp["nbreaks"] + 1)
 				return interp["values", idx - 1]
-			}else{
-				# TODO: do the actual interpolation
-				return interp["values", idx - 1]
-			}
+			else
+				return IU_interpolate_grad(interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
 		}else{	# ^bgg*b$, lower & upper ob info specified
 			if(idx == 1 || idx == interp["nbreaks"] + 1)
 				return interp["values", idx]
-			else{
-				# TODO: do the actual interpolation
-				return interp["values", idx]
-			}
+			else
+				return IU_interpolate_grad(interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
 		}
 		return v_type
 	}
 }
 
-function IU_interpolate_vec(vec, v, v_min, v_max) {
+function IU_interpolate_grad(grad, v, v_min, v_max,   n_ary, ary, n_ary2, ary2, i, g_min, g_max, f, rstr) {
 
-	printf("DEBUG: IU_interpolate_vec: vec = %s, v = %g, v_min = %g, v_max = %g\n", vec, v, v_min, v_max)
-	return ""
+	# grad is well formed or IU_init() would have failed
+	n_ary = split(grad, ary, ":")
+	n_ary2 = split(ary[1], ary2, ",")
+	for(i = 1; i <= n_ary2; i++)
+		g_min[i] = ary2[i] + 0	# force numeric
+	n_ary2 = split(ary[2], ary2, ",")
+	for(i = 1; i <= n_ary2; i++)
+		g_max[i] = ary2[i] + 0	# force numeric
+	f = (v - v_min) / (v_max - v_min)	# safe b/c IU_init() checked that v_max > v_min
+	rstr = ""
+	for(i = 1; i <= n_ary2; i++){
+		rstr = rstr ((i > 1) ? "," : "") sprintf("%g", g_min[i] + f * (g_max[i] - g_min[i]))
+	}
+	return rstr
 }
 
 function IU_search(interp, v,   i, j, k, cv) {
