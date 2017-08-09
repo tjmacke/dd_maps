@@ -66,7 +66,7 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, i
 	}else if(interp["nbreaks"] = interp["nvalues"] - 1){
 		printf("DEBUG: IU_init: nb = nv - 1: chk that we have v[1] = bin, v[2:$-1] = grad, v[$] = bin\n") > "/dev/stderr"
 		if(!match(v_pat, /^bgg*b$/)){
-			printf("ERROR: IU_init: nbreaks (%d) = nvalues - 1 (%d): all values but first and last must be gread\n", interp["nbreaks"], interp["nvalues"] - 1) > "/dev/stderr"
+			printf("ERROR: IU_init: nbreaks (%d) = nvalues - 1 (%d): all values but first and last must be grad\n", interp["nbreaks"], interp["nvalues"] - 1) > "/dev/stderr"
 			return 1
 		}
 		interp["v_ob_info"] = "^$"
