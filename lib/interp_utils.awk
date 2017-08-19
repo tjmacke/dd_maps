@@ -59,7 +59,7 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, i
 		interp["v_ob_info"] = ""
 	}else if(interp["nbreaks"] == interp["nvalues"]){
 		if(!match(v_pat, /^bgg*$/) && !match(v_pat, /^gg*b$/)){
-			printf("ERROR: IU_init: nbreaks (%d) = nvalues (%d): All but first or last, but not both  values must grad\n", inter["nbreaks"], interp["nvalues"]) > "/dev/stderr"
+			printf("ERROR: IU_init: nbreaks (%d) = nvalues (%d): All but first or last, but not both values must grad\n", interp["nbreaks"], interp["nvalues"]) > "/dev/stderr"
 			return 1
 		}
 		interp["v_ob_info"] = v_pat ~ /^b/ ? "^" : "$"
