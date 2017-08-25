@@ -39,7 +39,7 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, i
 		printf("ERROR: IU_init: no key named \"%s\" in config\n", k_values) > "/dev/stderr"
 		return 1
 	}
-	nv = n_ary = split(work, ary, "|")
+	nb = n_ary = split(work, ary, "|")
 	interp["nbreaks"] = n_ary
 	for(i = 1; i <= n_ary; i++){
 		sub(/^[ \t]*/, "", ary[i])
@@ -63,7 +63,7 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, i
 			return 1
 		}
 		interp["v_ob_info"] = v_pat ~ /^b/ ? "^" : "$"
-	}else if(interp["nbreaks"] = interp["nvalues"] - 1){
+	}else if(interp["nbreaks"] == interp["nvalues"] - 1){
 		printf("DEBUG: IU_init: nb = nv - 1: chk that we have v[1] = bin, v[2:$-1] = grad, v[$] = bin\n") > "/dev/stderr"
 		if(!match(v_pat, /^bgg*b$/)){
 			printf("ERROR: IU_init: nbreaks (%d) = nvalues - 1 (%d): all values but first and last must be grad\n", interp["nbreaks"], interp["nvalues"] - 1) > "/dev/stderr"
@@ -71,7 +71,7 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, i
 		}
 		interp["v_ob_info"] = "^$"
 	}else{
-		printf("ERROR: IU_init: nbreaks (%d) != nvalues +/- 1 (%d, %d, %d)\n", interp["nbreaks"], interp["nvalues"] - 1, interp["nvalues"], interp["nvalues"] + 1) > "/dev/stderr"
+		printf("ERROR: IU_init: bad nbreaks (%d), legal values are (%d, %d, %d)\n", interp["nbreaks"], interp["nvalues"] - 1, interp["nvalues"], interp["nvalues"] + 1) > "/dev/stderr"
 		return 1
 	}
 
