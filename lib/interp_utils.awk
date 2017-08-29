@@ -1,14 +1,15 @@
-function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, i, nv, v_pat, v_len) {
+function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len) {
 
 	interp["name"] = name
 
 	# get the values
-	work = config["_globals", k_values]
+	key = name "_values"
+	work = config["_globals", key]
 	if(work == ""){
-		printf("ERROR: IU_init: no key named \"%s\" in config\n", k_values) > "/dev/stderr"
+		printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
 		return 1
 	}
-	nv = n_ary = split(work, ary, "|")
+	n_ary = split(work, ary, "|")
 	interp["nvalues"] = n_ary
 	interp["is_grad"] = 0
 	interp["v_len"] = 0	# set only for grad elts
@@ -34,12 +35,13 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, i
 	}
 
 	# get the breaks
-	work = config["_globals", k_breaks]
+	key = name "_breaks"
+	work = config["_globals", key]
 	if(work == ""){
-		printf("ERROR: IU_init: no key named \"%s\" in config\n", k_values) > "/dev/stderr"
+		printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
 		return 1
 	}
-	nb = n_ary = split(work, ary, "|")
+	n_ary = split(work, ary, "|")
 	interp["nbreaks"] = n_ary
 	for(i = 1; i <= n_ary; i++){
 		sub(/^[ \t]*/, "", ary[i])
@@ -83,6 +85,14 @@ function IU_init(config, interp, name, k_values, k_breaks,   work, n_ary, ary, i
 		}
 	}
 
+	# check for any exceptions
+	key = name "_exceptions"
+	work = config["_globals", key]
+	if(work != ""){
+		if(IU_parse_exceptions(interp, work))
+			return 1
+	}
+
 	# init all counts to 0
 	for(i = 0; i <= interp["nbreaks"] + 1; i++)
 		interp["counts", i] = 0
@@ -112,6 +122,62 @@ function IU_check_grad(grad,   v_len, n_ary, ary, i, n_ary2, ary2, j) {
 	return v_len
 }
 
+function IU_parse_exceptions(interp, str,   err, n_ary, ary, i, colon, cond, op, opnd, value) {
+
+	err = 0
+	interp["exceptions"] = str
+	n_ary = split(str, ary, "|")
+	for(i = 1; i <= n_ary; i++){
+		sub(/^  */, "", ary[i])
+		sub(/  *$/, "", ary[i])
+	}
+	interp["nexceptions"] = n_ary
+	for(i = 1; i <= n_ary; i++){
+		colon = index(ary[i], ":")
+		if(colon == 0){
+			printf("ERROR: IU_parse_exception: no colon: %s\n", ary[i]) > "/dev/stderr"
+			return 1
+		}
+		cond = substr(ary[i], 1, colon - 1)
+		sub(/^  */, "", cond)
+		sub(/  *$/, "", cond)
+		if(cond == ""){
+			printf("ERROR: IU_parse_exception: empty condition: %s\n", ary[i]) > "/dev/stderr"
+			return 1
+		}
+		# op can be <=, <, ==, !=, >=, >
+		op = substr(cond, 1, 2)
+		if(op == "<=" || op == "==" || op == "!=" || op == ">="){
+			opnd = substr(cond, 3)
+		}else{
+			op = substr(op, 1, 1)
+			if(op == "<" || op == ">")
+				opnd = substr(cond, 2)
+			else{
+				printf("ERROR: IU_parse_exception: unknown operator \"%s\"\n", cond) > "/dev/stderr"
+				return 1
+			}
+		}
+		sub(/^  */, "", opnd)
+		sub(/  *$/, "", opnd)
+		if(cond == ""){
+			print("ERROR: IU_parse_exception: exception %d: %s: empty operand %s\n", i, ary[i]) > "/dev/stderr"
+			return 1
+		}
+
+		value = substr(ary[i], colon + 1)
+		sub(/^  */, "", value)
+		sub(/  *$/, "", value)
+		# TODO? value can be empty, is this OK?
+
+		interp["exceptions", i, "op"] = op 
+		interp["exceptions", i, "opnd"] = opnd + 0 # force numeric
+		interp["exceptions", i, "value"] = value
+		interp["ecount", i] = 0
+	}
+	return err
+}
+
 function IU_dump(file, interp,   i, keys, nk) {
 
 	printf("interp = {\n") > file
@@ -134,10 +200,29 @@ function IU_dump(file, interp,   i, keys, nk) {
 	for(i = 2; i <= interp["nbreaks"] + 1; i++)
 		printf(" | %d", interp["counts", i]) > file
 	printf("\n") > file
+	if(!("exceptions" in interp))
+		printf("\texceptions    =\n") > file
+	else{
+		printf("\texceptions    = %d {\n", interp["nexceptions"]) > file
+		for(i = 1; i <= interp["nexceptions"]; i++)
+			printf("\t\t%d = %s | %s | %s\n", i, interp["exceptions", i, "op"], interp["exceptions", i, "opnd"], interp["exceptions", i, "value"]) > file
+		printf("\t}\n") > file
+		printf("\tecounts       = %d", interp["ecounts", 1]) > file
+		for(i = 2; i <= interp["nexceptions"]; i++)
+			printf(" | %d", interp["ecounts", i]) > file
+		printf("\n") > file
+	}
+	
 	printf("}\n") > file
 }
 
-function IU_interpolate(interp, v,   idx, work, n_ary, ary, i) {
+function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
+
+	if("exceptions" in interp){
+		ev = IU_handle_exceptions(interp, v)
+		if(ev != "")
+			return ev
+	}
 
 	idx = IU_search(interp, v)
 	interp["tcounts"]++
@@ -181,8 +266,35 @@ function IU_interpolate(interp, v,   idx, work, n_ary, ary, i) {
 			else
 				return IU_interpolate_grad(interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
 		}
-		return v_type
 	}
+}
+
+function IU_handle_exceptions(interp, v,   i, hit) {
+
+	for(i = 1; i <= interp["nexceptions"]; i++){
+		hit = ""
+		if(interp["exceptions", i, "op"] == "<"){
+			if(v < interp["exceptions", i, "opnd"])
+				hit = "<"
+		}else if(interp["exceptions", i, "op"] == "<="){
+			if(v <= interp["exceptions", i, "opnd"])
+				hit = "<="
+		}else if(interp["exceptions", i, "op"] == "=="){
+			if(v == interp["exceptions", i, "opnd"])
+				hit = "=="
+		}else if(interp["exceptions", i, "op"] == "!="){
+			if(v != interp["exceptions", i, "opnd"])
+				hit = "!="
+		}else if(interp["exceptions", i, "op"] == ">="){
+			if(v >= interp["exceptions", i, "opnd"])
+				hit = ">="
+		}else if(v >= interp["exceptions", i, "opnd"])
+			hit = ">"
+		if(hit)
+			return interp["exceptions", i, "value"]
+	}
+
+	return ""
 }
 
 function IU_interpolate_grad(grad, v, v_min, v_max,   n_ary, ary, n_ary2, ary2, i, g_min, g_max, f, rstr) {

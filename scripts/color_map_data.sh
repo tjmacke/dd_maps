@@ -98,7 +98,7 @@ BEGIN {
  	}
 
 	if(("_globals", "color_values") in config){
-		if(IU_init(config, color, "color", "color_values", "color_breaks")){
+		if(IU_init(config, color, "color")){
 			err = 1;
 			exit err
 		}
@@ -107,7 +107,7 @@ BEGIN {
 		use_color = 0
 
 	if(("_globals", "size_values") in config){
-		if(IU_init(config, size, "size", "size_values", "size_breaks")){
+		if(IU_init(config, size, "size")){
 			err = 1
 			exit err
 		}

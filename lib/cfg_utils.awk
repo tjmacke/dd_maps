@@ -5,8 +5,27 @@ function CFG_read(cfile, config,    err, n_cflines, cfline, nf, ary, i, tkey) {
 		n_cflines++
 		if(substr(cfline, 1, 1) == "#")
 			continue;
-		# TODO: redo to split on the first eq sign
-		nf = split(cfline, ary, "=")
+
+#		# TODO: redo to split on the first eq sign
+#		nf = split(cfline, ary, "=")
+#		for(i = 1; i <= nf; i++){
+#			gsub(/^[\t  ]*/, "", ary[i])
+#			gsub(/[\t  ]*$/, "", ary[i])
+#		}
+#		if(ary[1] == "")
+#			continue
+#		if(substr(ary[1], 1, 1) == "#")
+#			continue
+
+		eq = index(cfline, "=")
+		if(eq == 0){
+			nf = 1
+			ary[1] = cfline
+		}else{
+			nf = 2
+			ary[1] = substr(cfline, 1, eq - 1)
+			ary[2] = substr(cfline, eq + 1)
+		}
 		for(i = 1; i <= nf; i++){
 			gsub(/^[\t  ]*/, "", ary[i])
 			gsub(/[\t  ]*$/, "", ary[i])
@@ -17,13 +36,13 @@ function CFG_read(cfile, config,    err, n_cflines, cfline, nf, ary, i, tkey) {
 			continue
 		if(nf == 1){
 			if(ary[1] != "}"){
-				printf("ERROR: line %7d: unrecognized stmt: %s\n", n_cflines, ary[1]) > "/dev/stderr"
+				printf("ERROR: CFG_read: line %7d: unrecognized stmt: %s\n", n_cflines, ary[1]) > "/dev/stderr"
 				err = 1
 				break
 			}
 			tkey = ""
 		}else if(nf > 2){
-			printf("ERROR: line %7d: too many fields: %d, expect 1 or 2\n", n_cflines, nf) > "/dev/stderr"
+			printf("ERROR: CFG_read: line %7d: too many fields: %d, expect 1 or 2\n", n_cflines, nf) > "/dev/stderr"
 			err = 1
 			break
 		}else if(ary[2] == "{"){
