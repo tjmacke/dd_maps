@@ -78,7 +78,10 @@ END {
 				first = 0
 			else
 				printf(",\n")
-			printf("\"%s\": \"%s\"", keys[i], values[i])
+#			printf("\"%s\": \"%s\"", keys[i], values[i])
+			printf("\"%s\": [")
+			printf("%s", keys[i], values[i])
+			printf("]"
 		}
 	}
 	for(p in ptab){
