@@ -36,36 +36,70 @@ awk '{
 		next
 	if($0 ~ /^[ \t]*$/)
 		next
-	n_clines++
-	clines[n_clines] = $0
+	n_lines++
+	lines[n_lines] = $0
 }
 END {
-	if(n_clines == 0){
-		printf("ERROR: config file contains only comments an blank lines\n") > "/dev/stderr"
+	if(n_lines == 0){
+		printf("ERROR: config file contains only comments and/or blank lines\n") > "/dev/stderr"
 		err = 1
 		exit err
 	}
 
-	printf("{\n")
-	for(i = 1; i <= n_clines; i++){
-		nf = split(clines[i], ary, "=")
-		key = trim(ary[1])
-		value = trim(ary[2])
-		nf2 = split(value, ary2, "|")
-		printf("  \"%s\": [", key)
-		for(j = 1; j <= nf2; j++){
-			v = trim(ary2[j])
-			if(index(v, ",") != 0)
-				printf("[%s]", v)
-			else if(v ~ /[A-Za-z]/)
-				printf("\"%s\"", v)
-			else
-				printf("%s", v)
-			printf("%s", j < nf2 ? "," : "")
+	n_ptab = 0
+	for(i = 1; i <= n_lines; i++){
+		eq = index(lines[i], "=")
+		if(eq == 0){
+			printf("ERROR: line %7d: not key = value\n") > "/dev/stderr"
+			err = 1
+			exit err
 		}
-		printf("]%s\n", i < n_clines ? "," : "")
+		keys[i] = trim(substr(lines[i], 1, eq - 1))
+		values[i] = trim(substr(lines[i], eq + 1))
+		dot = index(keys[i], ".")
+		if(dot != 0){
+			pfx = substr(keys[i], 1, dot - 1)
+		
+			if(!(pfx in ptab)){
+				n_ptab++
+				ptab[pfx] = 1
+			}
+			prefix[i] = pfx
+			keys[i] = substr(keys[i], dot + 1)
+		}else
+			prefix[i] = ""
 	}
-	printf("}\n")
+
+	first = 1
+	printf("{\n")
+	for(i = 1; i <= n_lines; i++){
+		if(prefix[i] == ""){
+			if(first)
+				first = 0
+			else
+				printf(",\n")
+			printf("\"%s\": \"%s\"", keys[i], values[i])
+		}
+	}
+	for(p in ptab){
+		if(first)
+			first = 0
+		else
+			printf(",\n")
+		printf("\"%s\" : {\n", p)
+		first_p = 1
+		for(i = 1; i <= n_lines; i++){
+			if(prefix[i] == p){
+				if(first_p)
+					first_p = 0
+				else
+					printf(",\n")
+				printf("\"%s\": \"%s\"", keys[i], values[i])
+			}
+		}
+		printf("\n}")
+	}
+	printf("\n}\n")
 
 	exit 0
 }

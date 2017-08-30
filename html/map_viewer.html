@@ -14,13 +14,13 @@
     #fileReader {float: left; width: 100%; height: 50%; }
     #dataStats { float: left; width: 100%; height 50%; font-size: 14px; border-top: 1px solid black; border-collapse: collapse; }
 
-    #colorScaleBox { float: left; width: 45%; height: 100%; border: 1px solid black; }
-    #colorInfo { float: left; width: 20%; height: 100%; }
-    #colorScale { float: right; width: 79%; height: 100%; }
+    #mainScaleBox { float: left; width: 45%; height: 100%; border: 1px solid black; }
+    #mainInfo { float: left; width: 20%; height: 100%; }
+    #mainScale { float: right; width: 79%; height: 100%; }
 
-    #sizeScaleBox { float: left; width: 29.5%; height: 100%; border: 1px solid black; }
-    #sizeInfo { float: left; width: 20%; height: 100%; }
-    #sizeScale { float: right; width: 80%; height: 100%; }
+    #auxScaleBox { float: left; width: 29.5%; height: 100%; border: 1px solid black; }
+    #auxInfo { float: left; width: 20%; height: 100%; }
+    #auxScale { float: right; width: 80%; height: 100%; }
 
     #map { position: absolute; width: 100%; height: 100%; top: 50px; border: 2px solid black; }
   </style>
@@ -35,18 +35,18 @@
 	Stats:
       </div>
     </div>
-    <div id="colorScaleBox">
-      <div id="colorInfo">
+    <div id="mainScaleBox">
+      <div id="mainInfo">
         Pin Color:
       </div>
-      <div id="colorScale">
+      <div id="mainScale">
       </div>
     </div>
-    <div id="sizeScaleBox">
-      <div id="sizeInfo">
+    <div id="auxScaleBox">
+      <div id="auxInfo">
         Pin Size:
       </div>
-      <div id="sizeScale">
+      <div id="auxScale">
       </div>
     </div>
   </div>
@@ -78,8 +78,8 @@
     // This code sets up  the map
     L.mapbox.accessToken = "pk.eyJ1IjoidGptYWNrZSIsImEiOiJjaWZlZndqMmw2dXdycnlseHllc3hhaWxhIn0.BdoeGKCUMnGifNEsnzoOfg";
     // various map types.  I've been using mapbox.streets since day, but high-contrast seems more useful for chloropleths
-    // var mapID = "mapbox.streets";
-    var mapID = "mapbox.high-contrast";
+    var mapID = "mapbox.streets";
+    // var mapID = "mapbox.high-contrast";
     // var mapID = "mapbox.light";
     var map = L.mapbox.map("map", mapID).setView([37.4377, -122.1603], 14);
     var myLayer = L.mapbox.featureLayer().addTo(map);
