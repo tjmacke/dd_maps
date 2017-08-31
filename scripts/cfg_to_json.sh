@@ -78,10 +78,9 @@ END {
 				first = 0
 			else
 				printf(",\n")
-#			printf("\"%s\": \"%s\"", keys[i], values[i])
-			printf("\"%s\": [")
-			printf("%s", keys[i], values[i])
-			printf("]"
+			printf("\"%s\": [", keys[i])
+			printf("%s", mk_json_value(values[i]))
+			printf("]")
 		}
 	}
 	for(p in ptab){
@@ -97,7 +96,9 @@ END {
 					first_p = 0
 				else
 					printf(",\n")
-				printf("\"%s\": \"%s\"", keys[i], values[i])
+				printf("\"%s\": [", keys[i])
+				printf("%s", mk_json_value(values[i]))
+				printf("]")
 			}
 		}
 		printf("\n}")
@@ -111,4 +112,20 @@ function trim(str,   work) {
 	sub(/^[ \t]*/, "", work)
 	sub(/[ \t]*$/, "", work)
 	return work
+}
+function mk_json_value(str,   nf, ary, f, v) {
+	
+	jval = ""
+	nf = split(str, ary, "|")
+	for(f = 1; f <= nf; f++){
+		v = trim(ary[f])
+		if(index(v, ",") != 0)
+			jval = jval sprintf("[%s]", v)
+		else if(v ~ /[A-Za-z]/)
+			jval = jval sprintf("\"%s\"", v)
+		else
+			jval = jval sprintf("%s", v)
+		jval = jval sprintf("%s", f < nf ? "," : "")
+	}
+	return jval
 }' $FILE

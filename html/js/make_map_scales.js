@@ -74,8 +74,8 @@ function makeMapScales(scaleData) {
   auxScaleProps.sp_tick_text_yoff = auxScaleProps.sp_tick_yoff + auxScaleProps.sp_tick_len + auxScaleProps.sp_xHeight;
 
   // properties that provide the scale data
-  auxScaleProps.sp_divId = "#aux";
-  aux.sp_svgId = "#svgAuxScale";
+  auxScaleProps.sp_divId = "#auxScale";
+  auxScaleProps.sp_svgId = "#svgAuxScale";
   // TODO: fix!
   auxScaleProps.sp_values = scaleData.size_values;
   var aux_sp_breaks = scaleData.size_breaks;
@@ -107,7 +107,7 @@ function makeMapScales(scaleData) {
     for(var i = 0; i < scaleData.size_stats.length; i++){
       aux_box_text.push(scaleData.size_values[i] + ", " + scaleData.size_stats[i][1] + "%"); 
     }
-    auxScaleProps.sp_box_text = size_box_text;
+    auxScaleProps.sp_box_text = aux_box_text;
   }
   auxScaleProps.sp_box_text_color = "black";
 
