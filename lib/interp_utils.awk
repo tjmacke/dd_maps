@@ -3,7 +3,7 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len
 	interp["name"] = name
 
 	# get the values
-	key = name "_values"
+	key = name ".values"
 	work = config["_globals", key]
 	if(work == ""){
 		printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
@@ -35,7 +35,7 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len
 	}
 
 	# get the breaks
-	key = name "_breaks"
+	key = name ".breaks"
 	work = config["_globals", key]
 	if(work == ""){
 		printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
@@ -86,7 +86,7 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len
 	}
 
 	# check for any exceptions
-	key = name "_exceptions"
+	key = name ".exceptions"
 	work = config["_globals", key]
 	if(work != ""){
 		if(IU_parse_exceptions(interp, work))

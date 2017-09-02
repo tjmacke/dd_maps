@@ -47,6 +47,9 @@ END {
 	}
 
 	n_ptab = 0
+	main_scale = ""
+	aux_scale = ""
+	n_keys = 0
 	for(i = 1; i <= n_lines; i++){
 		eq = index(lines[i], "=")
 		if(eq == 0){
@@ -54,25 +57,41 @@ END {
 			err = 1
 			exit err
 		}
-		keys[i] = trim(substr(lines[i], 1, eq - 1))
-		values[i] = trim(substr(lines[i], eq + 1))
-		dot = index(keys[i], ".")
+		key = trim(substr(lines[i], 1, eq - 1))
+		value = trim(substr(lines[i], eq + 1))
+		if(key == "main"){
+			main_scale = value
+			continue
+		}else if(key == "aux"){
+			aux_scale = value
+			continue
+		}
+		n_keys++
+		keys[n_keys] = key
+		values[n_keys] = value
+		dot = index(keys[n_keys], ".")
 		if(dot != 0){
-			pfx = substr(keys[i], 1, dot - 1)
+			pfx = substr(keys[n_keys], 1, dot - 1)
 		
 			if(!(pfx in ptab)){
 				n_ptab++
 				ptab[pfx] = 1
 			}
-			prefix[i] = pfx
-			keys[i] = substr(keys[i], dot + 1)
+			prefix[n_keys] = pfx
+			keys[n_keys] = substr(keys[n_keys], dot + 1)
 		}else
-			prefix[i] = ""
+			prefix[n_keys] = ""
 	}
+	# TODO: is this the right thing?
+	# if(main_scale == "" && aux_scale == ""){
+	#	printf("ERROR: END: neither the main or aux scale is set\n") > "/dev/stderr"
+	#	err = 1
+	#	exit err
+	# }
 
 	first = 1
 	printf("{\n")
-	for(i = 1; i <= n_lines; i++){
+	for(i = 1; i <= n_keys; i++){
 		if(prefix[i] == ""){
 			if(first)
 				first = 0
@@ -88,9 +107,15 @@ END {
 			first = 0
 		else
 			printf(",\n")
-		printf("\"%s\" : {\n", p)
+		if(p == main_scale)
+			key = "main"
+		else if(p == aux_scale)
+			key = "aux"
+		else
+			key = p
+		printf("\"%s\" : {\n", key)
 		first_p = 1
-		for(i = 1; i <= n_lines; i++){
+		for(i = 1; i <= n_keys; i++){
 			if(prefix[i] == p){
 				if(first_p)
 					first_p = 0
