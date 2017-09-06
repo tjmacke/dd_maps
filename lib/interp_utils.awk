@@ -2,6 +2,18 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len
 
 	interp["name"] = name
 
+	# get the scale type (linear (default) and  log10 so far
+	key = name ".scale_type"
+	work = config["_globals", key]
+	if(work == "")
+		interp["scale_type"] = "linear"
+	else if(work == "linear" || work == "log")
+		interp["scale_type"] = work
+	else{
+		print("ERROR: IU_init: unknown scale_type: %s\n", key) > "/dev/stderr"
+		return 1
+	}
+
 	# get the values
 	key = name ".values"
 	work = config["_globals", key]
@@ -173,7 +185,7 @@ function IU_parse_exceptions(interp, str,   err, n_ary, ary, i, colon, cond, op,
 		interp["exceptions", i, "op"] = op 
 		interp["exceptions", i, "opnd"] = opnd + 0 # force numeric
 		interp["exceptions", i, "value"] = value
-		interp["ecount", i] = 0
+		interp["ecounts", i] = 0
 	}
 	return err
 }
@@ -182,6 +194,7 @@ function IU_dump(file, interp,   i, keys, nk) {
 
 	printf("interp = {\n") > file
 	printf("\tname          = %s\n", interp["name"]) > file
+	printf("\tscale_type    = %s\n", interp["scale_type"]) > file
 	printf("\tis_grad       = %d\n", interp["is_grad"]) > file
 	printf("\tv_ob_info     = %s\n", interp["v_ob_info"]) > file
 	printf("\tv_len         = %d\n", interp["v_len"]) > file
@@ -290,8 +303,11 @@ function IU_handle_exceptions(interp, v,   i, hit) {
 				hit = ">="
 		}else if(v >= interp["exceptions", i, "opnd"])
 			hit = ">"
-		if(hit)
+		if(hit){
+			interp["ecounts", i]++
+			interp["tcounts"]++
 			return interp["exceptions", i, "value"]
+		}
 	}
 
 	return ""
