@@ -254,7 +254,7 @@ function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
 				n_ary = split(work, ary, ":")
 				return ary[2]
 			}else	
-				return IU_interpolate_grad(interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
+				return IU_interpolate_grad(interp, interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
 		}else if(interp["v_ob_info"] == "^"){	# ^bgg*$, lower out of bounds specified, take higher ob from last grad element
 			if(idx == 1)
 				return interp["values", 1]
@@ -263,7 +263,7 @@ function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
 				n_ary = split(work, ary, ":")
 				return ary[2]
 			}else
-				return IU_interpolate_grad(interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
+				return IU_interpolate_grad(interp, interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
 		}else if(interp["v_ob_info"] == "$"){	# ^gg*b$, upper out of bounds specified, take lower ob from first grad element
 			if(idx == 1){
 				work = interp["values", 1]
@@ -272,12 +272,12 @@ function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
 			}else if(idx == interp["nbreaks"] + 1)
 				return interp["values", idx - 1]
 			else
-				return IU_interpolate_grad(interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
+				return IU_interpolate_grad(interp, interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
 		}else{	# ^bgg*b$, lower & upper ob info specified
 			if(idx == 1 || idx == interp["nbreaks"] + 1)
 				return interp["values", idx]
 			else
-				return IU_interpolate_grad(interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
+				return IU_interpolate_grad(interp, interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
 		}
 	}
 }
@@ -313,7 +313,7 @@ function IU_handle_exceptions(interp, v,   i, hit) {
 	return ""
 }
 
-function IU_interpolate_grad(grad, v, v_min, v_max,   n_ary, ary, n_ary2, ary2, i, g_min, g_max, f, rstr) {
+function IU_interpolate_grad(interp, grad, v, v_min, v_max,   n_ary, ary, n_ary2, ary2, i, g_min, g_max, f, rstr) {
 
 	# grad is well formed or IU_init() would have failed
 	n_ary = split(grad, ary, ":")
@@ -323,6 +323,15 @@ function IU_interpolate_grad(grad, v, v_min, v_max,   n_ary, ary, n_ary2, ary2, 
 	n_ary2 = split(ary[2], ary2, ",")
 	for(i = 1; i <= n_ary2; i++)
 		g_max[i] = ary2[i] + 0	# force numeric
+
+	# other scales may be possible but for now
+	if(interp["scale_type"] == "log"){
+		log10 = log(10)
+		v = log(v)/log10
+		v_min = log(v_min)/log10
+		v_max = log(v_max)/log10
+	}
+
 	f = (v - v_min) / (v_max - v_min)	# safe b/c IU_init() checked that v_max > v_min
 	rstr = ""
 	for(i = 1; i <= n_ary2; i++){
