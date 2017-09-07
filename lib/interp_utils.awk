@@ -235,6 +235,9 @@ function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
 		ev = IU_handle_exceptions(interp, v)
 		if(ev != "")
 			return ev
+	}else if(interp["scale_type"] == "log"){
+		if(v <= 0)
+			return ""
 	}
 
 	idx = IU_search(interp, v)
