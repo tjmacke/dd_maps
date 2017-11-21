@@ -6,17 +6,6 @@ function CFG_read(cfile, config,    err, n_cflines, cfline, nf, ary, i, tkey) {
 		if(substr(cfline, 1, 1) == "#")
 			continue;
 
-#		# TODO: redo to split on the first eq sign
-#		nf = split(cfline, ary, "=")
-#		for(i = 1; i <= nf; i++){
-#			gsub(/^[\t  ]*/, "", ary[i])
-#			gsub(/[\t  ]*$/, "", ary[i])
-#		}
-#		if(ary[1] == "")
-#			continue
-#		if(substr(ary[1], 1, 1) == "#")
-#			continue
-
 		eq = index(cfline, "=")
 		if(eq == 0){
 			nf = 1
