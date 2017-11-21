@@ -31,9 +31,9 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len
 		if(index(ary[i], ":") != 0){
 			interp["is_grad"] = 1
 			v_pat = v_pat "g"
-			v_len = IU_check_grad(ary[i])
+			v_len = _IU_check_grad(ary[i])
 			if(v_len == 0){
-				printf("ERROR: IU_init: IU_check_grad failed for value %d (%s)\n", i, ary[i]) > "/dev/stderr"
+				printf("ERROR: IU_init: _IU_check_grad failed for value %d (%s)\n", i, ary[i]) > "/dev/stderr"
 				return 1
 			}else if(interp["v_len"] == 0){
 				interp["v_len"] = v_len
@@ -101,7 +101,7 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len
 	key = name ".exceptions"
 	work = config["_globals", key]
 	if(work != ""){
-		if(IU_parse_exceptions(interp, work))
+		if(_IU_parse_exceptions(interp, work))
 			return 1
 	}
 
@@ -113,81 +113,60 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len
 	return 0
 }
 
-function IU_check_grad(grad,   v_len, n_ary, ary, i, n_ary2, ary2, j) {
+function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
 
-	v_len = 0
-	n_ary = split(grad, ary, ":")
-	if(n_ary != 2){
-		printf("ERROR: IU_check_grad: grad %s has %d fields, must have %d\n", grad, n_ary, 2) > "/dev/stderr"
-		return 0
-	}
-	for(i = 1; i <= n_ary; i++){
-		n_ary2 = split(ary[i], ary2, ",")
-		if(v_len == 0)
-			v_len = n_ary2
-		else if(n_ary2 != v_len){
-			printf("ERROR: IU_check_grad: vector %s has %d elements, must have %d\n", ary[i], n_ary2, v_len) > "/dev/stderr"
-			return 0
-		}
+	if("exceptions" in interp){
+		ev = _IU_handle_exceptions(interp, v)
+		if(ev != "")
+			return ev
+	}else if(interp["scale_type"] == "log"){
+		if(v <= 0)
+			return ""
 	}
 
-	return v_len
-}
-
-function IU_parse_exceptions(interp, str,   err, n_ary, ary, i, colon, cond, op, opnd, value) {
-
-	err = 0
-	interp["exceptions"] = str
-	n_ary = split(str, ary, "|")
-	for(i = 1; i <= n_ary; i++){
-		sub(/^  */, "", ary[i])
-		sub(/  *$/, "", ary[i])
+	idx = _IU_search(interp, v)
+	interp["tcounts"]++
+	interp["counts", idx]++
+	if(!interp["is_grad"]){
+		return interp["values", idx]
+	}else{
+		# nbreaks = nvalues - 1
+		if(interp["v_ob_info"]  == ""){	# ^gg*$, take out of bounds values from first and last grad elemnt
+			if(idx == 1){
+				work = interp["values", 1]
+				n_ary = split(work, ary, ":")
+				return ary[1]
+			}else if(idx == interp["nbreaks"] + 1){
+				work = interp["values", interp["nvalues"]]
+				n_ary = split(work, ary, ":")
+				return ary[2]
+			}else	
+				return _IU_interpolate_grad(interp, interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
+		}else if(interp["v_ob_info"] == "^"){	# ^bgg*$, lower out of bounds specified, take higher ob from last grad element
+			if(idx == 1)
+				return interp["values", 1]
+			else if(idx == interp["nbreaks"] + 1){
+				work = interp["values", interp["nvalues"]]
+				n_ary = split(work, ary, ":")
+				return ary[2]
+			}else
+				return _IU_interpolate_grad(interp, interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
+		}else if(interp["v_ob_info"] == "$"){	# ^gg*b$, upper out of bounds specified, take lower ob from first grad element
+			if(idx == 1){
+				work = interp["values", 1]
+				n_ary = split(work, ary, ":")
+				return ary[1]
+			}else if(idx == interp["nbreaks"] + 1)
+				return interp["values", idx - 1]
+			else
+				return _IU_interpolate_grad(interp, interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
+		}else{	# ^bgg*b$, lower & upper ob info specified
+			if(idx == 1 || idx == interp["nbreaks"] + 1)
+				return interp["values", idx]
+			else
+				return _IU_interpolate_grad(interp, interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
+		}
 	}
-	interp["nexceptions"] = n_ary
-	for(i = 1; i <= n_ary; i++){
-		colon = index(ary[i], ":")
-		if(colon == 0){
-			printf("ERROR: IU_parse_exception: no colon: %s\n", ary[i]) > "/dev/stderr"
-			return 1
-		}
-		cond = substr(ary[i], 1, colon - 1)
-		sub(/^  */, "", cond)
-		sub(/  *$/, "", cond)
-		if(cond == ""){
-			printf("ERROR: IU_parse_exception: empty condition: %s\n", ary[i]) > "/dev/stderr"
-			return 1
-		}
-		# op can be <=, <, ==, !=, >=, >
-		op = substr(cond, 1, 2)
-		if(op == "<=" || op == "==" || op == "!=" || op == ">="){
-			opnd = substr(cond, 3)
-		}else{
-			op = substr(op, 1, 1)
-			if(op == "<" || op == ">")
-				opnd = substr(cond, 2)
-			else{
-				printf("ERROR: IU_parse_exception: unknown operator \"%s\"\n", cond) > "/dev/stderr"
-				return 1
-			}
-		}
-		sub(/^  */, "", opnd)
-		sub(/  *$/, "", opnd)
-		if(cond == ""){
-			print("ERROR: IU_parse_exception: exception %d: %s: empty operand %s\n", i, ary[i]) > "/dev/stderr"
-			return 1
-		}
-
-		value = substr(ary[i], colon + 1)
-		sub(/^  */, "", value)
-		sub(/  *$/, "", value)
-		# TODO? value can be empty, is this OK?
-
-		interp["exceptions", i, "op"] = op 
-		interp["exceptions", i, "opnd"] = opnd + 0 # force numeric
-		interp["exceptions", i, "value"] = value
-		interp["ecounts", i] = 0
-	}
-	return err
 }
 
 function IU_dump(file, interp,   i, keys, nk) {
@@ -229,63 +208,84 @@ function IU_dump(file, interp,   i, keys, nk) {
 	printf("}\n") > file
 }
 
-function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
+function _IU_check_grad(grad,   v_len, n_ary, ary, i, n_ary2, ary2, j) {
 
-	if("exceptions" in interp){
-		ev = IU_handle_exceptions(interp, v)
-		if(ev != "")
-			return ev
-	}else if(interp["scale_type"] == "log"){
-		if(v <= 0)
-			return ""
+	v_len = 0
+	n_ary = split(grad, ary, ":")
+	if(n_ary != 2){
+		printf("ERROR: _IU_check_grad: grad %s has %d fields, must have %d\n", grad, n_ary, 2) > "/dev/stderr"
+		return 0
 	}
-
-	idx = IU_search(interp, v)
-	interp["tcounts"]++
-	interp["counts", idx]++
-	if(!interp["is_grad"]){
-		return interp["values", idx]
-	}else{
-		# nbreaks = nvalues - 1
-		if(interp["v_ob_info"]  == ""){	# ^gg*$, take out of bounds values from first and last grad elemnt
-			if(idx == 1){
-				work = interp["values", 1]
-				n_ary = split(work, ary, ":")
-				return ary[1]
-			}else if(idx == interp["nbreaks"] + 1){
-				work = interp["values", interp["nvalues"]]
-				n_ary = split(work, ary, ":")
-				return ary[2]
-			}else	
-				return IU_interpolate_grad(interp, interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
-		}else if(interp["v_ob_info"] == "^"){	# ^bgg*$, lower out of bounds specified, take higher ob from last grad element
-			if(idx == 1)
-				return interp["values", 1]
-			else if(idx == interp["nbreaks"] + 1){
-				work = interp["values", interp["nvalues"]]
-				n_ary = split(work, ary, ":")
-				return ary[2]
-			}else
-				return IU_interpolate_grad(interp, interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
-		}else if(interp["v_ob_info"] == "$"){	# ^gg*b$, upper out of bounds specified, take lower ob from first grad element
-			if(idx == 1){
-				work = interp["values", 1]
-				n_ary = split(work, ary, ":")
-				return ary[1]
-			}else if(idx == interp["nbreaks"] + 1)
-				return interp["values", idx - 1]
-			else
-				return IU_interpolate_grad(interp, interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
-		}else{	# ^bgg*b$, lower & upper ob info specified
-			if(idx == 1 || idx == interp["nbreaks"] + 1)
-				return interp["values", idx]
-			else
-				return IU_interpolate_grad(interp, interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
+	for(i = 1; i <= n_ary; i++){
+		n_ary2 = split(ary[i], ary2, ",")
+		if(v_len == 0)
+			v_len = n_ary2
+		else if(n_ary2 != v_len){
+			printf("ERROR: _IU_check_grad: vector %s has %d elements, must have %d\n", ary[i], n_ary2, v_len) > "/dev/stderr"
+			return 0
 		}
 	}
+
+	return v_len
 }
 
-function IU_handle_exceptions(interp, v,   i, hit) {
+function _IU_parse_exceptions(interp, str,   err, n_ary, ary, i, colon, cond, op, opnd, value) {
+
+	err = 0
+	interp["exceptions"] = str
+	n_ary = split(str, ary, "|")
+	for(i = 1; i <= n_ary; i++){
+		sub(/^  */, "", ary[i])
+		sub(/  *$/, "", ary[i])
+	}
+	interp["nexceptions"] = n_ary
+	for(i = 1; i <= n_ary; i++){
+		colon = index(ary[i], ":")
+		if(colon == 0){
+			printf("ERROR: _IU_parse_exception: no colon: %s\n", ary[i]) > "/dev/stderr"
+			return 1
+		}
+		cond = substr(ary[i], 1, colon - 1)
+		sub(/^  */, "", cond)
+		sub(/  *$/, "", cond)
+		if(cond == ""){
+			printf("ERROR: _IU_parse_exception: empty condition: %s\n", ary[i]) > "/dev/stderr"
+			return 1
+		}
+		# op can be <=, <, ==, !=, >=, >
+		op = substr(cond, 1, 2)
+		if(op == "<=" || op == "==" || op == "!=" || op == ">="){
+			opnd = substr(cond, 3)
+		}else{
+			op = substr(op, 1, 1)
+			if(op == "<" || op == ">")
+				opnd = substr(cond, 2)
+			else{
+				printf("ERROR: _IU_parse_exception: unknown operator \"%s\"\n", cond) > "/dev/stderr"
+				return 1
+			}
+		}
+		sub(/^  */, "", opnd)
+		sub(/  *$/, "", opnd)
+		if(cond == ""){
+			print("ERROR: _IU_parse_exception: exception %d: %s: empty operand %s\n", i, ary[i]) > "/dev/stderr"
+			return 1
+		}
+
+		value = substr(ary[i], colon + 1)
+		sub(/^  */, "", value)
+		sub(/  *$/, "", value)
+		# TODO? value can be empty, is this OK?
+
+		interp["exceptions", i, "op"] = op 
+		interp["exceptions", i, "opnd"] = opnd + 0 # force numeric
+		interp["exceptions", i, "value"] = value
+		interp["ecounts", i] = 0
+	}
+	return err
+}
+
+function _IU_handle_exceptions(interp, v,   i, hit) {
 
 	for(i = 1; i <= interp["nexceptions"]; i++){
 		hit = ""
@@ -316,34 +316,7 @@ function IU_handle_exceptions(interp, v,   i, hit) {
 	return ""
 }
 
-function IU_interpolate_grad(interp, grad, v, v_min, v_max,   n_ary, ary, n_ary2, ary2, i, g_min, g_max, f, rstr) {
-
-	# grad is well formed or IU_init() would have failed
-	n_ary = split(grad, ary, ":")
-	n_ary2 = split(ary[1], ary2, ",")
-	for(i = 1; i <= n_ary2; i++)
-		g_min[i] = ary2[i] + 0	# force numeric
-	n_ary2 = split(ary[2], ary2, ",")
-	for(i = 1; i <= n_ary2; i++)
-		g_max[i] = ary2[i] + 0	# force numeric
-
-	# other scales may be possible but for now
-	if(interp["scale_type"] == "log"){
-		log10 = log(10)
-		v = log(v)/log10
-		v_min = log(v_min)/log10
-		v_max = log(v_max)/log10
-	}
-
-	f = (v - v_min) / (v_max - v_min)	# safe b/c IU_init() checked that v_max > v_min
-	rstr = ""
-	for(i = 1; i <= n_ary2; i++){
-		rstr = rstr ((i > 1) ? "," : "") sprintf("%g", g_min[i] + f * (g_max[i] - g_min[i]))
-	}
-	return rstr
-}
-
-function IU_search(interp, v,   i, j, k, cv) {
+function _IU_search(interp, v,   i, j, k, cv) {
 
 	# deal with out of range values here to simplify the binary interval search
 	if(v <= interp["breaks", 1])
@@ -369,4 +342,31 @@ function IU_search(interp, v,   i, j, k, cv) {
 	}
 	# should never get here!
 	return 0
+}
+
+function _IU_interpolate_grad(interp, grad, v, v_min, v_max,   n_ary, ary, n_ary2, ary2, i, g_min, g_max, f, rstr) {
+
+	# grad is well formed or IU_init() would have failed
+	n_ary = split(grad, ary, ":")
+	n_ary2 = split(ary[1], ary2, ",")
+	for(i = 1; i <= n_ary2; i++)
+		g_min[i] = ary2[i] + 0	# force numeric
+	n_ary2 = split(ary[2], ary2, ",")
+	for(i = 1; i <= n_ary2; i++)
+		g_max[i] = ary2[i] + 0	# force numeric
+
+	# other scales may be possible but for now
+	if(interp["scale_type"] == "log"){
+		log10 = log(10)
+		v = log(v)/log10
+		v_min = log(v_min)/log10
+		v_max = log(v_max)/log10
+	}
+
+	f = (v - v_min) / (v_max - v_min)	# safe b/c IU_init() checked that v_max > v_min
+	rstr = ""
+	for(i = 1; i <= n_ary2; i++){
+		rstr = rstr ((i > 1) ? "," : "") sprintf("%g", g_min[i] + f * (g_max[i] - g_min[i]))
+	}
+	return rstr
 }
