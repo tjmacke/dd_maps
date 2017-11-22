@@ -1,4 +1,4 @@
-function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len) {
+function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, parms) {
 
 	interp["name"] = name
 
@@ -28,22 +28,32 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len
 	for(i = 1; i <= n_ary; i++){
 		sub(/^[ \t]*/, "", ary[i])
 		sub(/[ \t]*$/, "", ary[i])
+		parms["grad"] = ary[i]
 		if(index(ary[i], ":") != 0){
 			interp["is_grad"] = 1
 			v_pat = v_pat "g"
-			v_len = _IU_check_grad(ary[i])
-			if(v_len == 0){
+			parms["v_len"] = 0
+			if(_IU_check_grad(config, parms)){
 				printf("ERROR: IU_init: _IU_check_grad failed for value %d (%s)\n", i, ary[i]) > "/dev/stderr"
 				return 1
 			}else if(interp["v_len"] == 0){
-				interp["v_len"] = v_len
-			}else if(v_len != interp["v_len"]){
-				printf("ERROR: IU_init: v_len (%d) for value %d (%s) differs from current v_len (%d)\n", v_len, i, ary[i], interp["v_len"]) > "/dev/stderr"
+				interp["v_len"] = parms["v_len"]
+			}else if(parms["v_len"] != interp["v_len"]){
+				printf("ERROR: IU_init: v_len (%d) for value %d (%s) differs from current v_len (%d)\n", parms["v_len"], i, ary[i], interp["v_len"]) > "/dev/stderr"
 				return 1
 			}
-		}else
+		}else{
+			if(substr(ary[i], 1, 1) == "$"){
+				work = config["_globals", substr(ary[i], 2)]
+				if(work == ""){
+					printf("ERROR: IU_init: macro %s not defined\n", ary[i]) > "/dev/stderr"
+					return 1
+				}else
+					parms["grad"] = work
+			}
 			v_pat = v_pat "b"
-		interp["values", i] = ary[i]
+		}
+		interp["values", i] = parms["grad"]
 	}
 
 	# get the breaks
@@ -101,7 +111,7 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, v_len
 	key = name ".exceptions"
 	work = config["_globals", key]
 	if(work != ""){
-		if(_IU_parse_exceptions(interp, work))
+		if(_IU_parse_exceptions(config, interp, work))
 			return 1
 	}
 
@@ -208,28 +218,38 @@ function IU_dump(file, interp,   i, keys, nk) {
 	printf("}\n") > file
 }
 
-function _IU_check_grad(grad,   v_len, n_ary, ary, i, n_ary2, ary2, j) {
+function _IU_check_grad(config, parms,    v_len, n_ary, ary, i, work, n_ary2, ary2, j, xgrad, xval) {
 
-	v_len = 0
-	n_ary = split(grad, ary, ":")
+	parms["v_len"] = 0
+	n_ary = split(parms["grad"], ary, ":")
 	if(n_ary != 2){
 		printf("ERROR: _IU_check_grad: grad %s has %d fields, must have %d\n", grad, n_ary, 2) > "/dev/stderr"
-		return 0
+		return 1
 	}
+	xgrad = ""
 	for(i = 1; i <= n_ary; i++){
 		n_ary2 = split(ary[i], ary2, ",")
-		if(v_len == 0)
-			v_len = n_ary2
-		else if(n_ary2 != v_len){
-			printf("ERROR: _IU_check_grad: vector %s has %d elements, must have %d\n", ary[i], n_ary2, v_len) > "/dev/stderr"
-			return 0
+		if(parms["v_len"] == 0)
+			parms["v_len"] = n_ary2
+		else if(n_ary2 != parms["v_len"]){
+			printf("ERROR: _IU_check_grad: vector %s has %d elements, must have %d\n", ary[i], n_ary2, parms["v_len"]) > "/dev/stderr"
+			return 1
+		}
+		if(substr(ary[i], 1, 1) == "$"){
+			xval = config["_globals", substr(ary[i], 2)]
+			if(xval == ""){
+				printf("ERROR: _IU_check_grad: macro %s is not defined\n", ary[i]) > "/dev/stderr"
+				return 1
+			}
+			xgrad = xgrad (i > 1 ? ":" : "") xval
 		}
 	}
+	parms["grad"] = xgrad
 
-	return v_len
+	return 0
 }
 
-function _IU_parse_exceptions(interp, str,   err, n_ary, ary, i, colon, cond, op, opnd, value) {
+function _IU_parse_exceptions(config, interp, str,   err, n_ary, ary, i, work, colon, cond, op, opnd, value, xvalue) {
 
 	err = 0
 	interp["exceptions"] = str
@@ -268,7 +288,7 @@ function _IU_parse_exceptions(interp, str,   err, n_ary, ary, i, colon, cond, op
 		sub(/^  */, "", opnd)
 		sub(/  *$/, "", opnd)
 		if(cond == ""){
-			print("ERROR: _IU_parse_exception: exception %d: %s: empty operand %s\n", i, ary[i]) > "/dev/stderr"
+			print("ERROR: _IU_parse_exception: exception %d: %s: empty operand\n", i, ary[i]) > "/dev/stderr"
 			return 1
 		}
 
@@ -276,6 +296,17 @@ function _IU_parse_exceptions(interp, str,   err, n_ary, ary, i, colon, cond, op
 		sub(/^  */, "", value)
 		sub(/  *$/, "", value)
 		# TODO? value can be empty, is this OK?
+		if(value == ""){
+			printf("ERROR: _IU_parse_exception: exception %d: %s: empty value\n", i, ary[i]) > "/dev/stderr"
+			return 1
+		}else if(substr(value, 1, 1) == "$"){
+			xvalue = config["_globals", substr(value, 2)]
+			if(xvalue == ""){
+				printf("ERROR: _IU_parse_exception: macro %s is not defined\n", value) > "/dev/stderr"
+				return 1
+			}
+			value = xvalue
+		}
 
 		interp["exceptions", i, "op"] = op 
 		interp["exceptions", i, "opnd"] = opnd + 0 # force numeric
