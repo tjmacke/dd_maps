@@ -9,9 +9,10 @@ CREATE TABLE addresses (
 	lat double NULL,
 	lng double NULL,
 -- Deal with address management
---	date_first_use text NULL,	-- If this DB is recreated, then this field should NOT NULL
+--	date_first_use text NOT NULL,
+--	date_last_use text NOT NULL,
 --	date_geo_set text NULL,
---	date_geo_checked text NULL,
+--	use_count integer NOT NULL,
 	PRIMARY KEY (address_id ASC)
 );
 

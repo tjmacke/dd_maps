@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -geo geocoder ] geo-dir"
+U_MSG="usage: $0 [ -help ] [ -geo geocoder ] [ -limit N ] geo-dir"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -24,6 +24,7 @@ rval=0
 NOW="$(date +%Y%m%dT%H%M%S)"
 
 GEO=
+LIMIT=
 GEO_DIR=
 
 while [ $# -gt 0 ] ; do
@@ -40,6 +41,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		GEO=$1
+		shift
+		;;
+	-limit)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-limit requires integer argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		LIMIT=$1
 		shift
 		;;
 	-*)
@@ -61,6 +72,10 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
+if [ ! -z "$LIMIT" ] ; then
+	LIMIT="LIMIT $LIMIT"
+fi
+
 # keep track of which geocoder we're using.  opencagedata.com (ocd) is still default
 if [ ! -z "$GEO" ] ; then
 	GC_NAME=$GEO
@@ -80,7 +95,7 @@ elif [ ! -d $GEO_DIR ] ; then
 	exit 1
 fi
 
-echo -e ".mode tabs\nPRAGMA foreign_keys = on ;\nSELECT * FROM addresses WHERE a_stat = 'G' AND as_reason = 'new' ;"	|\
+echo -e ".mode tabs\nPRAGMA foreign_keys = on ;\nSELECT * FROM addresses WHERE a_stat = 'G' AND as_reason = 'new' $LIMIT ;"	|\
 sqlite3 $DM_DB										|\
 awk -F'\t' 'BEGIN {
 	pr_hdr = 1
