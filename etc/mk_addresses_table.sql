@@ -8,11 +8,9 @@ CREATE TABLE addresses (
 	rply_address text NULL,
 	lat double NULL,
 	lng double NULL,
--- Deal with address management
---	date_first_use text NOT NULL,
---	date_last_use text NOT NULL,
---	date_geo_set text NULL,
---	use_count integer NOT NULL,
+	date_first_use text NOT NULL,
+	date_last_use text NOT NULL,
+	date_geo_set text NULL,
 	PRIMARY KEY (address_id ASC)
 );
 
