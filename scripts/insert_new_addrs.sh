@@ -173,11 +173,6 @@ while read line ; do
 		gsub(apos, apos apos, work)
 		return apos work apos
         }')"
-
-#tm echo "{"
-#tm echo -e "$ins_stmt"
-#tm echo "}"
-
 	if [ "$SKIP_DB" != "yes" ] ; then
 		sql_msg="$(echo -e "$ins_stmt" | sqlite3 $DM_DB 2>&1)"
 		if [ ! -z "$sql_msg" ] ; then
