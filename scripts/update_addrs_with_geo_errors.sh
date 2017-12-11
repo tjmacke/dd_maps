@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ addr-geo-error-file ]"
+U_MSG="usage: $0 [ -help ] [ -d YYYYMMDD ] [ addr-geo-error-file ]"
 
 if [ -z $DM_HOME ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -20,6 +20,7 @@ if [ ! -s $DM_DB ] ; then
 	exit 1
 fi
 
+DATE=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -27,6 +28,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-d)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-d requires date argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		DATE=$1
+		shift
 		;;
 	-*)
 		LOG ERROR "unknown option $1"
@@ -47,12 +58,29 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
+if [ -z "$FILE" ] ; then
+	if [ -z "$DATE" ] ; then
+		LOG ERROR "-d date must be specified when reading from stdin"
+		exit 1
+	fi
+else
+	f_DATE="$(echo $FILE |\
+	awk -F. '{ nf = split($2, ary, "T") ; if(length(ary[1]) != 8 || ary[1] !~ /^20[12][0-9]{5}$/){ printf("BAD date: %s\n", ary[1]) }else{ printf("%s\n", ary[1]) } }')"
+	if [[ $f_DATE == BAD* ]] ; then
+		LOG ERROR "$f_DATE"
+		exit 1
+	fi
+fi
+
+if [ -z "$DATE" ] ; then
+	DATE=$f_DATE
+elif [ "$DATE" != "$f_DATE" ] ; then
+	LOG ERROR "specified date, $DATE, does not match file date, $f_DATE"
+	exit 1
+fi
+
 grep '^ERROR' $FILE	|\
 awk -F: '{
-#	work = $4
-#	sub(/^ */, "", work)
-#	sub(/ *$/, "", work)
-#	print work
 	addr = $4
 	sub(/^ */, "", addr)
 	sub(/ *$/, "", addr)
@@ -70,11 +98,13 @@ while read line ; do
 	upd_stmt="$(echo "$line" |\
 	awk -F'\t' 'BEGIN {
 		apos = sprintf("%c", 39)
+		date = "'"$DATE"'"
+		date = sprintf("%s-%s-%s", substr(date, 1, 4), substr(date, 5, 2), substr(date, 7, 2))
 	}
 	{
 		printf(".log stderr\\n")
 		printf("PRAGMA foreign_keys = on ;\\n")
-		printf("UPDATE addresses SET a_stat = %s, as_reason = %s WHERE address = %s ;\n", esc_string("B"), esc_string($1), esc_string($2))
+		printf("UPDATE addresses SET a_stat = %s, as_reason = %s, date_geo_checked = %s WHERE address = %s ;\n", esc_string("B"), esc_string($1), esc_string(date), esc_string($2))
 	}
 	function esc_string(str,   work) {
 		work = str

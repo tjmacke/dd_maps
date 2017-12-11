@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -geo geocoder ] -at { src | dst } [ addr-geo-file ]"
+U_MSG="usage: $0 [ -help ] [ -geo geocoder ] [ -d YYYYMMDD ] -at { src | dst } [ addr-geo-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -21,6 +21,7 @@ if [ ! -s $DM_DB ] ; then
 fi
 
 GEO=
+DATE=
 ATYPE=
 FILE=
 
@@ -38,6 +39,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		GEO=$1
+		shift
+		;;
+	-d)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-d requires date argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		DATE=$1
 		shift
 		;;
 	-at)
@@ -84,10 +95,20 @@ if [ -z "$FILE" ] ; then
 		LOG ERROR "-geo geocoder must be specified when reading from stdin"
 		exit 1
 	fi
+	if [ -z "$DATE" ] ; then
+		LOG ERROR "-d YYYYMMDD must be specified when reading from stdin"
+		exit 1
+	fi
 else
 	f_GEO="$(echo $FILE | awk -F. '{ print $3 }')"
 	if [ "$f_GEO" != "ocd" ] && [ "$f_GEO" != "geo" ] ; then
 		LOG ERROR "input file uses unknown geocoder \"$f_GEO\", must be ocd or geo"
+		exit 1
+	fi
+	f_DATE="$(echo $FILE |\
+	awk -F. '{ nf = split($2, ary, "T") ; if(length(ary[1]) != 8 || ary[1] !~ /^20[12][0-9]{5}$/){ printf("BAD date: %s\n", ary[1]) }else{ printf("%s\n", ary[1]) } }')"
+	if [[ $f_DATE == BAD* ]] ; then
+		LOG ERROR "$f_DATE"
 		exit 1
 	fi
 fi
@@ -99,11 +120,20 @@ elif [ "$GEO" != "$f_GEO" ] ; then
 	exit 1
 fi
 
+if [ -z "$DATE" ] ; then
+	DATE=$f_DATE
+elif [ "$DATE" != "$f_DATE" ] ; then
+	LOG ERROR "specified date, $DATE, does not match file date, $f_DATE"
+	exit 1
+fi
+
 cat $FILE	|\
 while read line ; do
 	upd_stmt="$(echo "$line" |\
 	awk -F'\t' 'BEGIN {
 		geo = "'"$GEO"'"
+		date = "'"$DATE"'"
+		date = sprintf("%s-%s-%s", substr(date, 1, 4), substr(date, 5, 2), substr(date, 7, 2))
 		atype = "'"$ATYPE"'"
 		f_addr = atype == "src" ? 2 : 3
 		apos = sprintf("%c", 39)
@@ -112,8 +142,8 @@ while read line ; do
 		printf(".log stderr\\n")
 		printf("PRAGMA foreign_keys = on ;\\n")
 		# Status is geo.ok.$GEO, where $GEO is the name of the geocoder that was used to resolve the address.
-		printf("UPDATE addresses SET a_stat = %s, as_reason = %s, lng = %s, lat = %s, rply_address = %s WHERE address = %s ;\n", 
-			esc_string("G"), esc_string(sprintf("geo.ok.%s", geo)), $4, $5, esc_string($6), esc_string($f_addr))
+		printf("UPDATE addresses SET a_stat = %s, as_reason = %s, lng = %s, lat = %s, rply_address = %s, date_geo_checked = %s WHERE address = %s ;\n", 
+			esc_string("G"), esc_string(sprintf("geo.ok.%s", geo)), $4, $5, esc_string($6), esc_string(date), esc_string($f_addr))
 	}
 	function esc_string(str,   work) {
 		work = str

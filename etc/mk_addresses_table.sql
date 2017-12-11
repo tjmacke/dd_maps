@@ -10,7 +10,7 @@ CREATE TABLE addresses (
 	lng double NULL,
 	date_first_use text NOT NULL,
 	date_last_use text NOT NULL,
-	date_geo_set text NULL,
+	date_geo_checked text NULL,
 	PRIMARY KEY (address_id ASC)
 );
 
