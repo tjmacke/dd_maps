@@ -138,6 +138,9 @@ st_types_2qry = {
 	St        = Street
 	St.       = Street
 	Street    = Street
+	Ter       = Terrace
+	Ter.      = Terrace
+	Terrace   = Terrace
 	Way       = Way
 }
 

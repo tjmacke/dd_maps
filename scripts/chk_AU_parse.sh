@@ -141,7 +141,7 @@ BEGIN {
  	pa_options["no_name"] = "Residence"
  
  	pq_options["rply"] = 0
- 	pq_options["do_subs"] = 0
+ 	pq_options["do_subs"] = 1
  	pq_options["no_name"] = "Residence"
  
  	pr_options["rply"] = 1
