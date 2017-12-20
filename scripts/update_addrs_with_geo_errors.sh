@@ -5,7 +5,7 @@ export LC_ALL=C
 
 U_MSG="usage: $0 [ -help ] [ -d YYYYMMDD ] [ addr-geo-error-file ]"
 
-if [ -z $DM_HOME ] ; then
+if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
 	exit 1
 fi
