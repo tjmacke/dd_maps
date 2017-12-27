@@ -119,9 +119,9 @@ elif [ "$GTYPE" != "points" ] && [ "$GTYPE" != "lines" ] ; then
 	echo "$U_MSG" 1>&2
 	exit 1
 elif [ "$GTYPE" == "points" ] ; then
-	skeys="-k 4,4 -k 5,5"
+	skeys="-k 4g,4 -k 5g,5"
 else
-	skeys="-k 3,3 -k 9,9 -k 10,10"
+	skeys="-k 3,3 -k 9g,9 -k 10g,10"
 fi
 
 if [ ! -z "$PFILE" ] ; then
@@ -270,7 +270,6 @@ END {
 		}
 	}
 	printf("]\n")
-
 	printf("}\n")
 	printf("}\n")
 }'

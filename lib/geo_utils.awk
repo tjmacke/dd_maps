@@ -1,3 +1,20 @@
+function GU_pr_header(title, n_points) {
+
+	printf("{\n")
+	printf("\"geojson\": {\n")
+	printf("\"type\": \"FeatureCollection\",\n")
+	printf("\"metadata\": {\n")
+	printf("  \"generated\": \"%s\",\n", strftime("%Y%m%dT%H%M%S%Z"))
+	printf("  \"title\": \"%s\",\n", title)
+	printf("  \"count\": %d\n", n_points)
+	printf("},\n")
+	printf("\"features\": [\n")
+}
+function GU_pr_trailer() {
+	printf("]\n")
+	printf("}\n")
+	printf("}\n")
+}
 function GU_find_pgroups(start, count, longs, lats, pg_starts, pg_counts,   n_pgroups, l_geo, geo, i) {
 
 	n_pgroups = 1
