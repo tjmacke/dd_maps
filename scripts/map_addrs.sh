@@ -122,10 +122,12 @@ END {
 		}
 	}
 	# add any other features
-	while((getline line < flist) > 0){
-		printf("%s\n", line)
+	if(flist != ""){
+		while((getline line < flist) > 0){
+			printf("%s\n", line)
+		}
+		close(flist)
 	}
-	close(flist)
 	GU_pr_trailer()
 	exit 0
 }'
