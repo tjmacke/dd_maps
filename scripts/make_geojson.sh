@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -c conf-file -gt { points | lines } [ -p polygon-file ] [ -t title ] [ address-data-file ]"
+U_MSG="usage: $0 [ -help ] -c conf-file -gt { points | lines } [ -fl flist-list ] [ -t title ] [ address-data-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -35,7 +35,7 @@ PTMP_FILE=/tmp/polys.$$
 
 CFILE=
 GTYPE=
-PFILE=
+FLIST=
 TITLE=
 FILE=
 
@@ -65,14 +65,14 @@ while [ $# -gt 0 ] ; do
 		GTYPE=$1
 		shift
 		;;
-	-p)
+	-fl)
 		shift
 		if [ $# -eq 0 ] ; then
-			LOG ERROR "-p requries polygon-file argument"
+			LOG ERROR "-fl requries flist-json argument"
 			echo "$U_MSG" 1>&2
 			exit 1
 		fi
-		PFILE=$1
+		FLIST=$1
 		shift
 		;;
 	-t)
@@ -124,21 +124,12 @@ else
 	skeys="-k 3,3 -k 9g,9 -k 10g,10"
 fi
 
-if [ ! -z "$PFILE" ] ; then
-	$JU_BIN/json_get -g '{geojson}{features}[1:$]' $PFILE > $PTMP_FILE
-fi
-
 sort -t $'\t' $skeys $FILE |\
 $AWK -F'\t' '
 @include '"$GEO_UTILS"'
 BEGIN {
 	cfile = "'"$CFILE"'"
-	pfile = "'"$PTMP_FILE"'"
-	for(n_polys = 0; (getline < pfile) > 0; ){
-		n_polys++
-		polys[n_polys] = $0
-	}
-	close(pfile)
+	flist = "'"$FLIST"'"
 	title = "'"$TITLE"'"
 }
 {
@@ -186,21 +177,7 @@ END {
 	printf(",\n")
 	close(cfile)
 
-	# add the geojson
-	printf("\"geojson\": {\n")
-	printf("\"type\": \"FeatureCollection\",\n")
-	printf("\"metadata\": {\n")
-	printf("  \"generated\": \"%s\",\n", strftime("%Y%m%dT%H%M%S%z"))
-	if(title != "")
-		printf("  \"title\": \"%s\",\n", title)
-	printf("  \"count\": %d\n", n_points)
-	printf("},\n")
-	printf("\"features\": [\n")
-
-	# add any polygons
-	for(p = 1; p <= n_polys; p++)
-		printf("%s,\n", polys[p])
-
+	GU_pr_header("make_geojson", n_points);
 	if(n_fields == 5){
 		# code for points
 		# points have been sorted on geo so points w/same geo are consecutive
@@ -210,7 +187,7 @@ END {
 			for(j = 0; j < pg_counts[i]; j++){
 				s_idx = pg_starts[i] + j;
 				GU_mk_point("/dev/stdout",
-					colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], s_idx == n_points)
+					colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], ((s_idx == n_points) && !flist))
 			}
 		}
 	}else{
@@ -239,7 +216,7 @@ END {
 						d_idx = pg_starts[i] + j
 						GU_mk_point("/dev/stdout", colors_2[d_idx], styles_2[d_idx],
 							longs_2[d_idx] + long_adj[j+1], lats_2[d_idx] + lat_adj[j+1], titles_2[d_idx], 0)
-						GU_mk_line("/dev/stdout", longs[s_idx], lats[s_idx], longs_2[d_idx], lats_2[d_idx], d_idx == n_points)
+						GU_mk_line("/dev/stdout", longs[s_idx], lats[s_idx], longs_2[d_idx], lats_2[d_idx], ((d_idx == n_points) && !flist))
 					}
 				}
 				sg_start = p
@@ -265,13 +242,18 @@ END {
 				d_idx = pg_starts[i] + j;
 				GU_mk_point("/dev/stdout", colors_2[s_idx], styles_2[s_idx],
 					longs_2[d_idx] + long_adj[j+1], lats_2[d_idx] + lat_adj[j+1], titles_2[d_idx], 0)
-				GU_mk_line("/dev/stdout", longs[s_idx], lats[s_idx], longs_2[d_idx], lats_2[d_idx], d_idx == n_points)
+				GU_mk_line("/dev/stdout", longs[s_idx], lats[s_idx], longs_2[d_idx], lats_2[d_idx], ((d_idx == n_points) && !flist))
 			}
 		}
 	}
-	printf("]\n")
-	printf("}\n")
-	printf("}\n")
+	# add any other features
+	if(flist != ""){
+		while((getline < flist) > 0){
+			printf("%s\n", line)
+		}
+		close(flist)
+	}
+	GU_pr_trailer()
 }'
 
 rm -f $PTMP_FILE
