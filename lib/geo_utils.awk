@@ -1,3 +1,23 @@
+function GU_pi() {
+	return 4*atan2(1, 1)
+}
+function GU_d2r(d) {
+	return (d+0)*GU_pi()/180.0
+}
+function GU_r2d(r) {
+	return (r+0)*180.0/GU_pi()
+}
+function GU_is_righthanded(count, first, x, y,   area, p, x1, y1, x2, y2) {
+	area = 0
+	for(p = 0; p < p_count[poly]; p++){
+		x1 = x[p_first[poly] + p]
+		y1 = y[p_first[poly] + p]
+		x2 = x[p_first[poly] + p + 1]
+		y2 = y[p_first[poly] + p + 1]
+		area += GU_d2r(x2 - x1) * (2.0 + sin(GU_d2r(y1)) + sin(GU_d2r(y2)))
+	}
+	return area >= 0
+}
 function GU_pr_header(title, n_points) {
 
 	printf("{\n")
