@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -fl flist-json ] -at { src | dst } [ address-geo-file ]"
+U_MSG="usage: $0 [ -help ] [ -cf color-file ] [ -no_pg ] [ -fl flist-json ] -at { src | dst } [ address-geo-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -30,6 +30,8 @@ else
 	exit 1
 fi
 
+CFILE=
+PG="yes"
 FLIST=
 ATYPE=
 FILE=
@@ -39,6 +41,20 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-cf)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-cf requires color-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		CFILE=$1
+		shift
+		;;
+	-no_pg)
+		PG=
+		shift
 		;;
 	-fl)
 		shift
@@ -91,17 +107,34 @@ fi
 
 rval=0
 
-sort -t $'\t' -k 4g,4 -k 5g,5 $FILE	|\
+cat $FILE		|\
+if [ "$PG" == "yes" ] ; then
+	sort -t $'\t' -k 4g,4 -k 5g,5
+else
+	cat
+fi			|\
 $AWK -F'\t' '
 @include '"$GEO_UTILS"'
 BEGIN {
+	pg = "'"$PG"'" == "yes"
+	cfile = "'"$CFILE"'"
+	if(cfile != ""){
+		for(n_cf_colors = 0; (getline < cfile) > 0; ){
+			n_cf_colors++
+			cf_colors[n_cf_colors] = $0
+		}
+		close(cfile)
+	}
 	flist = "'"$FLIST"'"
 	atype = "'"$ATYPE"'"
 	f_addr = atype == "src" ? 2 : 3
 }
 {
 	n_points++
-	colors[n_points] = "#aae"
+	if(cfile == "")
+		colors[n_points] = "#aae"
+	else
+		colors[n_points] = cf_colors[n_points]
 	styles[n_points] = "\"marker-size\": \"small\""
 	titles[n_points] = $2
 	longs[n_points] = $4
@@ -111,14 +144,29 @@ END {
 	if(n_points == 0)
 		exit 0
 
+	if(cfile != ""){
+		if(n_cf_colors != n_points){
+			printf("ERROR: END: n_points (%d) and n_cf_colors (%d) differ\n", n_points, n_cf_colors) > "/dev/stderr"
+			err = 1
+			exit err
+		}
+	}
+
 	GU_pr_header("map_addrs", n_points)
+	if(pg){
 	n_pgroups = GU_find_pgroups(1, n_points, longs, lats, pg_starts, pg_counts)
-	for(i = 1; i <= n_pgroups; i++){
-		GU_geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
-		for(j = 0; j < pg_counts[i]; j++){
-			s_idx = pg_starts[i] + j
+		for(i = 1; i <= n_pgroups; i++){
+			GU_geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
+			for(j = 0; j < pg_counts[i]; j++){
+				s_idx = pg_starts[i] + j
+				GU_mk_point("/dev/stdout",
+					colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], ((s_idx == n_points) && !flist))
+			}
+		}
+	}else{
+		for(i = 1; i <= n_points; i++){
 			GU_mk_point("/dev/stdout",
-				colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], ((s_idx == n_points) && !flist))
+				colors[i], styles[i], longs[i], lats[i], titles[i], ((i == n_points) && !flist))
 		}
 	}
 	# add any other features

@@ -89,7 +89,7 @@ function GU_mk_point(file, color, style, long, lat, title, last,   h_color, h_st
  	printf("\"coordinates\": [%.5f, %.5f]", long, lat)				> file
  	printf("},\n")									> file
  	printf("  \"properties\": {\n")							> file
- 	printf("    \"title\": \"%s\",\n", title)					> file
+ 	printf("    \"title\": \"%s\",\n", GU_str_escape(title))			> file
 	if(h_color)
 		printf("    \"marker-color\": \"%s\"%s\n", color, h_style ? "," : "")	> file
 	if(h_style)
@@ -114,4 +114,12 @@ function GU_gc_dist(lng_1, lat_1, lng_2, lat_2,   R_EARTH, D2R, ph1_1, phi_2, de
 	a = sin(delta_phi/2.0) * sin(delta_phi/2.0) + cos(phi_1) * cos(phi_2) * sin(delta_lambda/2.0) * sin(delta_lambda/2.0)
 	c = 2 * atan2(sqrt(a), sqrt(1.0-a))
 	return R_EARTH * c
+}
+function GU_str_escape(str,   work) {
+
+	work = str
+	gsub(/\\/, "\\\\", work)
+	gsub(/\"/, "\\\"", work)
+	gsub(/\//, "\\/", work)
+	return work
 }
