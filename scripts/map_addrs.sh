@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -cf color-file ] [ -no_pg ] [ -fl flist-json ] -at { src | dst } [ address-geo-file ]"
+U_MSG="usage: $0 [ -help ] [ -cf color-file ] [ -sf style-file] [ -fl flist-json ] -at { src | dst } [ address-geo-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -31,7 +31,7 @@ else
 fi
 
 CFILE=
-PG="yes"
+SFILE=
 FLIST=
 ATYPE=
 FILE=
@@ -52,8 +52,14 @@ while [ $# -gt 0 ] ; do
 		CFILE=$1
 		shift
 		;;
-	-no_pg)
-		PG=
+	-sf)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-sf requires style-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		SFILE=$1
 		shift
 		;;
 	-fl)
@@ -107,36 +113,53 @@ fi
 
 rval=0
 
-cat $FILE		|\
-if [ "$PG" == "yes" ] ; then
-	sort -t $'\t' -k 4g,4 -k 5g,5
+# input:	6 fields:
+#	date	text-1	.	lng	lat	text-2
+#
+#	text-1 was originally the qry addr and text-2 the rply addr, but they're just text
+#
+# format required by sort is 5 fields:
+#	color	size	title	lng	lat
+#
+#	title = text-1, lng, lat are passed through, color & size can be taken from files,
+#	but default to "#aae" and ".", use mapbox's default marker-size
+
+cat $FILE	|\
+if [ ! -z "$CFILE" ] || [ ! -z "$SFILE" ] ; then
+	awk -F'\t' 'BEGIN {
+		cfile = "'"$CFILE"'"
+		if(cfile != ""){
+			for(n_ctab = 0; (getline < cfile) > 0; ){
+				n_ctab++
+				ctab[n_ctab] = $0
+			}
+			close(cfile)
+		}
+		sfile = "'"$SFILE"'"
+		if(sfile != ""){
+			for(n_stab = 0; (getline < sfile) > 0; ){
+				n_stab++
+				stab[n_stab] = $0
+			}
+			close(sfile)
+		}
+	}
+	{
+		printf("%s\t%s\t%s\t%s\t%s\n", NR <= n_ctab ? ctab[NR] : "#aae", NR <= n_stab ? stab[NR] : ".", $2, $4, $5)
+	}'
 else
-	cat
-fi			|\
+	awk -F'\t'	'{
+		printf("%s\t%s\t%s\t%s\t%s\n", "#aae", ".", $2, $4, $5)
+	}'
+fi				|\
+sort -t $'\t' -k 4g,4 -k 5g,5	|\
 $AWK -F'\t' '
 @include '"$GEO_UTILS"'
-BEGIN {
-	pg = "'"$PG"'" == "yes"
-	cfile = "'"$CFILE"'"
-	if(cfile != ""){
-		for(n_cf_colors = 0; (getline < cfile) > 0; ){
-			n_cf_colors++
-			cf_colors[n_cf_colors] = $0
-		}
-		close(cfile)
-	}
-	flist = "'"$FLIST"'"
-	atype = "'"$ATYPE"'"
-	f_addr = atype == "src" ? 2 : 3
-}
 {
 	n_points++
-	if(cfile == "")
-		colors[n_points] = "#aae"
-	else
-		colors[n_points] = cf_colors[n_points]
-	styles[n_points] = "\"marker-size\": \"small\""
-	titles[n_points] = $2
+	colors[n_points] = $1
+	styles[n_points] = $2
+	titles[n_points] = $3
 	longs[n_points] = $4
 	lats[n_points] = $5
 }
@@ -144,29 +167,14 @@ END {
 	if(n_points == 0)
 		exit 0
 
-	if(cfile != ""){
-		if(n_cf_colors != n_points){
-			printf("ERROR: END: n_points (%d) and n_cf_colors (%d) differ\n", n_points, n_cf_colors) > "/dev/stderr"
-			err = 1
-			exit err
-		}
-	}
-
 	GU_pr_header("map_addrs", n_points)
-	if(pg){
 	n_pgroups = GU_find_pgroups(1, n_points, longs, lats, pg_starts, pg_counts)
-		for(i = 1; i <= n_pgroups; i++){
-			GU_geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
-			for(j = 0; j < pg_counts[i]; j++){
-				s_idx = pg_starts[i] + j
-				GU_mk_point("/dev/stdout",
-					colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], ((s_idx == n_points) && !flist))
-			}
-		}
-	}else{
-		for(i = 1; i <= n_points; i++){
+	for(i = 1; i <= n_pgroups; i++){
+		GU_geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
+		for(j = 0; j < pg_counts[i]; j++){
+			s_idx = pg_starts[i] + j
 			GU_mk_point("/dev/stdout",
-				colors[i], styles[i], longs[i], lats[i], titles[i], ((i == n_points) && !flist))
+				colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], ((s_idx == n_points) && !flist))
 		}
 	}
 	# add any other features
