@@ -79,9 +79,9 @@ function GU_geo_adjust(long, lat, n, long_adj, lat_adj,   PI, RAD, i, a) {
 		}
 	}
 }
-function GU_mk_point(file, color, style, long, lat, title, last,   h_color, h_style) {
+function GU_mk_point(file, color, size, long, lat, title, last,   h_color, h_size) {
  	h_color = color != "."
-	h_style = style != "."
+	h_size = size != "."
  	printf("{\n")									> file
  	printf("  \"type\": \"Feature\",\n")						> file
  	printf("  \"geometry\": {")							> file
@@ -91,9 +91,9 @@ function GU_mk_point(file, color, style, long, lat, title, last,   h_color, h_st
  	printf("  \"properties\": {\n")							> file
  	printf("    \"title\": \"%s\",\n", GU_str_escape(title))			> file
 	if(h_color)
-		printf("    \"marker-color\": \"%s\"%s\n", color, h_style ? "," : "")	> file
-	if(h_style)
-		printf("    %s\n", style)						> file
+		printf("    \"marker-color\": \"%s\"%s\n", color, h_size ? "," : "")	> file
+	if(h_size)
+		printf("    %s\n", size)						> file
 	printf("  }\n")									> file
 	printf("}%s\n", !last ? "," : "")						> file
 }
