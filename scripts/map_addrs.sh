@@ -13,6 +13,9 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
+DEF_COLOR="#aae"
+DEF_SIZE="small"
+
 # TODO: fix this evil dependency
 JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
@@ -122,11 +125,14 @@ rval=0
 #	color	size	title	lng	lat
 #
 #	title = text-1, lng, lat are passed through, color & size can be taken from files,
-#	but default to "#aae" and ".", use mapbox's default marker-size
+#	but default to "#aae" and "small"
 
 cat $FILE	|\
 if [ ! -z "$CFILE" ] || [ ! -z "$SFILE" ] ; then
 	awk -F'\t' 'BEGIN {
+		def_color = "'"$DEF_COLOR"'"
+		def_size = "'"$DEF_SIZE"'"
+
 		cfile = "'"$CFILE"'"
 		if(cfile != ""){
 			for(n_ctab = 0; (getline < cfile) > 0; ){
@@ -145,11 +151,17 @@ if [ ! -z "$CFILE" ] || [ ! -z "$SFILE" ] ; then
 		}
 	}
 	{
-		printf("%s\t%s\t%s\t%s\t%s\n", NR <= n_ctab ? ctab[NR] : "#aae", NR <= n_stab ? stab[NR] : ".", $2, $4, $5)
+#		printf("%s\t%s\t%s\t%s\t%s\n", NR <= n_ctab ? ctab[NR] : def_color, NR <= n_stab ? stab[NR] : def_size, $2, $4, $5)
+		printf("%s\t%s\t%s\t%s\t%s\n", NR <= n_ctab ? ctab[NR] : def_color, NR <= n_stab ? stab[NR] : def_size, $2, $4, $5)
 	}'
 else
-	awk -F'\t'	'{
-		printf("%s\t%s\t%s\t%s\t%s\n", "#aae", ".", $2, $4, $5)
+	awk -F'\t'	'BEGIN {
+		def_color = "'"$DEF_COLOR"'"
+		def_size = "'"$DEF_SIZE"'"
+	}
+	{
+#		printf("%s\t%s\t%s\t%s\t%s\n", "#aae", ".", $2, $4, $5)
+		printf("%s\t%s\t%s\t%s\t%s\n", def_color, def_size, $2, $4, $5)
 	}'
 fi				|\
 sort -t $'\t' -k 4g,4 -k 5g,5	|\

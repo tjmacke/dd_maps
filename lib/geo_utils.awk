@@ -93,7 +93,7 @@ function GU_mk_point(file, color, size, long, lat, title, last,   h_color, h_siz
 	if(h_color)
 		printf("    \"marker-color\": \"%s\"%s\n", color, h_size ? "," : "")	> file
 	if(h_size)
-		printf("    %s\n", size)						> file
+		printf("    \"marker-size\": \"%s\"\n", size)				> file
 	printf("  }\n")									> file
 	printf("}%s\n", !last ? "," : "")						> file
 }
