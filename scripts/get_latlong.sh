@@ -103,8 +103,14 @@ if [ -z "$E_ADDR" ] ; then
 	exit 1
 fi
 
-# default geocoder is opencagedata.com, symbol "ocd"
-if [ -z "$GEO" ] ; then
+# default geocoder is geocod.io, symbol "geo"
+if [ -z "$GEO" ] || [ $GEO == "geo" ] ; then
+	KEY=$(cat ~/etc/geocodio.key)
+	PARMS="q=$E_ADDR&api_key=$KEY"
+	curl -s -S https://api.geocod.io/v1/geocode?"$PARMS"	|\
+	$TEE							|\
+	$JU_BIN/json_get -g '{results}[1]{accuracy_type, formatted_address, location}{lat, lng}'
+elif [ "$GEO" == "ocd" ] ; then
 	KEY=$(cat ~/etc/opencagedata.key)
 	PARMS="query=$E_ADDR&key=$KEY"
 	if [ ! -z "$LIMIT" ] ; then
@@ -114,12 +120,6 @@ if [ -z "$GEO" ] ; then
 	$TEE									|\
 	$JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'	|\
 	sort -k 1rn,1
-elif [ "$GEO" == "geo" ] ; then
-	KEY=$(cat ~/etc/geocodio.key)
-	PARMS="q=$E_ADDR&api_key=$KEY"
-	curl -s -S https://api.geocod.io/v1/geocode?"$PARMS"	|\
-	$TEE							|\
-	$JU_BIN/json_get -g '{results}[1]{accuracy_type, formatted_address, location}{lat, lng}'
 elif [ "$GEO" == "liq" ] ; then
 	# TODO:
 	# Add &addressdetails=1 to parms to get an address obj that can be used to produce a simpler address?

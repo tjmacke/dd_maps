@@ -76,12 +76,12 @@ if [ ! -z "$LIMIT" ] ; then
 	LIMIT="LIMIT $LIMIT"
 fi
 
-# keep track of which geocoder we're using.  opencagedata.com (ocd) is still default
+# keep track of which geocoder we're using.  geocod.io (geo) is still default
 if [ ! -z "$GEO" ] ; then
 	GC_NAME=$GEO
 	GEO="-geo $GEO"		# set flag for add_geo_to_addrs.sh
 else
-	GC_NAME="ocd"
+	GC_NAME="geo"
 fi
 GEO_TSV_FNAME=addrs.$NOW.$GC_NAME.tsv
 GEO_ERR_FNAME=addrs.$NOW.$GC_NAME.err
