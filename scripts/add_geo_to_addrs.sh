@@ -198,7 +198,7 @@ while read line ; do
 
 			pr_options["rply"] = 1
 			# TODO: this will need to be generalized!
-			pr_options["us_only"] = geo == "geo"
+			pr_options["us_only"] = geo == "" || geo == "geo"
 			pr_options["do_subs"] = 1
 			pr_options["no_name"] = ""
 		}

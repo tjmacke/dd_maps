@@ -104,7 +104,7 @@ if [ -z "$E_ADDR" ] ; then
 fi
 
 # default geocoder is geocod.io, symbol "geo"
-if [ -z "$GEO" ] || [ $GEO == "geo" ] ; then
+if [ -z "$GEO" ] || [ "$GEO" == "geo" ] ; then
 	KEY=$(cat ~/etc/geocodio.key)
 	PARMS="q=$E_ADDR&api_key=$KEY"
 	curl -s -S https://api.geocod.io/v1/geocode?"$PARMS"	|\
