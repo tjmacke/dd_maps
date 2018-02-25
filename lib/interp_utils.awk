@@ -7,7 +7,7 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, parms
 	work = config["_globals", key]
 	if(work == "")
 		interp["scale_type"] = "linear"
-	else if(work == "linear" || work == "log")
+	else if(work == "linear" || work == "log" || work == "factor")
 		interp["scale_type"] = work
 	else{
 		print("ERROR: IU_init: unknown scale_type: %s\n", key) > "/dev/stderr"
@@ -56,21 +56,57 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, parms
 		interp["values", i] = parms["grad"]
 	}
 
-	# get the breaks
-	key = name ".breaks"
-	work = config["_globals", key]
-	if(work == ""){
-		printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
-		return 1
+	# get the breaks for log/linear or keys for factor
+	if(interp["scale_type"] == "linear" || interp["scale_type"] == "log"){
+		key = name ".breaks"
+		work = config["_globals", key]
+		if(work == ""){
+			printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
+			return 1
+		}
+		n_ary = split(work, ary, "|")
+		interp["nbreaks"] = n_ary
+		for(i = 1; i <= n_ary; i++){
+			sub(/^[ \t]*/, "", ary[i])
+			sub(/[ \t]*$/, "", ary[i])
+			interp["breaks", i] = ary[i] + 0	# force numeric
+		}
+	}else{
+		key = name ".keys"
+		work = config["_globals", key]
+		if(work == ""){
+			printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
+			return 1
+		}
+		n_ary = split(work, ary, "|")
+		interp["nkeys"] = n_ary
+		for(i = 1; i <= n_ary; i++){
+			sub(/^[ \t]*/, "", ary[i])
+			sub(/[ \t]*$/, "", ary[i])
+			interp["k2v", ary[i]] = interp["values", i]	# leave as string
+			interp["keys", i] = ary[i]
+		}
+		# get the default color for values do not match any key
+		key = name ".default"
+		work = config["_globals", key]
+		if(work == ""){
+			printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
+			return 1
+		}else if(substr(work, 1, 1) == "$"){
+			work = config["_globals", substr(work, 2)]
+			if(work == ""){
+				printf("ERROR: IU_init: macro $%s not defined\n", work) > "/dev/stderr"
+				return 1
+			}
+		}
+		interp["default"] = work
 	}
-	n_ary = split(work, ary, "|")
-	interp["nbreaks"] = n_ary
-	for(i = 1; i <= n_ary; i++){
-		sub(/^[ \t]*/, "", ary[i])
-		sub(/[ \t]*$/, "", ary[i])
-		interp["breaks", i] = ary[i] + 0	# force numeric
-	}
-	if(!interp["is_grad"]){
+	if(interp["scale_type"] == "factor"){
+		if(interp["nkeys"] != interp["nvalues"]){
+			printf("ERROR: IU_init: nkeys (%d) != nvalues (%d)\n", interp["nkeys"], interp["nvalues"]) > "/dev/stderr"
+			return 1
+		}
+	}else if(!interp["is_grad"]){
 		if(interp["nbreaks"] != interp["nvalues"] - 1){
 			printf("ERROR: IU_init: nbreaks (%d) != nvalues - 1 (%d)\n", interp["nbreaks"], interp["nvalues"] - 1) > "/dev/stderr"
 			return 1
@@ -99,42 +135,61 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, parms
 		return 1
 	}
 
-	# check that breaks are strictly ascending, insures interp denoms are > 0
-	for(i = 2; i <= interp["nbreaks"]; i++){
-		if(interp["breaks", i] <= interp["breaks", i-1]){
-			printf("ERROR: IU_init: breaks must be strictly ascending: breaks[%d] (%g) <= breaks[%d] (%g)\n", i-1, interp["breaks", i-1], i, interp["breaks", i]) > "/dev/stderr"
-			return 1
-		}
-	}
-
-	# check for any exceptions
-	key = name ".exceptions"
-	work = config["_globals", key]
-	if(work != ""){
-		if(_IU_parse_exceptions(config, interp, work))
-			return 1
-	}
-
-	# init all counts to 0
-	for(i = 0; i <= interp["nbreaks"] + 1; i++)
-		interp["counts", i] = 0
 	interp["tcounts"] = 0
+	if(interp["scale_type"] == "factor"){
+		# init all counts to 0
+		for(i = 0; i <= interp["nkeys"] + 1; i++)
+			interp["counts", interp["keys", i]] = 0
+		interp["counts", interp["default"]] = 0
+	}else{
+		# check that breaks are strictly ascending, insures interp denoms are > 0
+		for(i = 2; i <= interp["nbreaks"]; i++){
+			if(interp["breaks", i] <= interp["breaks", i-1]){
+				printf("ERROR: IU_init: breaks must be strictly ascending: breaks[%d] (%g) <= breaks[%d] (%g)\n", i-1, interp["breaks", i-1], i, interp["breaks", i]) > "/dev/stderr"
+				return 1
+			}
+		}
+
+		# check for any exceptions
+		key = name ".exceptions"
+		work = config["_globals", key]
+		if(work != ""){
+			if(_IU_parse_exceptions(config, interp, work))
+				return 1
+		}
+
+		# init all counts to 0
+		for(i = 0; i <= interp["nbreaks"] + 1; i++)
+			interp["counts", i] = 0
+	}
 
 	return 0
 }
 
-function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
+function IU_interpolate(interp, v,   vn, ev, idx, work, n_ary, ary, i) {
 
+	# handle factors first and then return
+	if(interp["scale_type"] == "factor"){
+		ev = interp["k2v", v]
+		if(ev == "")
+			ev = interp["default"]
+		interp["tcounts"]++
+		interp["counts", ev]++
+		return ev
+	}
+
+	# numeric interpolation
+	vn = v + 0	# force number
 	if("exceptions" in interp){
-		ev = _IU_handle_exceptions(interp, v)
+		ev = _IU_handle_exceptions(interp, vn)
 		if(ev != "")
 			return ev
 	}else if(interp["scale_type"] == "log"){
-		if(v <= 0)
+		if(vn <= 0)
 			return ""
 	}
 
-	idx = _IU_search(interp, v)
+	idx = _IU_search(interp, vn)
 	interp["tcounts"]++
 	interp["counts", idx]++
 	if(!interp["is_grad"]){
@@ -151,7 +206,7 @@ function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
 				n_ary = split(work, ary, ":")
 				return ary[2]
 			}else	
-				return _IU_interpolate_grad(interp, interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
+				return _IU_interpolate_grad(interp, interp["values", idx - 1], vn, interp["breaks", idx - 1], interp["breaks", idx])
 		}else if(interp["v_ob_info"] == "^"){	# ^bgg*$, lower out of bounds specified, take higher ob from last grad element
 			if(idx == 1)
 				return interp["values", 1]
@@ -160,7 +215,7 @@ function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
 				n_ary = split(work, ary, ":")
 				return ary[2]
 			}else
-				return _IU_interpolate_grad(interp, interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
+				return _IU_interpolate_grad(interp, interp["values", idx], vn, interp["breaks", idx], interp["breaks", idx + 1])
 		}else if(interp["v_ob_info"] == "$"){	# ^gg*b$, upper out of bounds specified, take lower ob from first grad element
 			if(idx == 1){
 				work = interp["values", 1]
@@ -169,12 +224,12 @@ function IU_interpolate(interp, v,   ev, idx, work, n_ary, ary, i) {
 			}else if(idx == interp["nbreaks"] + 1)
 				return interp["values", idx - 1]
 			else
-				return _IU_interpolate_grad(interp, interp["values", idx - 1], v, interp["breaks", idx - 1], interp["breaks", idx])
+				return _IU_interpolate_grad(interp, interp["values", idx - 1], vn, interp["breaks", idx - 1], interp["breaks", idx])
 		}else{	# ^bgg*b$, lower & upper ob info specified
 			if(idx == 1 || idx == interp["nbreaks"] + 1)
 				return interp["values", idx]
 			else
-				return _IU_interpolate_grad(interp, interp["values", idx], v, interp["breaks", idx], interp["breaks", idx + 1])
+				return _IU_interpolate_grad(interp, interp["values", idx], vn, interp["breaks", idx], interp["breaks", idx + 1])
 		}
 	}
 }
@@ -184,37 +239,53 @@ function IU_dump(file, interp,   i, keys, nk) {
 	printf("interp = {\n") > file
 	printf("\tname          = %s\n", interp["name"]) > file
 	printf("\tscale_type    = %s\n", interp["scale_type"]) > file
-	printf("\tis_grad       = %d\n", interp["is_grad"]) > file
-	printf("\tv_ob_info     = %s\n", interp["v_ob_info"]) > file
-	printf("\tv_len         = %d\n", interp["v_len"]) > file
+	if(interp["scale_type"] != "factor"){
+		printf("\tis_grad       = %d\n", interp["is_grad"]) > file
+		printf("\tv_ob_info     = %s\n", interp["v_ob_info"]) > file
+		printf("\tv_len         = %d\n", interp["v_len"]) > file
+	}
 	printf("\tnvalues       = %d\n", interp["nvalues"]) > file
 	printf("\tvalues        = %s", interp["values", 1]) > file
 	for(i = 2; i <= interp["nvalues"]; i++)
 		printf(" | %s", interp["values", i]) > file
 	printf("\n") > file
-	printf("\tnbreaks       = %d\n", interp["nbreaks"]) > file
-	printf("\tbreaks        = %s", interp["breaks", 1]) > file
-	for(i = 2; i <= interp["nbreaks"]; i++)
-		printf(" | %s", interp["breaks", i]) > file
-	printf("\n") > file
-	printf("\ttcounts       = %d\n", interp["tcounts"]) > file
-	printf("\tcounts        = %d", interp["counts", 1]) > file
-	for(i = 2; i <= interp["nbreaks"] + 1; i++)
-		printf(" | %d", interp["counts", i]) > file
-	printf("\n") > file
-	if(!("exceptions" in interp))
-		printf("\texceptions    =\n") > file
-	else{
-		printf("\texceptions    = %d {\n", interp["nexceptions"]) > file
-		for(i = 1; i <= interp["nexceptions"]; i++)
-			printf("\t\t%d = %s | %s | %s\n", i, interp["exceptions", i, "op"], interp["exceptions", i, "opnd"], interp["exceptions", i, "value"]) > file
-		printf("\t}\n") > file
-		printf("\tecounts       = %d", interp["ecounts", 1]) > file
-		for(i = 2; i <= interp["nexceptions"]; i++)
-			printf(" | %d", interp["ecounts", i]) > file
+	if(interp["scale_type"] == "factor"){
+		printf("\tnkeys         = %d\n", interp["nkeys"]) > file
+		printf("\tkeys          = %s", interp["keys", 1]) > file
+		for(i = 2; i <= interp["nkeys"]; i++)
+			printf(" | %s", interp["keys", i]) > file
 		printf("\n") > file
+		printf("\tdefault       = %s\n", interp["default"]) > file
+		printf("\ttcounts       = %d\n", interp["tcounts"]) > file
+		printf("\tcounts        = %d", interp["counts", interp["keys", 1]]) > file
+		for(i = 2; i <= interp["nkeys"] + 1; i++)
+			printf(" | %d", interp["counts", interp["keys", i]]) > file
+		printf(" | %d", interp["counts", interp["default"]]) > file
+		printf("\n") > file
+	}else{
+		printf("\tnbreaks       = %d\n", interp["nbreaks"]) > file
+		printf("\tbreaks        = %s", interp["breaks", 1]) > file
+		for(i = 2; i <= interp["nbreaks"]; i++)
+			printf(" | %s", interp["breaks", i]) > file
+		printf("\n") > file
+		printf("\ttcounts       = %d\n", interp["tcounts"]) > file
+		printf("\tcounts        = %d", interp["counts", 1]) > file
+		for(i = 2; i <= interp["nbreaks"] + 1; i++)
+			printf(" | %d", interp["counts", i]) > file
+		printf("\n") > file
+		if(!("exceptions" in interp))
+			printf("\texceptions    =\n") > file
+		else{
+			printf("\texceptions    = %d {\n", interp["nexceptions"]) > file
+			for(i = 1; i <= interp["nexceptions"]; i++)
+				printf("\t\t%d = %s | %s | %s\n", i, interp["exceptions", i, "op"], interp["exceptions", i, "opnd"], interp["exceptions", i, "value"]) > file
+			printf("\t}\n") > file
+			printf("\tecounts       = %d", interp["ecounts", 1]) > file
+			for(i = 2; i <= interp["nexceptions"]; i++)
+				printf(" | %d", interp["ecounts", i]) > file
+			printf("\n") > file
+		}
 	}
-	
 	printf("}\n") > file
 }
 

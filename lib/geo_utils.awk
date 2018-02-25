@@ -18,9 +18,16 @@ function GU_is_righthanded(count, first, x, y,   area, p, x1, y1, x2, y2) {
 	}
 	return area >= 0
 }
-function GU_pr_header(title, n_points) {
+function GU_pr_header(title, sc_cfg, n_points) {
 
 	printf("{\n")
+	if(sc_cfg != ""){
+		printf("\"config\": ")
+		for( ; (getline sc_line < sc_cfg) > 0; )
+			printf("%s\n", sc_line)
+		printf(",\n")
+		close(sc_cfg)
+	}
 	printf("\"geojson\": {\n")
 	printf("\"type\": \"FeatureCollection\",\n")
 	printf("\"metadata\": {\n")

@@ -46,11 +46,9 @@ function makeMapScales(scaleData) {
     mainScaleProps.sp_fill_boxes_func = function(d, i) {
       return "rgb(" + Math.round(d[0]*255) + "," + Math.round(d[1]*255) + "," + Math.round(d[2]*255) + ")";	// DIFF!
     };
-    if(!("stats" in msp)) {
-      mainScaleProps.sp_box_text = null;									// DIFF!
-    } else {
+    if("stats" in msp) {
       var main_box_text = [];
-      for(var i = 0; i < msp.stats.length; i++){
+      for(var i = 0; i < msp.stats.length; i++) {
         main_box_text.push(msp.stats[i][1] + "%");								// DIFF!
       }
       mainScaleProps.sp_box_text = main_box_text;
@@ -59,6 +57,14 @@ function makeMapScales(scaleData) {
       } else {													// DIFF!
         mainScaleProps.sp_box_text_color = "rgb(255,255,255)";							// DIFF!
       }														// DIFF!
+    } else if("keys" in msp) {
+      var main_box_text = [];
+      for(var i = 0; i < msp.keys.length; i++) {
+        main_box_text.push(msp.keys[i]);									// DIFF!
+      }
+      mainScaleProps.sp_box_text = main_box_text;
+    } else {
+      mainScaleProps.sp_box_text = null;									// DIFF!
     }
     makeScale(mainScaleProps);
   } else {
@@ -105,15 +111,16 @@ function makeMapScales(scaleData) {
     auxScaleProps.sp_fill_boxes_func = function(d, i) {
       return "white";											// DIFF!
     }
-    if(!("stats" in asp)) {
-      auxScaleProps.sp_box_text = asp.values;
-    } else {
+    if("stats" in asp) {
       auxScaleProps.sp_box_text = scaleData.size_values;
       var aux_box_text = [];
       for(var i = 0; i < asp.stats.length; i++){
         aux_box_text.push(asp.values[i] + ", " + asp.stats[i][1] + "%"); 
       }
       auxScaleProps.sp_box_text = aux_box_text;
+    } else if("keys" in asp) {
+    } else {
+      auxScaleProps.sp_box_text = asp.values;
     }
     auxScaleProps.sp_box_text_color = "black";
     makeScale(auxScaleProps);

@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -cf color-file ] [ -sf style-file] [ -fl flist-json ] -at { src | dst } [ address-geo-file ]"
+U_MSG="usage: $0 [ -help ] [ -sc scale-conf-file ] [ -cf color-file ] [ -sf style-file] [ -fl flist-json ] -at { src | dst } [ address-geo-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -33,6 +33,7 @@ else
 	exit 1
 fi
 
+SC_CFG=
 CFILE=
 SFILE=
 FLIST=
@@ -44,6 +45,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 0
+		;;
+	-sc)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-c requires scale-config-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		SC_CFG=$1
+		shift
 		;;
 	-cf)
 		shift
@@ -168,6 +179,7 @@ sort -t $'\t' -k 4g,4 -k 5g,5	|\
 $AWK -F'\t' '
 @include '"$GEO_UTILS"'
 {
+	sc_cfg = "'"$SC_CFG"'"
 	n_points++
 	colors[n_points] = $1
 	styles[n_points] = $2
@@ -179,7 +191,7 @@ END {
 	if(n_points == 0)
 		exit 0
 
-	GU_pr_header("map_addrs", n_points)
+	GU_pr_header("map_addrs", sc_cfg, n_points)
 	n_pgroups = GU_find_pgroups(1, n_points, longs, lats, pg_starts, pg_counts)
 	for(i = 1; i <= n_pgroups; i++){
 		GU_geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)

@@ -177,7 +177,7 @@ END {
 	printf(",\n")
 	close(cfile)
 
-	GU_pr_header("make_geojson", n_points);
+	GU_pr_header("make_geojson", "", n_points);
 	if(n_fields == 5){
 		# code for points
 		# points have been sorted on geo so points w/same geo are consecutive
