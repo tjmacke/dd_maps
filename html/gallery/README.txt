@@ -1,3 +1,16 @@
+1. Introduction.
+
+These files each contain a json object with at least one component, an object with key
+"geojson".  Some files contain a second component, an object with key config which defines
+the a legend explaining the colors.  As such the json files can not be view on a pure
+geojson viewer like geojson.io.  To extract the geojson, use the script ext_geojson.sh:
+
+	./ext_geojson json-file > /tmp/geojgeon-file
+
+which will create a file w/o any legend that can be view with geojson.io.
+
+2. File descriptions.
+
 src.??.obscured.json	-- Two variable time series.
 
 	A door-dasher agreed to collect data of all of her deliveries in exchange for whatever I
