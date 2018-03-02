@@ -64,6 +64,7 @@ function makeMapScales(scaleData) {
       for(var i = 0; i < msp.keys.length; i++) {
         main_box_text.push(msp.keys[i]);									// DIFF!
       }
+      main_box_text.push(msp.def_key_text);
       mainScaleProps.sp_box_text = main_box_text;
     } else {
       mainScaleProps.sp_box_text = null;									// DIFF!
