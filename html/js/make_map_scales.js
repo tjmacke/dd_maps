@@ -25,6 +25,8 @@ function makeMapScales(scaleData) {
   if ("main" in scaleData) {
     var msp = scaleData["main"];
     mainScaleProps.sp_values = msp.values;
+    if(msp.scale_type == "factor")
+       mainScaleProps.sp_values.push(msp.def_value[0]);
     var main_sp_breaks = msp.breaks;
     mainScaleProps.sp_breaks_idx_off = 1;
     if (("min_value" in msp) || ("max_value" in msp)) {

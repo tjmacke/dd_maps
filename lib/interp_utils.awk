@@ -2,7 +2,7 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, parms
 
 	interp["name"] = name
 
-	# get the scale type (linear (default) and  log10 so far
+	# get the scale type linear (default), log10 and factor so far
 	key = name ".scale_type"
 	work = config["_globals", key]
 	if(work == "")
@@ -87,7 +87,7 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, parms
 			interp["keys", i] = ary[i]
 		}
 		# get the default color for values do not match any key
-		key = name ".default"
+		key = name ".def_value"
 		work = config["_globals", key]
 		if(work == ""){
 			printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
@@ -99,7 +99,20 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, parms
 				return 1
 			}
 		}
-		interp["default"] = work
+		interp["def_value"] = work
+		key = name ".def_key_text"
+		work = config["_globals", key]
+		if(work == ""){
+			printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
+			return 1
+		}else if(substr(work, 1, 1) == "$"){
+			work = config["_globals", substr(work, 2)]
+			if(work == ""){
+				printf("ERROR: IU_init: macro $%s not defined\n", work) > "/dev/stderr"
+				return 1
+			}
+		}
+		interp["def_key_text"] = work
 	}
 	if(interp["scale_type"] == "factor"){
 		if(interp["nkeys"] != interp["nvalues"]){
@@ -140,7 +153,7 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, parms
 		# init all counts to 0
 		for(i = 0; i <= interp["nkeys"] + 1; i++)
 			interp["counts", interp["keys", i]] = 0
-		interp["counts", interp["default"]] = 0
+		interp["counts", interp["def_value"]] = 0
 	}else{
 		# check that breaks are strictly ascending, insures interp denoms are > 0
 		for(i = 2; i <= interp["nbreaks"]; i++){
@@ -172,7 +185,7 @@ function IU_interpolate(interp, v,   vn, ev, idx, work, n_ary, ary, i) {
 	if(interp["scale_type"] == "factor"){
 		ev = interp["k2v", v]
 		if(ev == "")
-			ev = interp["default"]
+			ev = interp["def_value"]
 		interp["tcounts"]++
 		interp["counts", ev]++
 		return ev
@@ -255,12 +268,13 @@ function IU_dump(file, interp,   i, keys, nk) {
 		for(i = 2; i <= interp["nkeys"]; i++)
 			printf(" | %s", interp["keys", i]) > file
 		printf("\n") > file
-		printf("\tdefault       = %s\n", interp["default"]) > file
+		printf("\tdef_value     = %s\n", interp["def_value"]) > file
+		printf("\tdef_key_text  = %s\n", interp["def_key_text"]) > file
 		printf("\ttcounts       = %d\n", interp["tcounts"]) > file
 		printf("\tcounts        = %d", interp["counts", interp["keys", 1]]) > file
 		for(i = 2; i <= interp["nkeys"] + 1; i++)
 			printf(" | %d", interp["counts", interp["keys", i]]) > file
-		printf(" | %d", interp["counts", interp["default"]]) > file
+		printf(" | %d", interp["counts", interp["def_value"]]) > file
 		printf("\n") > file
 	}else{
 		printf("\tnbreaks       = %d\n", interp["nbreaks"]) > file
