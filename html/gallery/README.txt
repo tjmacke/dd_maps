@@ -1,13 +1,13 @@
 1. Introduction.
 
 These files each contain a json object with at least one component, an object with key
-"geojson".  Some files contain a second component, an object with key config which defines
-the a legend explaining the colors.  As such the json files can not be view on a pure
+"geojson".  Some files contain a second component, an object with key "config" which defines
+the a legend explaining the colors.  As such the json files can not be viewed on a pure
 geojson viewer like geojson.io.  To extract the geojson, use the script ext_geojson.sh:
 
 	./ext_geojson json-file > /tmp/geojgeon-file
 
-which will create a file w/o any legend that can be view with geojson.io.
+which will create a file w/o any legend that can be viewed with geojson.io.
 
 2. File descriptions.
 
@@ -71,14 +71,14 @@ sn*.json	-- Seattle neighborhoods and sub-neighborhoods
 
 tab.json, vg.json, yz.json	-- Tiny "temporary parking" maps.
 
-	Seattle's data portal also include a tsv file of the city's 79316 street parking signs.
+	Seattle's data portal also includes a tsv file of the city's 79316 street parking signs.
 	And so I wondered could this be used by food deliverty people to find possible very
-	short term parking near restaurants or diners's addresses.
+	short term parking near restaurants or diners' addresses.
 
 	The three examples are the restaurants Veggie Grill on 4th, Yo! Zushi in Capitol
-	Hill and Tableau in Freemont. I wrote a tiny script that takes the address, geocodes
-	it, the using an R*tree finds all usable parking places near the address and marks
-	them with colored pins on the map.  White pins are 3 min passenger loading zones,
+	Hill and Tableau Software in Freemont. I wrote a tiny script that takes the address,
+	geocodes it, the using an R*tree finds all usable parking places near the address and
+	marks them with colored pins on the map.  White pins are 3 min passenger loading zones,
 	yellow pins are 30 minute load/unload zone (should pay, but ...), orange pins are
 	commercial loading zones (delivery trucks drivers may yell at you and red pins are
 	truck loading zones  (Use at own risk)  Finally the purple pin is the address you
