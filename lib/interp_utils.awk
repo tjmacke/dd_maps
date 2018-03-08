@@ -137,7 +137,6 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, parms
 		}
 		interp["v_ob_info"] = v_pat ~ /^b/ ? "^" : "$"
 	}else if(interp["nbreaks"] == interp["nvalues"] - 1){
-		printf("DEBUG: IU_init: nb = nv - 1: chk that we have v[1] = bin, v[2:$-1] = grad, v[$] = bin\n") > "/dev/stderr"
 		if(!match(v_pat, /^bgg*b$/)){
 			printf("ERROR: IU_init: nbreaks (%d) = nvalues - 1 (%d): all values but first and last must be grad\n", interp["nbreaks"], interp["nvalues"] - 1) > "/dev/stderr"
 			return 1
@@ -326,8 +325,9 @@ function _IU_check_grad(config, parms,    v_len, n_ary, ary, i, work, n_ary2, ar
 				printf("ERROR: _IU_check_grad: macro %s is not defined\n", ary[i]) > "/dev/stderr"
 				return 1
 			}
-			xgrad = xgrad (i > 1 ? ":" : "") xval
-		}
+		}else
+			xval = ary[i]
+		xgrad = xgrad (i > 1 ? ":" : "") xval
 	}
 	parms["grad"] = xgrad
 

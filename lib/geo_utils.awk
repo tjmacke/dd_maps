@@ -22,7 +22,7 @@ function GU_pr_header(title, sc_cfg, n_points) {
 
 	printf("{\n")
 	if(sc_cfg != ""){
-		printf("\"config\": ")
+		printf("\"scaleConfig\": ")
 		for( ; (getline sc_line < sc_cfg) > 0; )
 			printf("%s\n", sc_line)
 		printf(",\n")

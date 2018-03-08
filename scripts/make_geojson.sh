@@ -171,7 +171,7 @@ END {
 	printf("{\n")
 
 	# add the configuation
-	printf("\"config\": ")
+	printf("\"scaleConfig\": ")
 	for( ; (getline cline < cfile) > 0; )
 		printf("%s\n", cline)
 	printf(",\n")
