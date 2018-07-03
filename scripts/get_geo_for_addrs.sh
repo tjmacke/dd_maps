@@ -79,7 +79,15 @@ if [ ! -z "$ADDR" ] ; then
 		echo "$U_MSG" 1>&2
 		exit 1
 	fi
-	echo "$ADDR"
+	echo "$ADDR"	|\
+	awk -F'|' '{
+		for(i = 1; i <= NF; i++){
+			work = $i
+			sub(/^  */, "", work)
+			sub(/  *$/, "", work)
+			printf("%s\n", work)
+		}
+	}'
 else
 	cat $FILE
 fi	|\
