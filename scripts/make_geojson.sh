@@ -18,6 +18,8 @@ DM_SCRIPTS=$DM_HOME/scripts
 JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
 
+PROG=$0
+
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
@@ -128,6 +130,7 @@ sort -t $'\t' $skeys $FILE |\
 $AWK -F'\t' '
 @include '"$GEO_UTILS"'
 BEGIN {
+	prog = "'"$PROG"'"
 	cfile = "'"$CFILE"'"
 	flist = "'"$FLIST"'"
 	title = "'"$TITLE"'"
@@ -177,7 +180,17 @@ END {
 	printf(",\n")
 	close(cfile)
 
-	GU_pr_header("make_geojson", "", n_points);
+
+	meta_data["count"] = 1
+	meta_data[meta_data["count"], "key"] = "createdBy"
+	meta_data[meta_data["count"], "value"] = prog
+	meta_data[meta_data["count"], "is_str"] = 1
+	meta_data["count"] = 2
+	meta_data[meta_data["count"], "key"] = "n_features"
+	meta_data[meta_data["count"], "value"] = n_points
+	meta_data[meta_data["count"], "is_str"] = 0
+	GU_pr_header("", meta_data);
+
 	if(n_fields == 5){
 		# code for points
 		# points have been sorted on geo so points w/same geo are consecutive

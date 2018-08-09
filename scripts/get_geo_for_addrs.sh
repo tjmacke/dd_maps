@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -v ] [ -geo geocoder ] { -a address | [ address-file ] }"
+U_MSG="usage: $0 [ -help ] [ -v ] [ -d N ] [ -geo geocoder ] { -a address | [ address-file ] }"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -16,6 +16,7 @@ DM_SCRIPTS=$DM_HOME/scripts
 NOW="$(date +%Y%m%d_%H%M%S)"
 
 VERBOSE=
+DELAY=
 GEO=
 ADDR=
 FILE=
@@ -28,6 +29,16 @@ while [ $# -gt 0 ] ; do
 		;;
 	-v)
 		VERBOSE="-v"
+		shift
+		;;
+	-d)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-d requires integer argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		DELAY=$1
 		shift
 		;;
 	-geo)
@@ -69,6 +80,10 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
+if [ ! -z "$DELAY" ] ; then
+	DELAY="-d $DELAY"
+fi
+
 if [ ! -z "$GEO" ] ; then
 	GEO="-geo $GEO"
 fi
@@ -99,4 +114,4 @@ awk -F'\t' 'BEGIN {
 	printf("%s\t.\t.\t.\tJob\t%s\t.\n", strftime("%Y-%m-%d"), $1)
 }'												|\
 $DM_SCRIPTS/get_addrs_from_runs.sh -at src							|\
-$DM_SCRIPTS/add_geo_to_addrs.sh $VERBOSE $GEO -at src
+$DM_SCRIPTS/add_geo_to_addrs.sh $VERBOSE $DELAY $GEO -at src

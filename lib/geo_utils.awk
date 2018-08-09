@@ -18,7 +18,7 @@ function GU_is_righthanded(count, first, x, y,   area, p, x1, y1, x2, y2) {
 	}
 	return area >= 0
 }
-function GU_pr_header(title, sc_cfg, n_points) {
+function GU_pr_header(sc_cfg, meta_data) {
 
 	printf("{\n")
 	if(sc_cfg != ""){
@@ -31,9 +31,15 @@ function GU_pr_header(title, sc_cfg, n_points) {
 	printf("\"geojson\": {\n")
 	printf("\"type\": \"FeatureCollection\",\n")
 	printf("\"metadata\": {\n")
-	printf("  \"generated\": \"%s\",\n", strftime("%Y%m%dT%H%M%S%Z"))
-	printf("  \"title\": \"%s\",\n", title)
-	printf("  \"count\": %d\n", n_points)
+	printf("  \"createdAt\": \"%s\"%s\n", strftime("%Y%m%dT%H%M%S%Z"), meta_data["count"] > 0 ? "," : "")
+	for(i = 1; i <= meta_data["count"]; i++){
+		printf("  \"%s\": ", meta_data[i, "key"])
+		if(!meta_data[i, "is_str"])
+			printf("%s", meta_data[i, "value"])
+		else
+			printf("\"%s\"", GU_str_escape(meta_data[i, "value"]))
+		printf("%s\n", i < meta_data["count"] ? "," : "")
+	}
 	printf("},\n")
 	printf("\"features\": [\n")
 }

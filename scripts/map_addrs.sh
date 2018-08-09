@@ -20,6 +20,8 @@ DEF_SIZE="small"
 JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
 
+PROG=$0
+
 # awk v3 does not support include
 AWK_VERSION="$(awk --version | awk '{ nf = split($3, ary, /[,.]/) ; print ary[1] ; exit 0 }')"
 if [ "$AWK_VERSION" == "3" ] ; then
@@ -179,6 +181,7 @@ sort -t $'\t' -k 4g,4 -k 5g,5	|\
 $AWK -F'\t' '
 @include '"$GEO_UTILS"'
 {
+	prog = "'"$PROG"'"
 	sc_cfg = "'"$SC_CFG"'"
 	n_points++
 	colors[n_points] = $1
@@ -191,7 +194,16 @@ END {
 	if(n_points == 0)
 		exit 0
 
-	GU_pr_header("map_addrs", sc_cfg, n_points)
+	meta_data["count"] = 1
+	meta_data[meta_data["count"], "key"] = "createdBy"
+	meta_data[meta_data["count"], "value"] = prog
+	meta_data[meta_data["count"], "is_str"] = 1
+	meta_data["count"] = 2
+	meta_data[meta_data["count"], "key"] = "n_features"
+	meta_data[meta_data["count"], "value"] = n_points
+	meta_data[meta_data["count"], "is_str"] = 0
+	GU_pr_header(sc_cfg, meta_data)
+
 	n_pgroups = GU_find_pgroups(1, n_points, longs, lats, pg_starts, pg_counts)
 	for(i = 1; i <= n_pgroups; i++){
 		GU_geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)

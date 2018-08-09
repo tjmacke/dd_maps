@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -v ] [ -c conf-file ] [ -geo geocoder ] -at { src | dst } [ extracted-address-file ]"
+U_MSG="usage: $0 [ -help ] [ -v ] [ -d N ] [ -c conf-file ] [ -geo geocoder ] -at { src | dst } [ extracted-address-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -34,6 +34,7 @@ else
 fi
 
 VERBOSE=
+DELAY=5
 AI_FILE=$DM_ETC/address.info
 GEO=
 ATYPE=
@@ -47,6 +48,16 @@ while [ $# -gt 0 ] ; do
 		;;
 	-v)
 		VERBOSE="yes"
+		shift
+		;;
+	-d)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-d requires integer argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		DELAY=$1
 		shift
 		;;
 	-c)
@@ -120,7 +131,9 @@ while read line ; do
 	if [ $lcnt -eq 1 ] ; then
 		continue
 	elif [ $lcnt -gt 2 ] ; then
-		sleep 5
+		if [ $DELAY -gt 0 ] ; then
+			sleep $DELAY
+		fi
 	fi
 	astat="$(echo "$line" | awk -F'\t' '{ print $1 ~ /^B/ ? "bad" : "good" }')"
 	if [ "$astat" == "bad" ] ; then
