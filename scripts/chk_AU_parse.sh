@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -v ] [ -c conf-file ] [ -db ] [ raqtr-file (tsv-file of as_reason, address, a_type, qry_address, rply_address)]"
+U_MSG="usage: $0 [ -help ] [ -v ] [ -c conf-file ] [ -db ] [ ratqr-file (tsv-file of as_reason, address, a_type, qry_address, rply_address)]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -113,28 +113,10 @@ BEGIN {
 		exit err
 	}
 
- 	# check that we got all the data we need
- 	ad_counts["n_us_states"] = AU_get_addr_data(addr_info, "us_states", us_states)
- 
- 	ad_counts["n_towns_a2q"] = AU_get_addr_data(addr_info, "towns_a2q", towns_a2q)
- 	ad_counts["n_st_types_2qry"] = AU_get_addr_data(addr_info, "st_types_2qry", st_types_2qry)
- 	ad_counts["n_dirs_2qry"] = AU_get_addr_data(addr_info, "dirs_2qry", dirs_2qry)
- 	ad_counts["n_ords_2qry"] = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
-
- 	ad_counts["n_towns_r2q"] = AU_get_addr_data(addr_info, "towns_r2q", towns_r2q)
- 
- 	for(ad in ad_counts){
- 		if(ad_counts[ad] == 0){
- 			printf("ERROR: %s no \"%s\" data\n", ai_file, substr(ad, 3)) > "/dev/stderr"
- 			err = 1
- 		}
- 	}
- 	if(err)
- 		exit err
-
-	# create a map of full state names
-	for(s in us_states)
-		us_states_long[us_states[s]] = s
+	if(AU_init(addr_info, us_states, us_states_long, towns_a2q, towns_r2q, st_types_2qry, dirs_2qry, ords_2qry)){
+		err = 1
+		exit err
+	}
  
  	pa_options["rply"] = 0
  	pa_options["do_subs"] = 1

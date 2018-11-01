@@ -100,26 +100,10 @@ BEGIN {
 		exit err
 	}
 
- 	# check that we got all the data we need
- 	ad_counts["n_us_states"] = AU_get_addr_data(addr_info, "us_states", us_states)
- 
- 	ad_counts["n_towns_a2q"] = AU_get_addr_data(addr_info, "towns_a2q", towns_a2q)
- 	ad_counts["n_st_types_2qry"] = AU_get_addr_data(addr_info, "st_types_2qry", st_types_2qry)
- 	ad_counts["n_dirs_2qry"] = AU_get_addr_data(addr_info, "dirs_2qry", dirs_2qry)
- 	ad_counts["n_ords_2qry"] = AU_get_addr_data(addr_info, "ords_2qry", ords_2qry)
- 
- 	for(ad in ad_counts){
- 		if(ad_counts[ad] == 0){
- 			printf("ERROR: %s no \"%s\" data\n", ai_file, substr(ad, 3)) > "/dev/stderr"
- 			err = 1
- 		}
- 	}
- 	if(err)
- 		exit err
-
-	# create a map of full state names
-	for(s in us_states)
-		us_states_long[us_states[s]] = s
+	if(AU_init(addr_info, us_states, us_states_long, towns_a2q, towns_r2q, st_types_2qry, dirs_2qry, ords_2qry)){
+		err = 1
+		exit err
+	}
 
 	pq_options["rply"] = 0
 	pq_options["do_subs"] = 1
