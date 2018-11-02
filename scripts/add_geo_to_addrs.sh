@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -v ] [ -d N ] [ -c conf-file ] [ -geo geocoder ] -at { src | dst } [ extracted-address-file ]"
+U_MSG="usage: $0 [ -help ] [ -v ] [ -d N ] [ -c conf-file ] [ -geo geocoder ] -at { src | dst } [ parsed-address-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
