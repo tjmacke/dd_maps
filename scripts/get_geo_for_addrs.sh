@@ -94,20 +94,19 @@ if [ ! -z "$ADDR" ] ; then
 		echo "$U_MSG" 1>&2
 		exit 1
 	fi
-	echo "$ADDR"	|\
-	awk -F'|' '{
-		for(i = 1; i <= NF; i++){
-			work = $i
-			sub(/^  */, "", work)
-			sub(/  *$/, "", work)
-			printf("%s\n", work)
-		}
-	}'
+	echo "$ADDR"
 else
 	cat $FILE
 fi	|\
-awk -F'\t' 'BEGIN {
-}
+awk -F'|' '{
+	for(i = 1; i <= NF; i++){
+		work = $i
+		sub(/^  */, "", work)
+		sub(/  *$/, "", work)
+		printf("%s\n", work)
+	}
+}'	|\
+awk -F'\t' '
 {
 	if($0 ~ /^#/)
 		next
