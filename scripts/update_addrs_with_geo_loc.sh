@@ -3,23 +3,25 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -geo geocoder ] [ -d YYYYMMDD ] -at { src | dst } [ addr-geo-file ]"
+U_MSG="usage: $0 [ -help ] -db db-file [ -geo geocoder ] [ -d YYYYMMDD ] -at { src | dst } [ addr-geo-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
 	exit 1
 fi
-DM_ADDRS=$DM_HOME/addrs
 DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
-DM_DB=$DM_ADDRS/dd_maps.db
+# set these from the cmd line
+#DM_ADDRS=$DM_HOME/addrs
+#DM_DB=$DM_ADDRS/dd_maps.db
 
-if [ ! -s $DM_DB ] ; then
-	LOG ERROR "database $DM_DB either does not exist or has zero size"
-	exit 1
-fi
+#if [ ! -s $DM_DB ] ; then
+#	LOG ERROR "database $DM_DB either does not exist or has zero size"
+#	exit 1
+#fi
 
+DM_DB=
 GEO=
 DATE=
 ATYPE=
@@ -30,6 +32,16 @@ while [ $# -gt 0 ] ; do
 	-help)
 		echo "$U_MSG"
 		exit 1
+		;;
+	-db)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-db requires db-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		DM_DB=$1
+		shift
 		;;
 	-geo)
 		shift
@@ -77,6 +89,15 @@ done
 if [ $# -ne 0 ] ; then
 	LOG ERROR "extra arguments $*"
 	echo "$U_MSG" 1>&2
+	exit 1
+fi
+
+if [ -z "$DM_DB" ] ; then
+	LOG ERROR "missing -db db-file argument"
+	echo "$U_MSG" 1>&2
+	exit 1
+elif [ ! -s $DM_DB ] ; then
+	LOG ERROR "database $DM_DB either does not exist or has zero size"
 	exit 1
 fi
 

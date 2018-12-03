@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -v ] [ -d N ] [ -c conf-file ] [ -geo geocoder ] -at { src | dst } [ parsed-address-file ]"
+U_MSG="usage: $0 [ -help ] [ -v ] [ -d N ] [ -c conf-file ] [ -efmt { new* | old } ] [ -geo geocoder ] -at { src | dst } [ parsed-address-file ]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -36,6 +36,7 @@ fi
 VERBOSE=
 DELAY=5
 AI_FILE=$DM_ETC/address.info
+EFMT=new
 GEO=
 ATYPE=
 FILE=
@@ -68,6 +69,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		AI_FILE=$1
+		shift
+		;;
+	-efmt)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-eftm requires format string"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		EFMT=$1
 		shift
 		;;
 	-geo)
@@ -111,6 +122,12 @@ fi
 
 if [ ! -z "$GEO" ] ; then
 	GEO="-geo $GEO"
+fi
+
+if [ "$EFMT" != "new" ] && [ "$EFMT" != "old" ] ; then
+	LOG ERROR "unknown error fmt: $EFMT, must new or old"
+	echo "$U_MSG" 1>&2
+	exit 1
 fi
 
 if [ -z "$ATYPE" ] ; then

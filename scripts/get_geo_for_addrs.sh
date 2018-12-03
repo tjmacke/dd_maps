@@ -2,7 +2,7 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -v ] [ -d N ] [ -geo geocoder ] { -a address | [ address-file ] }"
+U_MSG="usage: $0 [ -help ] [ -v ] [ -d N ] [ -efmt { new* | old } ] [ -geo geocoder ] { -a address | [ address-file ] }"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -17,6 +17,7 @@ NOW="$(date +%Y%m%d_%H%M%S)"
 
 VERBOSE=
 DELAY=
+EFMT=new
 GEO=
 ADDR=
 FILE=
@@ -39,6 +40,16 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		DELAY=$1
+		shift
+		;;
+	-efmt)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-efmt requires format string"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		EFMT=$1
 		shift
 		;;
 	-geo)
@@ -82,6 +93,12 @@ fi
 
 if [ ! -z "$DELAY" ] ; then
 	DELAY="-d $DELAY"
+fi
+
+if [ "$EFMT" != "new" ] && [ "$EFMT" != "old" ] ; then
+	LOG ERROR "unknown error fmt: $EFMT, must be new or old"
+	echo "$U_MSG" 1>&2
+	exit 1
 fi
 
 if [ ! -z "$GEO" ] ; then

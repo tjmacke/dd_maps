@@ -3,22 +3,23 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] [ -v ] [ -c conf-file ] [ -db ] [ ratqr-file (tsv-file of as_reason, address, a_type, qry_address, rply_address)]"
+U_MSG="usage: $0 [ -help ] [ -v ] [ -c conf-file ] [ -db db-file ] [ ratqr-file (tsv-file of as_reason, address, a_type, qry_address, rply_address)]"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
 	exit 1
 fi
-DM_ADDRS=$DM_HOME/addrs
 DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
-DM_DB=$DM_ADDRS/dd_maps.db
+# set these from the cmd line
+#DM_ADDRS=$DM_HOME/addrs
+#DM_DB=$DM_ADDRS/dd_maps.db
 
-if [ ! -s $DM_DB ] ; then
-	LOG ERROR "database $DM_DB either does not exist or has zero size"
-	exit 1
-fi
+#if [ ! -s $DM_DB ] ; then
+#	LOG ERROR "database $DM_DB either does not exist or has zero size"
+#	exit 1
+#fi
 
 TMP_DFILE=/tmp/ratqr.$$
 
@@ -40,6 +41,7 @@ fi
 VERBOSE=
 AI_FILE=$DM_ETC/address.info
 USE_DB=
+DM_DB=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -63,7 +65,14 @@ while [ $# -gt 0 ] ; do
 		shift
 		;;
 	-db)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-db requires db-file argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
 		USE_DB="yes"
+		DM_DB=$1
 		shift
 		;;
 	-*)
@@ -89,6 +98,9 @@ if [ "$USE_DB" == "yes" ] ; then
 	if [ ! -z "$FILE" ] ; then
 		LOG ERROR "-db not allowed with aqtr-file"
 		echo "$U_MSG" 1>&2
+		exit 1
+	elif [ ! -s $DM_DB ] ; then
+		LOG ERROR "database $DM_DB either does not exist or has zero size"
 		exit 1
 	fi
 	sqlite3 $DM_DB <<-_EOF_ > $TMP_DFILE
