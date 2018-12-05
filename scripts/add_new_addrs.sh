@@ -11,15 +11,7 @@ fi
 DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
-# set these from the cmd line
-#DM_ADDRS=$DM_HOME/addrs
-#DM_DB=$DM_ADDRS/dd_maps.db
-
 # Use the last mod date of the DB to select which runs files need to be check for new addresses
-#if [ ! -s $DM_DB ] ; then
-#	LOG ERROR "database $DM_DB either does not exist or has zero size"
-#	exit 1
-#fi
 
 FORCE=
 DM_DB=
@@ -76,7 +68,8 @@ elif [ ! -s $DM_DB ] ; then
 	exit 1
 fi
 
-if [ "$FORCE" = "yes" ] ; then
+# Use the last mod date of the DB to select which runs files need to be check for new addresses
+if [ "$FORCE" != "yes" ] ; then
 	N_FILES=
 	t_db=$(date -r $DM_DB +%s)
 	for f in $FILES ; do
