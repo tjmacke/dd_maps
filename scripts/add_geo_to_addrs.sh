@@ -157,9 +157,13 @@ while read line ; do
 		echo "$line" |\
 		awk -F'\t' 'BEGIN {
 			atype = "'"$ATYPE"'"
+			efmt = "'"$EFMT"'"
 		}
 		{
-			printf("ERROR: %s: addr: %s: %s\n", $2, atype == "src" ? $3 : $4, $1)
+			if(efmt == "old")
+				printf("ERROR: %s: addr: %s: %s\n", $2, atype == "src" ? $3 : $4, $1)
+			else
+				printf("ERROR\t%s\taddr\t%s\t%s\n", $2, atype == "src" ? $3 : $4, $1)
 		}' 1>&2
 		continue
 	fi
@@ -180,6 +184,7 @@ while read line ; do
 
 			verbose = "'"$VERBOSE"'" == "yes"
 			atype = "'"$ATYPE"'"
+			efmt = "'"$EFMT"'"
 			geo = "'"$GEO"'"
 			if(geo != ""){
 				split(geo, ary, /  */)
@@ -246,7 +251,10 @@ while read line ; do
 				printf("%s\n", b_match)
 				err = 0
 			}else if(err && n_lines > 0){
-				printf("ERROR: %s: addr: %s: not found:\n", today, addr) > "/dev/stderr"
+				if(efmt == "old")
+					printf("ERROR: %s: addr: %s: not found:\n", today, addr) > "/dev/stderr"
+				else
+					printf("ERROR\t%s\taddr\t%s\tnot found\t\n", today, addr) > "/dev/stderr"
 				printf("{\n") > "/dev/stderr"
 				printf("\tquery = %s\n", query) > "/dev/stderr"
 				for(i = 1; i <= n_lines; i++)

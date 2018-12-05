@@ -93,11 +93,14 @@ elif [ "$DATE" != "$f_DATE" ] ; then
 fi
 
 grep '^ERROR' $FILE	|\
-awk -F: '{
-	addr = $4
+awk '{
+	# auto detect error format: old uses ":" for sep, new uses tab
+	sep = index($0, "\t") != 0 ? "\t" : ":"
+	nf = split($0, ary, sep)
+	addr ary[4]
 	sub(/^ */, "", addr)
 	sub(/ *$/, "", addr)
-	reason = $5
+	reason = ary[5]
 	sub(/^ */, "", reason)
 	sub(/ *$/, "", reason)
 	if(reason == "not found")
