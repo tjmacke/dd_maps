@@ -74,7 +74,7 @@ while [ $# -gt 0 ] ; do
 	-efmt)
 		shift
 		if [ $# -eq 0 ] ; then
-			LOG ERROR "-eftm requires format string"
+			LOG ERROR "-efmt requires format string"
 			echo "$U_MSG" 1>&2
 			exit 1
 		fi
@@ -160,6 +160,7 @@ while read line ; do
 			efmt = "'"$EFMT"'"
 		}
 		{
+			# error msgs with _5_ fields
 			if(efmt == "old")
 				printf("ERROR: %s: addr: %s: %s\n", $2, atype == "src" ? $3 : $4, $1)
 			else
@@ -251,11 +252,13 @@ while read line ; do
 				printf("%s\n", b_match)
 				err = 0
 			}else if(err && n_lines > 0){
+				# error msgs with _6_ fields
 				if(efmt == "old")
-					printf("ERROR: %s: addr: %s: not found:\n", today, addr) > "/dev/stderr"
+					printf("ERROR: %s: addr: %s: not found: {\n", today, addr) > "/dev/stderr"
 				else
-					printf("ERROR\t%s\taddr\t%s\tnot found\t\n", today, addr) > "/dev/stderr"
-				printf("{\n") > "/dev/stderr"
+					printf("ERROR\t%s\taddr\t%s\tnot found\t{\n", today, addr) > "/dev/stderr"
+				# TODO: delete next line
+				# printf("{\n") > "/dev/stderr"
 				printf("\tquery = %s\n", query) > "/dev/stderr"
 				for(i = 1; i <= n_lines; i++)
 					printf("\t%s\n", lines[i]) > "/dev/stderr"
