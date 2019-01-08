@@ -14,7 +14,8 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
-LL_FILE=/tmp/ll.$$.json
+LL_JSON=/tmp/ll.$$.json
+LL_ERR=/tmp/ll.$$.err
 
 TODAY="$(date +%Y-%m-%d)"
 
@@ -172,9 +173,24 @@ while read line ; do
 	dst="$(echo "$line" | awk -F'\t' '{ print $4 }')"
 	query="$(echo "$line" | awk -F'\t' '{ print $5 }')"
 	name="$(echo "$line" | awk -F'\t' '{ print $6 }')"
-	$DM_SCRIPTS/get_latlong.sh -limit 20 $GEO "$query" > $LL_FILE
-	if [ ! -s $LL_FILE ] ; then
-		LOG ERROR "get_latlong.sh failed for $query"
+	$DM_SCRIPTS/get_latlong.sh -limit 20 $GEO "$query" > $LL_JSON 2> $LL_ERR
+	if [ ! -s $LL_JSON ] ; then
+		awk 'BEGIN {
+			today = "'"$TODAY"'"
+			atype = "'"$ATYPE"'"
+			src = "'"$src"'"
+			dst = "'"$dst"'"
+			query = "'"$query"'"
+			# geo =, need to know at this point
+			addr = atype == "src" ? src : dst
+		}
+		{
+			printf("ERROR\t%s\taddr\t%s\tget_latlong.sh failed\t{\n", today, addr)
+			printf("\taddr      = %s\n", addr)
+			printf("\tquery     = %s\n", query)
+			printf("\tGEO.reply = %s\n", $0)
+			printf("}\n")
+		}' $LL_ERR 1>&2
 	else
 		# validate what came back
 		$AWK -F'\t' '
@@ -265,8 +281,8 @@ while read line ; do
 				printf("}\n") > "/dev/stderr"		
 			}
 			exit err
-		}' $LL_FILE
+		}' $LL_JSON
 	fi
 done
 
-rm -f $LL_FILE
+rm -f $LL_JSON $LL_ERR
