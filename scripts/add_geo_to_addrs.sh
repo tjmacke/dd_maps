@@ -181,14 +181,17 @@ while read line ; do
 			src = "'"$src"'"
 			dst = "'"$dst"'"
 			query = "'"$query"'"
-			# geo =, need to know at this point
+			geo="'"$GEO"'"
 			addr = atype == "src" ? src : dst
 		}
 		{
+			work = $0
+			idx = index(work, "ERROR:")
+			work = substr(work, length("ERROR: "))
 			printf("ERROR\t%s\taddr\t%s\tget_latlong.sh failed\t{\n", today, addr)
 			printf("\taddr      = %s\n", addr)
 			printf("\tquery     = %s\n", query)
-			printf("\tGEO.reply = %s\n", $0)
+			printf("\t%s.reply = %s\n", geo, work)
 			printf("}\n")
 		}' $LL_ERR 1>&2
 	else

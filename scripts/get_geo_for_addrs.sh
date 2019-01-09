@@ -13,12 +13,17 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
+# TODO: put this in a script ../etc
+# primary & secondary geocoders
+GEO_1=geo
+GEO_2=ocd
+
 NOW="$(date +%Y%m%d_%H%M%S)"
 
 VERBOSE=
 DELAY=
 EFMT=new
-GEO=
+GEO=$GEO_1
 ADDR=
 FILE=
 
@@ -103,9 +108,11 @@ else
 	EFMT="-efmt $EFMT"
 fi
 
-if [ ! -z "$GEO" ] ; then
-	GEO="-geo $GEO"
-fi
+# TODO: validate geo, but for now, just omit this
+#if [ ! -z "$GEO" ] ; then
+#	GEO="-geo $GEO"
+#fi
+GEO="-geo $GEO"
 
 if [ ! -z "$ADDR" ] ; then
 	if [ ! -z "$FILE" ] ; then

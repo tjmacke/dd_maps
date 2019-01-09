@@ -142,6 +142,8 @@ st_types_2qry = {
 	Ter       = Terrace
 	Ter.      = Terrace
 	Terrace   = Terrace
+	Wy        = Way
+	Wy.       = Way
 	Way       = Way
 }
 
