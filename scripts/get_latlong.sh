@@ -9,6 +9,11 @@ U_MSG="usage: $0 [ -help ] [ -limit N ] [ -json json-file ] [ -geo geocoder ] ca
 JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
 
+CURL_OUT=/tmp/curl.json.$$
+CURL_ERR=/tmp/curl.err.$$
+JG_OUT=/tmp/jg.out.$$
+JG_ERR=/tmp/jg.err.$$
+
 LIMIT=
 JFILE=
 GEO=
@@ -107,31 +112,36 @@ fi
 if [ -z "$GEO" ] || [ "$GEO" == "geo" ] ; then
 	KEY=$(cat ~/etc/geocodio.key)
 	PARMS="q=$E_ADDR&api_key=$KEY"
-	curl -s -S https://api.geocod.io/v1/geocode?"$PARMS"	|\
-	$TEE							|\
-	$JU_BIN/json_get -g '{results}[1]{accuracy_type, formatted_address, location}{lat, lng}'
+	URL="https://api.geocod.io/v1/geocode?$PARMS"
+	JG_REQ='{results}[1]{accuracy_type, formatted_address, location}{lat, lng}'
+	POST=
+
+	# curl -s -S https://api.geocod.io/v1/geocode"?$PARMS"	|\
+	# $JU_BIN/json_get -g '{results}[1]{accuracy_type, formatted_address, location}{lat, lng}'
 elif [ "$GEO" == "ocd" ] ; then
 	KEY=$(cat ~/etc/opencagedata.key)
 	PARMS="query=$E_ADDR&key=$KEY"
 	if [ ! -z "$LIMIT" ] ; then
 		PARMS="${PARMS}&limit=$LIMIT" 
 	fi
-	curl -s -S https://api.opencagedata.com/geocode/v1/json?"$PARMS"	|\
-	$TEE									|\
-	$JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'	|\
-	sort -k 1rn,1
-elif [ "$GEO" == "liq" ] ; then
-	# TODO:
-	# Add &addressdetails=1 to parms to get an address obj that can be used to produce a simpler address?
-	# This will require some testing to see what happens on incomplete addresses?
-	KEY=$(cat ~/etc/locationiq.key)
-	PARMS="key=$KEY&format=json&q=$E_ADDR"
-	curl -s -S http://locationiq.org/v1/search.php?"$PARMS"	|\
-	$TEE							|\
-	$JU_BIN/json_get -g '[1:$]{importance, display_name, lat, lon}'
+	URL="https://api.opencagedata.com/geocode/v1/json?$PARMS"
+	JG_REQ='{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'
+	POST="sort -k 1rn,1"
+
+	# curl -s -S https://api.opencagedata.com/geocode/v1/json"?$PARMS"	|\
+	# $JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'	|\
+	# sort -k 1rn,1
 else 
 	LOG ERROR "unknown geocoder $GEO"
 	exit 1
 fi
+
+if [ ! -z "$POST" ] ; then
+	curl -s -S $URL | $JU_BIN/json_get -g "$JG_REQ" | $POST
+else
+	curl -s -S $URL | $JU_BIN/json_get -g "$JG_REQ"
+fi
+
+rm -f $CURL_OUT $CURL_ERR $JG_OUT $JG_ERR
 
 exit 0
