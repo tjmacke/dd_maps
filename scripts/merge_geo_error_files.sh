@@ -66,6 +66,7 @@ END {
 		}
 		a_count[addr]++
 	}
+
 	in_rec = 0
 	# TODO: deal with 1 file?
 	for(i = 0; i < l_count[fnum]; i++){
@@ -75,9 +76,10 @@ END {
 			addr = ary[4]
 			printf("%s\n", lines[l_first[fnum]+i])
 			printf("\taddr      = %s\n", addr)
+			# get query & respone(s) from file 1
 			for(j = 1; j < a_count[addr] - 1; j++){
 				nf2 = split(lines[a_first[addr]+j], ary2, "\t")
-				if(ary2[2] ~ /^emsg /)
+				if(ary2[2] ~ /^emsg / || ary2[2] ~ /^addr/)
 					continue
 				else if(ary2[2] ~ /^query /){
 					nf3 = split(ary2[2], ary3, "=")
@@ -87,15 +89,15 @@ END {
 					}
 					printf("\t%s     = %s\n", ary3[1], ary3[2])
 				}else
-					printf("\t%s.%s\n", geocoder[1], ary2[2])
+					printf("\t%s\n", ary2[2])
 			}
 		}else if(ary[1] == "}"){
 			in_rec = 0
 			printf("%s\n", lines[l_first[fnum]+i])
 		}else if(in_rec){
-			if(ary[2] ~ /^query / || ary[2] ~ /^emsg/)
+			if(ary[2] ~ /^emsg/ || ary[2] ~ /^addr/ || ary[2] ~ /^query/)
 				continue
-			printf("\t%s.%s\n", geocoder[fnum], ary[2])
+			printf("\t%s\n", ary[2])
 		}
 	}
 }' $FILE_1 $FILE_2

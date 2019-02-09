@@ -11,7 +11,6 @@ JU_BIN=$JU_HOME/bin
 
 CURL_OUT=/tmp/curl.json.$$
 CURL_ERR=/tmp/curl.err.$$
-JG_OUT=/tmp/jg.out.$$
 JG_ERR=/tmp/jg.err.$$
 
 LIMIT=
@@ -115,9 +114,6 @@ if [ -z "$GEO" ] || [ "$GEO" == "geo" ] ; then
 	URL="https://api.geocod.io/v1/geocode?$PARMS"
 	JG_REQ='{results}[1]{accuracy_type, formatted_address, location}{lat, lng}'
 	POST=
-
-	# curl -s -S https://api.geocod.io/v1/geocode"?$PARMS"	|\
-	# $JU_BIN/json_get -g '{results}[1]{accuracy_type, formatted_address, location}{lat, lng}'
 elif [ "$GEO" == "ocd" ] ; then
 	KEY=$(cat ~/etc/opencagedata.key)
 	PARMS="query=$E_ADDR&key=$KEY"
@@ -127,21 +123,26 @@ elif [ "$GEO" == "ocd" ] ; then
 	URL="https://api.opencagedata.com/geocode/v1/json?$PARMS"
 	JG_REQ='{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'
 	POST="sort -k 1rn,1"
-
-	# curl -s -S https://api.opencagedata.com/geocode/v1/json"?$PARMS"	|\
-	# $JU_BIN/json_get -g '{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'	|\
-	# sort -k 1rn,1
 else 
 	LOG ERROR "unknown geocoder $GEO"
 	exit 1
 fi
 
-if [ ! -z "$POST" ] ; then
-	curl -s -S $URL | $JU_BIN/json_get -g "$JG_REQ" | $POST
+curl -s -S $URL > $CURL_OUT 2> $CURL_ERR
+if [ -s $CURL_ERR ] ; then
+	cat $CURL_ERR 1>&2
 else
-	curl -s -S $URL | $JU_BIN/json_get -g "$JG_REQ"
+	if [ ! -z "$POST" ] ; then
+		$JU_BIN/json_get -g "$JG_REQ" $CURL_OUT 2> $JG_ERR | $POST
+	else
+		$JU_BIN/json_get -g "$JG_REQ" $CURL_OUT 2> $JG_ERR
+	fi
+	if [ -s $JG_ERR ] ; then
+		cat $JG_ERR 1>&2
+	fi
 fi
 
-rm -f $CURL_OUT $CURL_ERR $JG_OUT $JG_ERR
+rm -f $CURL_OUT $CURL_ERR $JG_ERR
 
+# TODO: fix this
 exit 0

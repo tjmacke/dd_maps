@@ -34,6 +34,8 @@ else
 	exit 1
 fi
 
+. $DM_ETC/geocoder_defs.sh
+
 VERBOSE=
 DELAY=5
 AI_FILE=$DM_ETC/address.info
@@ -121,8 +123,16 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
-if [ ! -z "$GEO" ] ; then
-	GEO="-geo $GEO"
+# set up the gecooder
+if [ -z "$GEO" ] ; then
+	GEO=$GEO_PRIMARY
+else
+	GC_WORK="$(chk_geocoders $GEO)"
+	if echo "$GC_WORK" | grep '^ERROR' > /dev/null ; then
+		LOG ERROR "$GC_WORK"
+		exit 1
+	fi
+	GEO=$GC_WORK
 fi
 
 if [ "$EFMT" != "new" ] && [ "$EFMT" != "old" ] ; then
@@ -173,7 +183,7 @@ while read line ; do
 	dst="$(echo "$line" | awk -F'\t' '{ print $4 }')"
 	query="$(echo "$line" | awk -F'\t' '{ print $5 }')"
 	name="$(echo "$line" | awk -F'\t' '{ print $6 }')"
-	$DM_SCRIPTS/get_latlong.sh -limit 20 $GEO "$query" > $LL_JSON 2> $LL_ERR
+	$DM_SCRIPTS/get_latlong.sh -limit 20 -geo $GEO "$query" > $LL_JSON 2> $LL_ERR
 	if [ ! -s $LL_JSON ] ; then
 		awk 'BEGIN {
 			today = "'"$TODAY"'"
