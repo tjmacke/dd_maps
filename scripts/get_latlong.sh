@@ -5,6 +5,14 @@ export LC_ALL=C
 
 U_MSG="usage: $0 [ -help ] [ -limit N ] [ -json json-file ] [ -geo geocoder ] canonical-address"
 
+if [ -z "$DM_HOME" ] ; then
+	LOG ERROR "DM_HOME is not defined"
+	exit 1
+fi
+DM_ETC=$DM_HOME/etc
+
+. $DM_ETC/geocoder_defs.sh
+
 # TODO: fix this evil dependency
 JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
@@ -15,7 +23,7 @@ JG_ERR=/tmp/jg.err.$$
 
 LIMIT=
 JFILE=
-GEO=
+GEO=$GEO_PRIMARY
 ADDR=
 
 while [ $# -gt 0 ] ; do
@@ -84,7 +92,6 @@ if [ -z "$ADDR" ] ; then
 	echo "$U_MSG" 1>&2
 	exit 1
 fi
-
 E_ADDR="$(echo "$ADDR" |\
 	awk 'BEGIN {
 		apos = sprintf("%c", 39)
@@ -107,8 +114,7 @@ if [ -z "$E_ADDR" ] ; then
 	exit 1
 fi
 
-# default geocoder is geocod.io, symbol "geo"
-if [ -z "$GEO" ] || [ "$GEO" == "geo" ] ; then
+if [ "$GEO" == "geo" ] ; then
 	KEY=$(cat ~/etc/geocodio.key)
 	PARMS="q=$E_ADDR&api_key=$KEY"
 	URL="https://api.geocod.io/v1/geocode?$PARMS"

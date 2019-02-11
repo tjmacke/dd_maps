@@ -13,17 +13,14 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
-# TODO: put this in a script ../etc
-# primary & secondary geocoders
-GEO_1=geo
-GEO_2=ocd
+. $DM_ETC/geocoder_defs.sh
 
 NOW="$(date +%Y%m%d_%H%M%S)"
 
 VERBOSE=
 DELAY=
 EFMT=new
-GEO=$GEO_1
+GEO=$GEO_PRIMARY
 ADDR=
 FILE=
 
@@ -108,11 +105,13 @@ else
 	EFMT="-efmt $EFMT"
 fi
 
-# TODO: validate geo, but for now, just omit this
-#if [ ! -z "$GEO" ] ; then
-#	GEO="-geo $GEO"
-#fi
-GEO="-geo $GEO"
+# chk for valid geocoder
+GC_WORK="$(chk_geocoders $GEO)"
+if echo "$GC_WORK" | grep '^ERROR' > /dev/null ; then
+	LOG ERROR "$GC_WORK"
+	exit 1
+fi
+GEO=$GC_WORK
 
 if [ ! -z "$ADDR" ] ; then
 	if [ ! -z "$FILE" ] ; then
@@ -139,4 +138,4 @@ awk -F'\t' '
 	printf("%s\t.\t.\t.\tJob\t%s\t.\n", strftime("%Y-%m-%d"), $1)
 }'												|\
 $DM_SCRIPTS/get_addrs_from_runs.sh -at src							|\
-$DM_SCRIPTS/add_geo_to_addrs.sh $VERBOSE $DELAY $EFMT $GEO -at src
+$DM_SCRIPTS/add_geo_to_addrs.sh $VERBOSE $DELAY $EFMT -geo $GEO -at src

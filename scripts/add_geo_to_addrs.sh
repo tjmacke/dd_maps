@@ -40,7 +40,7 @@ VERBOSE=
 DELAY=5
 AI_FILE=$DM_ETC/address.info
 EFMT=new
-GEO=
+GEO=$GEO_PRIMARY
 ATYPE=
 FILE=
 
@@ -123,17 +123,13 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
-# set up the gecooder
-if [ -z "$GEO" ] ; then
-	GEO=$GEO_PRIMARY
-else
-	GC_WORK="$(chk_geocoders $GEO)"
-	if echo "$GC_WORK" | grep '^ERROR' > /dev/null ; then
-		LOG ERROR "$GC_WORK"
-		exit 1
-	fi
-	GEO=$GC_WORK
+# chk for valid geocoder
+GC_WORK="$(chk_geocoders $GEO)"
+if echo "$GC_WORK" | grep '^ERROR' > /dev/null ; then
+	LOG ERROR "$GC_WORK"
+	exit 1
 fi
+GEO=$GC_WORK
 
 if [ "$EFMT" != "new" ] && [ "$EFMT" != "old" ] ; then
 	LOG ERROR "unknown error fmt: $EFMT, must new or old"
@@ -216,10 +212,6 @@ while read line ; do
 			atype = "'"$ATYPE"'"
 			efmt = "'"$EFMT"'"
 			geo = "'"$GEO"'"
-			if(geo != ""){
-				split(geo, ary, /  */)
-				geo = ary[2]
-			}
 			src = "'"$src"'"
 			dst = "'"$dst"'"
 			addr = atype == "src" ? src : dst
@@ -252,7 +244,7 @@ while read line ; do
 		{
 			if(AU_parse(pr_options, $2, rply_ary, us_states, us_states_long, towns_r2q, st_types_2qry, dirs_2qry, ords_2qry)){
 				n_lines++
-				lines[n_lines] = sprintf("reply = %s", $2)
+				lines[n_lines] = sprintf("%s.reply = %s", geo, $2)
 				n_lines++
 				lines[n_lines] = sprintf("emsg  = %s", rply_ary["emsg"])
 				err = 1
@@ -269,7 +261,7 @@ while read line ; do
 					}
 				}else{
 					n_lines++
-					lines[n_lines] = sprintf("reply = %s", $2)
+					lines[n_lines] = sprintf("%s.reply = %s", geo, $2)
 					n_lines++
 					lines[n_lines] = sprintf("emsg  = %s\t%s", rply_ary["emsg"], $0)
 					err = 1
