@@ -113,12 +113,18 @@ if echo "$GC_WORK" | grep '^ERROR' > /dev/null ; then
 fi
 GEO=$GC_WORK
 
+# chk that only one of -a ADDR or FILE is set
 if [ ! -z "$ADDR" ] ; then
 	if [ ! -z "$FILE" ] ; then
 		LOG ERROR "-a address not allowed with address-file"
 		echo "$U_MSG" 1>&2
 		exit 1
 	fi
+fi
+
+# do the work
+# TODO: put this into a loop like that in ~/web-maps/scrips/find_parking.sh
+if [ ! -z "$ADDR" ] ; then
 	echo "$ADDR"
 else
 	cat $FILE
