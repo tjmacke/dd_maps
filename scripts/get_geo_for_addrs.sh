@@ -2,7 +2,9 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] [ -v ] [ -d N ] [ -efmt { new* | old } ] [ -geo geocoder ] { -a address | [ address-file ] }"
+U_MSG="usage: $0 [ -help ] [ -v ] [ -d N ] [ -efmt { new* | old } ] [ -gl gc-list ] { -a address | [ address-file ] }"
+
+NOW="$(date +%Y%m%d_%H%M%S)"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -15,12 +17,16 @@ DM_SCRIPTS=$DM_HOME/scripts
 
 . $DM_ETC/geocoder_defs.sh
 
-NOW="$(date +%Y%m%d_%H%M%S)"
+TMP_AFILE=/tmp/addrs.$$
+TMP_OFILE=/tmp/out.$$
+TMP_EFILE=/tmp/err.$$
+TMP_EFILE_1=/tmp/err_1.$$
+TMP_EFILE_2=/tmp/err_2.$$
 
 VERBOSE=
 DELAY=
 EFMT=new
-GEO=$GEO_PRIMARY
+GC_LIST=
 ADDR=
 FILE=
 
@@ -54,14 +60,14 @@ while [ $# -gt 0 ] ; do
 		EFMT=$1
 		shift
 		;;
-	-geo)
+	-gl)
 		shift
 		if [ $# -eq 0 ] ; then
-			LOG ERROR "-geo requires geocoder argument"
+			LOG ERROR "-gl requires gc-list argument"
 			echo "$U_MSG" 1>&2
 			exit 1
 		fi
-		GEO=$1
+		GC_LIST=$1
 		shift
 		;;
 	-a)
@@ -105,13 +111,17 @@ else
 	EFMT="-efmt $EFMT"
 fi
 
-# chk for valid geocoder
-GC_WORK="$(chk_geocoders $GEO)"
-if echo "$GC_WORK" | grep '^ERROR' > /dev/null ; then
-	LOG ERROR "$GC_WORK"
-	exit 1
+# set up the geocoder order
+if [ -z "$GC_LIST" ] ; then
+	GC_LIST="$GEO_PRIMARY,$GEO_SECONDARY"
+else
+	GC_WORK="$(chk_geocoders $GC_LIST)"
+	if echo "$GC_WORK" | grep '^ERROR' > /dev/null ; then
+		LOG ERROR "$GC_WORK"
+		exit 1
+	fi
+	GC_LISTO=$GC_WORK	# comma sep list w/o spaces
 fi
-GEO=$GC_WORK
 
 # chk that only one of -a ADDR or FILE is set
 if [ ! -z "$ADDR" ] ; then
@@ -120,28 +130,60 @@ if [ ! -z "$ADDR" ] ; then
 		echo "$U_MSG" 1>&2
 		exit 1
 	fi
+else
+	AFILE=$FILE
 fi
 
 # do the work
 # TODO: put this into a loop like that in ~/web-maps/scrips/find_parking.sh
-if [ ! -z "$ADDR" ] ; then
-	echo "$ADDR"
-else
-	cat $FILE
-fi	|\
-awk -F'|' '{
-	for(i = 1; i <= NF; i++){
-		work = $i
-		sub(/^  */, "", work)
-		sub(/  *$/, "", work)
-		printf("%s\n", work)
-	}
-}'	|\
-awk -F'\t' '
-{
-	if($0 ~ /^#/)
-		next
-	printf("%s\t.\t.\t.\tJob\t%s\t.\n", strftime("%Y-%m-%d"), $1)
-}'												|\
-$DM_SCRIPTS/get_addrs_from_runs.sh -at src							|\
-$DM_SCRIPTS/add_geo_to_addrs.sh $VERBOSE $DELAY $EFMT -geo $GEO -at src
+for geo in $(echo $GC_LIST | tr ',' ' '); do
+	if [ ! -z "$ADDR" ] ; then
+		echo "$ADDR"
+	else
+		cat $AFILE
+	fi	|\
+	awk -F'|' '{
+		for(i = 1; i <= NF; i++){
+			work = $i
+			sub(/^  */, "", work)
+			sub(/  *$/, "", work)
+			printf("%s\n", work)
+		}
+	}'	|\
+	awk -F'\t' '
+	{
+		if($0 ~ /^#/)
+			next
+		printf("%s\t.\t.\t.\tJob\t%s\t.\n", strftime("%Y-%m-%d"), $1)
+	}'									|\
+	$DM_SCRIPTS/get_addrs_from_runs.sh -at src				|\
+	$DM_SCRIPTS/add_geo_to_addrs.sh $VERBOSE $DELAY $EFMT -geo $geo -at src	>> $TMP_OFILE 2> $TMP_EFILE_1
+	n_OFILE=$(cat $TMP_OFILE | wc -l)
+	n_EFILE_1=$(grep '^ERROR' $TMP_EFILE_1 | wc -l)
+	n_ADDRS=$((n_OFILE + n_EFILE_1))
+	if [ $n_EFILE_1 -eq 0 ] ; then
+		# resolved all addrs, done
+		break
+	else
+		# errors
+		if [ ! -s $TMP_EFILE ] ; then
+			# first time throuhg loop
+			mv $TMP_EFILE_1 $TMP_EFILE
+		else
+			# 2nd and subsequent times through loop
+			$DM_SCRIPTS/merge_geo_error_files.sh $TMP_EFILE $TMP_EFILE_1 > $TMP_EFILE_2
+			mv $TMP_EFILE_2 $TMP_EFILE
+		fi
+		grep '^ERROR' $TMP_EFILE | awk -F'\t' '{ print $4 }' > $TMP_AFILE
+		# 2nd and subsequent passes always read from file
+		ADDR=
+		AFILE=$TMP_AFILE
+	fi
+done
+
+cat $TMP_OFILE
+if [ -s $TMP_EFILE ] ; then
+	cat $TMP_EFILE 1>&2
+fi
+
+rm -f $TMP_AFILE $TMP_OFILE $TMP_EFILE $TMP_EFILE_1 $TMP_EFILE_2
