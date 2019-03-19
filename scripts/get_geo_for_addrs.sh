@@ -182,7 +182,9 @@ for geo in $(echo $GC_LIST | tr ',' ' '); do
 done
 
 cat $TMP_OFILE
+LOG ERROR "$n_OFILE/$n_ADDRS addresses were found"
 if [ -s $TMP_EFILE ] ; then
+	LOG ERROR "$n_EFILE_1/$n_ADDRS addresses were not found"
 	cat $TMP_EFILE 1>&2
 fi
 
