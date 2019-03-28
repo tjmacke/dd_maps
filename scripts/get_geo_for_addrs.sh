@@ -135,7 +135,6 @@ else
 fi
 
 # do the work
-# TODO: put this into a loop like that in ~/web-maps/scrips/find_parking.sh
 for geo in $(echo $GC_LIST | tr ',' ' '); do
 	if [ ! -z "$ADDR" ] ; then
 		echo "$ADDR"
@@ -162,7 +161,8 @@ for geo in $(echo $GC_LIST | tr ',' ' '); do
 	n_EFILE_1=$(grep '^ERROR' $TMP_EFILE_1 | wc -l)
 	n_ADDRS=$((n_OFILE + n_EFILE_1))
 	if [ $n_EFILE_1 -eq 0 ] ; then
-		# resolved all addrs, done
+		# resolved all addrs; any errors in $TMP_EFILE were fixed so remove it
+		rm -f $TMP_EFILE
 		break
 	else
 		# errors
