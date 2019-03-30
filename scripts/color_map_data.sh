@@ -201,31 +201,26 @@ END {
 		hex_color_1 = hex_color_2 = "#FFE4E1"
 		if(use_color){
 			if(color_data[i] != "."){
-				rgb = IU_interpolate(color, color_data[i]) #, color_data_min, color_data_max)
-				# TODO: figure out whehter CU_ should return #XXX or #XXXXXX
+				rgb = IU_interpolate(color, color_data[i])
+				# TODO: figure out whether CU_ should return #XXX or #XXXXXX
 				hex_color_1 = "#" CU_rgb_to_24bit_color(rgb)
 			}
 		}else if(use_color_2){
 			if(color_data_2[i] != "."){
-				rgb = IU_interpolate(color, color_data_2[i]) #, color_data_min, color_data_max)
-				# TODO: figure out whehter CU_ should return #XXX or #XXXXXX
+				rgb = IU_interpolate(color, color_data_2[i])
+				# TODO: figure out whether CU_ should return #XXX or #XXXXXX
 				hex_color_2 = "#" CU_rgb_to_24bit_color(rgb)
 			}
 		}
 
 		# use_size at this point means we have some actual size values
-#		style_msg_1 = style_msg_2 = "."
-		style_msg_1 = style_msg_2 = sprintf("\"marker-size\": \"%s\"", "small")
+		style_msg_1 = style_msg_2 = "small"
 		if(use_size){
-			if(size_data[i] != "."){
-				mrkr_size = IU_interpolate(size, size_data[i]) #, size_data_min, size_data_max)
-				style_msg_1 = sprintf("\"marker-size\": \"%s\"", mrkr_size)
-			}
+			if(size_data[i] != ".")
+				style_msg_1 = IU_interpolate(size, size_data[i])
 		}else if(use_size_2){
-			if(size_data_2[i] != "."){
-				mrkr_size = IU_interpolate(size, size_data_2[i]) #, size_data_min, size_data_max)
-				style_msg_2 = sprintf("\"marker-size\": \"%s\"", mrkr_size)
-			}
+			if(size_data_2[i] != ".")
+				style_msg_2 = IU_interpolate(size, size_data_2[i])
 		}
 
 		printf("%s\t%s\t%s:<br/>%s\t%s\t%s", hex_color_1, style_msg_1, titles[i], labels[i], longs[i], lats[i])

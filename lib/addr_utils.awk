@@ -102,17 +102,17 @@ function AU_parse(options, addr, addr_ary, states, states_long, towns, st_types,
 
 	town = ary[nf-1]
 
-	# find the street.
-	# street is 1) 1st elt of ary[1:nf-2] that begins w/number & ends w/st_type or 2) last elt of ary[1:nf-2] that begins w/number
+	f_st = 0
+
+	# find the street:
+	# street is the 1st element of ary that begins with an integer and has > 1 one word
+	# so, 200 by itself is not a street, but 200 Broadway is
 	f_st = 0
 	for(i = 1; i < nf - 1; i++){
-		if(ary[i] ~ /^[1-9]/){
-			nf2 = split(ary[i], ary2, /  */)
-			if(ary2[nf2] in st_types){
-				f_st = i
-				break
-			}
+		nf2 = split(ary[i], ary2, /  */)
+		if(ary2[1] ~ /^[1-9][0-9]*$/ && nf2 > 1){
 			f_st = i
+			break
 		}
 	}
 	if(f_st == 0){
