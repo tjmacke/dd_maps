@@ -171,16 +171,6 @@ END {
 	if(n_points == 0)
 		exit 0
 
-	printf("{\n")
-
-	# add the configuation
-	printf("\"scaleConfig\": ")
-	for( ; (getline cline < cfile) > 0; )
-		printf("%s\n", cline)
-	printf(",\n")
-	close(cfile)
-
-
 	meta_data["count"] = 1
 	meta_data[meta_data["count"], "key"] = "createdBy"
 	meta_data[meta_data["count"], "value"] = prog
@@ -189,7 +179,19 @@ END {
 	meta_data[meta_data["count"], "key"] = "n_features"
 	meta_data[meta_data["count"], "value"] = n_points
 	meta_data[meta_data["count"], "is_str"] = 0
-	GU_pr_header("", meta_data);
+	GU_pr_header(cfile, meta_data);
+
+	# add any other features
+	if(flist != ""){
+		n_of = 0
+		while((getline line < flist) > 0){
+			n_of++
+			printf("%s\n", line)
+		}
+		if(n_of > 0)
+			printf(",\n")
+		close(flist)
+	}
 
 	if(n_fields == 5){
 		# code for points
@@ -200,7 +202,7 @@ END {
 			for(j = 0; j < pg_counts[i]; j++){
 				s_idx = pg_starts[i] + j;
 				GU_mk_point("/dev/stdout",
-					colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], ((s_idx == n_points) && !flist))
+					colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], (s_idx == n_points))
 			}
 		}
 	}else{
@@ -229,7 +231,7 @@ END {
 						d_idx = pg_starts[i] + j
 						GU_mk_point("/dev/stdout", colors_2[d_idx], styles_2[d_idx],
 							longs_2[d_idx] + long_adj[j+1], lats_2[d_idx] + lat_adj[j+1], titles_2[d_idx], 0)
-						GU_mk_line("/dev/stdout", longs[s_idx], lats[s_idx], longs_2[d_idx], lats_2[d_idx], ((d_idx == n_points) && !flist))
+						GU_mk_line("/dev/stdout", longs[s_idx], lats[s_idx], longs_2[d_idx], lats_2[d_idx], (d_idx == n_points))
 					}
 				}
 				sg_start = p
@@ -255,16 +257,9 @@ END {
 				d_idx = pg_starts[i] + j;
 				GU_mk_point("/dev/stdout", colors_2[s_idx], styles_2[s_idx],
 					longs_2[d_idx] + long_adj[j+1], lats_2[d_idx] + lat_adj[j+1], titles_2[d_idx], 0)
-				GU_mk_line("/dev/stdout", longs[s_idx], lats[s_idx], longs_2[d_idx], lats_2[d_idx], ((d_idx == n_points) && !flist))
+				GU_mk_line("/dev/stdout", longs[s_idx], lats[s_idx], longs_2[d_idx], lats_2[d_idx], (d_idx == n_points))
 			}
 		}
-	}
-	# add any other features
-	if(flist != ""){
-		while((getline < flist) > 0){
-			printf("%s\n", line)
-		}
-		close(flist)
 	}
 	GU_pr_trailer()
 }'

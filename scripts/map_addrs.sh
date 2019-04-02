@@ -183,6 +183,7 @@ $AWK -F'\t' '
 {
 	prog = "'"$PROG"'"
 	sc_cfg = "'"$SC_CFG"'"
+	flist = "'"$FLIST"'"
 	n_points++
 	colors[n_points] = $1
 	styles[n_points] = $2
@@ -204,22 +205,28 @@ END {
 	meta_data[meta_data["count"], "is_str"] = 0
 	GU_pr_header(sc_cfg, meta_data)
 
+	# add any other features
+	if(flist != ""){
+		n_of = 0
+		while((getline line < flist) > 0){
+			n_of++
+			printf("%s\n", line)
+		}
+		if(n_of > 0)
+			printf(",\n")
+		close(flist)
+	}
+
 	n_pgroups = GU_find_pgroups(1, n_points, longs, lats, pg_starts, pg_counts)
 	for(i = 1; i <= n_pgroups; i++){
 		GU_geo_adjust(longs[pg_starts[i]], lats[pg_starts[i]], pg_counts[i], long_adj, lat_adj)
 		for(j = 0; j < pg_counts[i]; j++){
 			s_idx = pg_starts[i] + j
 			GU_mk_point("/dev/stdout",
-				colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], ((s_idx == n_points) && !flist))
+				colors[s_idx], styles[s_idx], longs[s_idx] + long_adj[j+1], lats[s_idx] + lat_adj[j+1], titles[s_idx], (s_idx == n_points))
 		}
 	}
-	# add any other features
-	if(flist != ""){
-		while((getline line < flist) > 0){
-			printf("%s\n", line)
-		}
-		close(flist)
-	}
+
 	GU_pr_trailer()
 	exit 0
 }'
