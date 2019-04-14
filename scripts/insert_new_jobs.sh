@@ -194,7 +194,7 @@ while read line ; do
 	}
 	{
 		t_start = $1 "T" $2
-		t_end = $1 "T" $3
+		t_end = $3 != "."k ? $1 "T" $3 : "."
 		printf(".log stderr\\n")
 		printf("PRAGMA foreign_keys = on ;\\n")
 		printf("INSERT INTO jobs (dash_id, time_start, time_end, src_addr_id, dst_addr_id, amount, payment, notes")
