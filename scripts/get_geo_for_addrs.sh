@@ -120,7 +120,7 @@ else
 		LOG ERROR "$GC_WORK"
 		exit 1
 	fi
-	GC_LISTO=$GC_WORK	# comma sep list w/o spaces
+	GC_LIST=$GC_WORK	# comma sep list w/o spaces
 fi
 
 # chk that only one of -a ADDR or FILE is set
@@ -167,7 +167,7 @@ for geo in $(echo $GC_LIST | tr ',' ' '); do
 	else
 		# errors
 		if [ ! -s $TMP_EFILE ] ; then
-			# first time throuhg loop
+			# first time through loop
 			mv $TMP_EFILE_1 $TMP_EFILE
 		else
 			# 2nd and subsequent times through loop
