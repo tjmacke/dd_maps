@@ -76,6 +76,7 @@ if [ -z "$FILE" ] ; then
 		LOG ERROR "-d date must be specified when reading from stdin"
 		exit 1
 	fi
+	f_DATE=
 else
 	f_DATE="$(echo $FILE |\
 	awk -F. '{ nf = split($2, ary, "T") ; if(length(ary[1]) != 8 || ary[1] !~ /^20[12][0-9]{5}$/){ printf("BAD date: %s\n", ary[1]) }else{ printf("%s\n", ary[1]) } }')"
@@ -85,11 +86,11 @@ else
 	fi
 fi
 
-if [ -z "$DATE" ] ; then
-	DATE=$f_DATE
-elif [ "$DATE" != "$f_DATE" ] ; then
-	LOG ERROR "specified date, $DATE, does not match file date, $f_DATE"
-	exit 1
+if [ ! -z "$DATE" ] && [ ! -z $f_DATE ] ; then
+	if [ "$DATE" != "f_DATE" ] ; then
+		LOG ERROR "date from file name $f_DATE and date from args $DATE differ"
+		exit 1
+	fi
 fi
 
 grep '^ERROR' $FILE	|\
@@ -97,7 +98,7 @@ awk '{
 	# auto detect error format: old uses ":" for sep, new uses tab
 	sep = index($0, "\t") != 0 ? "\t" : ":"
 	nf = split($0, ary, sep)
-	addr ary[4]
+	addr = ary[4]
 	sub(/^ */, "", addr)
 	sub(/ *$/, "", addr)
 	reason = ary[5]

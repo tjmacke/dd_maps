@@ -5,7 +5,7 @@ export LC_ALL=C
 
 U_MSG="usage: $0 [ -help ] -db db-file [ -d N ] [ -efmt { new* | old } ] [ -gl gc-list ] [ -limit N ] geo-dir"
 
-NOW="$(date +%Y%m%dT%H%M%S)"
+TODAY="$(date +%Y%m%d)"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME is not defined"
@@ -20,6 +20,7 @@ DM_SCRIPTS=$DM_HOME/scripts
 TMP_AFILE=/tmp/addrs.$$
 TMP_AFILE_1=/tmp/addrs_1.$$
 TMP_OFILE=/tmp/out.$$
+TMP_OFILE_1=/tmp/out_1.$$
 TMP_EFILE=/tmp/err.$$
 TMP_EFILE_1=/tmp/err_1.$$
 TMP_EFILE_2=/tmp/err_2.$$
@@ -131,26 +132,6 @@ if [ ! -z "$LIMIT" ] ; then
 	LIMIT="LIMIT $LIMIT"
 fi
 
-#tm OLD
-#tm # keep track of which geocoder we're using.  geocod.io (geo) is still default
-#tm if [ ! -z "$GEO" ] ; then
-#tm 	GC_NAME=$GEO
-#tm 	GEO="-geo $GEO"		# set flag for add_geo_to_addrs.sh
-#tm else
-#tm 	GC_NAME="geo"
-#tm fi
-#tm GEO_TSV_FNAME=addrs.$NOW.$GC_NAME.tsv
-#tm GEO_ERR_FNAME=addrs.$NOW.$GC_NAME.err
-#tm
-#tm if [ -z "$GEO_DIR" ] ; then
-#tm 	LOG ERROR "missing geo-dir"
-#tm 	echo "$U_MSG" 1>&2
-#tm 	exit 1
-#tm elif [ ! -d $GEO_DIR ] ; then
-#tm 	LOG ERROR "geo-dir $GEO_DIR does not exit or is not a directory"
-#tm 	exit 1
-#tm fi
-
 # set up the geocoder order
 if [ -z "$GC_LIST" ] ; then
 	GC_LIST="$GEO_PRIMARY,$GEO_SECONDARY"
@@ -164,6 +145,13 @@ else
 fi
 
 rval=0
+
+# this is a test query that finds #6 w/geo, #48 w/ocd and both miss on #80
+#echo -e ".mode tabs\nPRAGMA foreign_keys = on ;\nSELECT * FROM addresses WHERE address_id in (6, 48, 80) ;"	|\
+
+# this is the real query
+# echo -e ".mode tabs\nPRAGMA foreign_keys = on ;\nSELECT * FROM addresses WHERE a_stat = 'G' AND as_reason = 'new' $LIMIT ;"	|\
+
 echo -e ".mode tabs\nPRAGMA foreign_keys = on ;\nSELECT * FROM addresses WHERE a_stat = 'G' AND as_reason = 'new' $LIMIT ;"	|\
 sqlite3 $DM_DB										|\
 awk -F'\t' 'BEGIN {
@@ -176,12 +164,24 @@ awk -F'\t' 'BEGIN {
 	}
 	printf("%s\t%s\t%s\t%s\t%s\t%s\n", $2, ".", $4, ".", $6, $5)
 }'	| tee $TMP_AFILE > $TMP_AFILE_1
+n_ADDRS=$(tail -n +2 $TMP_AFILE | wc -l | tr -d ' ')
+LOG INFO "get geo for $n_ADDRS addresses"
+
 # do the work
+n_FOUND=0
 for geo in $(echo $GC_LIST | tr ',' ' '); do
-	$DM_SCRIPTS/add_geo_to_addrs.sh $DELAY $EFMT -geo $geo -at src $TMP_AFILE_1 >> $TMP_OFILE 2> $TMP_EFILE_1
-	n_OFILE=$(cat $TMP_OFILE | wc -l)
-	n_EFILE_1=$(grep '^ERROR' $TMP_EFILE_1 | wc -l)
-	n_ADDRS=$((n_OFILE + n_EFILE_1))
+	$DM_SCRIPTS/add_geo_to_addrs.sh $DELAY $EFMT -geo $geo -at src $TMP_AFILE_1 > $TMP_OFILE_1 2> $TMP_EFILE_1
+	n_OFILE_1=$(cat $TMP_OFILE_1 | wc -l | tr -d ' ')
+	n_FOUND=$((n_OFILE_1 + n_FOUND))
+	LOG INFO "found $n_OFILE_1 addresses using geocoder $geo"
+	if [ -s $TMP_OFILE_1 ] ; then
+		$DM_SCRIPTS/update_addrs_with_geo_loc.sh -db $DM_DB -d $TODAY -geo $geo -at src < $TMP_OFILE_1
+	fi
+
+	# TODO: put this under a switch in case this data is not wanted
+	cat $TMP_OFILE_1 >> $TMP_OFILE
+
+	n_EFILE_1=$(grep '^ERROR' $TMP_EFILE_1 | wc -l | tr -d ' ')
 	if [ $n_EFILE_1 -eq 0 ] ; then
 		# resolved all addrs; any errors in $TMP_EFILE were fixed so remove it
 		rm -f $TMP_EFILE
@@ -217,13 +217,16 @@ for geo in $(echo $GC_LIST | tr ',' ' '); do
 	fi
 done
 
+# TODO: put this under a switch in case this data is not wanted
 cat $TMP_OFILE
-LOG INFO "$n_OFILE/$n_ADDRS were found"
+
+LOG INFO "$n_FOUND/$n_ADDRS addresses were found"
 if [ -s $TMP_EFILE ] ; then
-	LOG ERROR "$n_EFILE_1/$n_ADDRS were not found"
+	LOG ERROR "$n_EFILE_1/$n_ADDRS addresses were not found"
+	$DM_SCRIPTS/update_addrs_with_geo_errors.sh -db $DM_DB -d $TODAY < $TMP_EFILE
 	cat $TMP_EFILE_1 1>&2
 fi
 
-rm -f $TMP_AFILE $TMP_AFILE_1 $TMP_OFILE $TMP_EFILE $TMP_EFILE_1 $TMP_EFILE_2
+rm -f $TMP_AFILE $TMP_AFILE_1 $TMP_OFILE $TMP_OFILE_1 $TMP_EFILE $TMP_EFILE_1 $TMP_EFILE_2
 
 exit $rval

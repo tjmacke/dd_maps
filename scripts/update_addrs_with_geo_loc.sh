@@ -112,6 +112,8 @@ if [ -z "$FILE" ] ; then
 		LOG ERROR "-d YYYYMMDD must be specified when reading from stdin"
 		exit 1
 	fi
+	f_GEO=
+	f_DATE=
 else
 	f_GEO="$(echo $FILE | awk -F. '{ print $3 }')"
 	if [ "$f_GEO" != "ocd" ] && [ "$f_GEO" != "geo" ] ; then
@@ -126,18 +128,18 @@ else
 	fi
 fi
 
-if [ -z "$GEO" ] ; then
-	GEO=$f_GEO
-elif [ "$GEO" != "$f_GEO" ] ; then
-	LOG ERROR "specified geo, $GEO, does not match file geo, $f_GEO"
-	exit 1
+if [ ! -z "$f_GEO" ] && [ ! -z "$GEO" ] ; then
+	if [ "$f_GEO" != "$GEO" ] ; then
+		LOG ERROR "geo from file name $f_GEO and geo from args $GEO differ"
+		exit 1
+	fi
 fi
 
-if [ -z "$DATE" ] ; then
-	DATE=$f_DATE
-elif [ "$DATE" != "$f_DATE" ] ; then
-	LOG ERROR "specified date, $DATE, does not match file date, $f_DATE"
-	exit 1
+if [ ! -z "$f_DATE" ] && [ ! -z "$DATE" ] ; then
+	if [ "$f_DATE" != "$DATE" ] ; then
+		LOG ERROR "date from file name $f_DATE and date from args $DATE differ"
+		exit 1
+	fi
 fi
 
 cat $FILE	|\
