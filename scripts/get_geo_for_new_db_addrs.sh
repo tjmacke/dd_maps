@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -db db-file [ -d N ] [ -efmt { new* | old } ] [ -gl gc-list ] [ -limit N ] geo-dir"
+U_MSG="usage: $0 [ -help ] [ -d N ] [ -efmt { new* | old } ] [ -gl gc-list ] [ -limit N ] db"
 
 TODAY="$(date +%Y%m%d)"
 
@@ -25,12 +25,11 @@ TMP_EFILE=/tmp/err.$$
 TMP_EFILE_1=/tmp/err_1.$$
 TMP_EFILE_2=/tmp/err_2.$$
 
-DM_DB=
 DELAY=
 EFMT=new
 GC_LIST=
 LIMIT=
-GEO_DIR=
+DM_DB=
 
 while [ $# -gt 0 ] ; do
 	case $1 in
@@ -56,16 +55,6 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		EFMT=$1
-		shift
-		;;
-	-db)
-		shift
-		if [ $# -eq 0 ] ; then
-			LOG ERROR "-db requires db-file argument"
-			echo "$U_MSG" 1>&2
-			exit 1
-		fi
-		DM_DB=$1
 		shift
 		;;
 	-gl)
@@ -94,7 +83,7 @@ while [ $# -gt 0 ] ; do
 		exit 1
 		;;
 	*)
-		GEO_DIR=$1
+		DM_DB=$1
 		shift
 		break
 		;;
@@ -119,15 +108,6 @@ else
 	EFMT="-efmt $EFMT"
 fi
 
-if [ -z "$DM_DB" ] ; then
-	LOG ERROR "missing -db db-file argument"
-	echo "$U_MSG" 1>&2
-	exit 1
-elif [ ! -s $DM_DB ] ; then
-	LOG ERROR "database $DM_DB either does not exist or has zero size"
-	exit 1
-fi
-
 if [ ! -z "$LIMIT" ] ; then
 	LIMIT="LIMIT $LIMIT"
 fi
@@ -142,6 +122,15 @@ else
 		exit 1
 	fi
 	GC_LIST=$GC_WORK	# comma sep list w/o spaces
+fi
+
+if [ -z "$DM_DB" ] ; then
+	LOG ERROR "missing db argument"
+	echo "$U_MSG" 1>&2
+	exit 1
+elif [ ! -s $DM_DB ] ; then
+	LOG ERROR "database $DM_DB either does not exist or has zero size"
+	exit 1
 fi
 
 rval=0
