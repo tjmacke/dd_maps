@@ -11,14 +11,6 @@ fi
 DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
-# set thsese from the cmd line
-#DM_ADDRS=$DM_HOME/addrs
-#DM_DB=$DM_ADDRS/dd_maps.db
-
-#if [ ! -s $DM_DB ] ; then
-#	LOG ERROR "database $DM_DB either does not exist or has zero size"
-#	exit 1
-#fi
 
 DM_DB=
 FILE=

@@ -2,9 +2,11 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] -a addrs-file [ runs-file ]"
+U_MSG="usage: $0 [ -help ] -db db-file [ runs-file ]"
 
-AFILE=
+TMP_AFILE=/tmp/addrs.$$
+
+DM_DB=
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -13,14 +15,14 @@ while [ $# -gt 0 ] ; do
 		echo "$U_MSG"
 		exit 0
 		;;
-	-a)
+	-db)
 		shift
 		if [ $# -eq 0 ] ; then
-			LOG ERROR "-a requires fixed-addrs-file argument"
+			LOG ERROR "-db requires db-file argument"
 			echo "$U_MSG" 1>&2
 			exit 1
 		fi
-		AFILE=$1
+		DM_DB=$1
 		shift
 		;;
 	-*)
@@ -42,14 +44,19 @@ if [ $# -ne 0 ] ; then
 	exit 1
 fi
 
-if [ -z "$AFILE" ] ; then
-	LOG ERROR "missing -a fixed-addrs-file argument"
+if [ -z "$DM_DB" ] ; then
+	LOG ERROR "missing -db db-file argument"
 	echo "$U_MSG" 1>&2
 	exit 1
 fi
 
+sqlite3 $DM_DB > $TMP_AFILE <<_EOF_
+.mode tab
+select address from addresses ;
+_EOF_
+
 awk -F'\t' 'BEGIN {
-	afile = "'"$AFILE"'"
+	afile = "'"$TMP_AFILE"'"
 	for(n_atab = 0; (getline < afile) > 0; ){
 		n_atab++
 		atab[$0] = 0
@@ -68,3 +75,5 @@ END {
 			printf("%s\n", a)
 	}
 }' $FILE
+
+rm -f $TMP_AFILE
