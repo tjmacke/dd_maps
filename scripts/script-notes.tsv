@@ -1,5 +1,5 @@
 script	uses $DM_HOME	uses sqlite3	calls	notes
-add_geo_to_addrs.sh	yes	no	get_latlong.sh	uses $DM_ETC/address.info
+add_geo_to_addrs.sh	yes	no	get_latlong.sh	uses $DM_ETC/address.info, $DM_ETC/geocoder_defs.sh
 add_new_addrs.sh	yes	no	get_addrs_from_runs.sh, insert_new_addrs.sh	use last mod date $DM_DB to select runs file wth new addresses
 cfg_to_json.sh	no	no	.	.
 chk_AU_parse.sh	yes	yes	.	uses $DM_ETC/address.info, $DM_LIB/cfg_utils.awk, $DM_LIB/addr_utils.awk
@@ -11,9 +11,9 @@ find_qry_aliases.sh	yes	yes	.	.
 find_unused_addrs_in_runs.sh	no	no	.	.
 get_addrs_from_runs.sh	yes	no	.	uses $DM_ETC/address.info, $DM_LIB/cfg_utils.awk, $DM_LIB/addr_utils.awk
 get_freshness_info.sh	no	no	.	.
-get_geo_for_addrs.sh	yes	no	get_addrs_from_runs.sh, add_geo_to_addrs.sh	.
-get_geo_for_new_db_addrs.sh	yes	yes	add_geo_to_addrs.sh	.
-get_latlong.sh	no	no	.	uses ~/etc/opencagedata.key, ~/etc/geocodio.key, $JU_BIN/json_get
+get_geo_for_addrs.sh	yes	no	get_addrs_from_runs.sh, add_geo_to_addrs.sh	$DM_ETC/geocoder_defs.sh
+get_geo_for_new_db_addrs.sh	yes	yes	add_geo_to_addrs.sh	$DM_ETC/geocoder_defs.sh
+get_latlong.sh	yes	no	.	uses $DM_ETC/geocoder_defs.sh, ~/etc/opencagedata.key, ~/etc/geocodio.key, $JU_BIN/json_get
 get_new_sources.sh	no	no	.	.
 get_pay_rates.sh	no	no	.	.
 insert_new_addrs.sh	yes	yes	.	.
