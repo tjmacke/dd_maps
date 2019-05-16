@@ -80,6 +80,14 @@ SELECT dst.address
 	FROM jobs
 	INNER JOIN addresses dst ON dst.address_id = jobs.dst_addr_id ;
 
+-- Get the count and most receent date of a source address. For destination addr gs/src/dst/g
+PRAGMA foreign_keys = ON ;
+SELECT count(src.address), max(time_start), src.address
+	FROM jobs 
+	INNER JOIN addresses src ON src.address_id = src_addr_id
+	GROUP BY address 
+	ORDER BY count(src.address) DESC ;
+
 -- UPDATE stmts
 -- Add geo to a known address
 PRAGMA foreign_keys = ON ;
