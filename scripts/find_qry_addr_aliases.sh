@@ -53,7 +53,7 @@ awk -F'\t' '{
 		if(l_1 != ""){
 			if(n_addrs > 1){
 				asorti(addrs, addrs_idx)
-				printf("qry = %s {\n", l_1)
+				printf("qry(%s) = %d {\n", l_1, n_addrs)
 				for(i = 1; i <= n_addrs; i++)
 					printf("\t%s\n", addrs_idx[i])
 				printf("}\n")
@@ -71,7 +71,7 @@ END {
 	if(l_1 != ""){
 		if(n_addrs > 1){
 			asorti(addrs, addrs_idx)
-			printf("qry = %s {\n", l_1)
+			printf("qry(%s) = %d {\n", l_1, n_addrs)
 			for(i = 1; i <= n_addrs; i++)
 				printf("\t%s\n", addrs_idx[i])
 			printf("}\n")
