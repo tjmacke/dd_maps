@@ -81,8 +81,9 @@ SELECT dst.address
 	INNER JOIN addresses dst ON dst.address_id = jobs.dst_addr_id ;
 
 -- Get the count and most receent date of a source address. For destination addr gs/src/dst/g
+-- use strftime('%Y-%m-%d', MAX(time_start)) to limit datetime precision to the date:w
 PRAGMA foreign_keys = ON ;
-SELECT count(src.address), max(time_start), src.address
+SELECT COUNT(src.address), MAX(time_start), src.address
 	FROM jobs 
 	INNER JOIN addresses src ON src.address_id = src_addr_id
 	GROUP BY address 
