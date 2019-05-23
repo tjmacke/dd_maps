@@ -9,7 +9,6 @@ plotAddrInfo <- function(df, atype, app, multi) {
 	source(sfn, chdir=T)
 
 	dl <- makeDateLabels(df$date)
-
 	ya_info <- getYaxisInfo(max(ifelse(atype == 'src', df$nNewSources, df$nNewDests)))
 	y_max = max(ya_info)
 
@@ -42,8 +41,16 @@ plotAddrInfo <- function(df, atype, app, multi) {
 	abline(v=dl$tk, lty=3, col='black')
 
 	if(length(df$date) >= 2) {
-		lines(as.Date(df$date, '%Y-%m-%d'), ifelse(atype == 'src', df$nNewSources, df$nNewDests))
+		if(atype == 'src') {
+			lines(as.Date(df$date, '%Y-%m-%d'), df$nNewSources)
+		} else {
+			lines(as.Date(df$date, '%Y-%m-%d'), df$nNewDests)
+		}
 	} else {
-		points(as.Date(df$date, '%Y-%m-%d'), ifelse(atype == 'src', df$nNewSources, df$nNewDests))
+		if(atype == 'src') {
+			points(as.Date(df$date, '%Y-%m-%d'), df$nNewSources)
+		} else {
+			points(as.Date(df$date, '%Y-%m-%d'), df$nNewDests)
+		}
 	}
 }
