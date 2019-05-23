@@ -12,6 +12,16 @@ plotAddrInfo <- function(df, atype, app, multi) {
 	ya_info <- getYaxisInfo(max(ifelse(atype == 'src', df$nNewSources, df$nNewDests)))
 	y_max = max(ya_info)
 
+	if(atype == 'src') {
+		df_yvals = df$nNewSources
+		g_ylab = 'Number of New Sources'
+		g_title = 'New Delivery Sources'
+	} else {
+		df_yvals = df$nNewDests
+		g_ylab = 'Number of New Destinations'
+		g_title = 'New Delivery Destinations'
+	}
+
 	plot(
 		c(as.Date(dl$tk[1], '%Y-%m-%d'), as.Date(dl$tk[length(dl$tk)], '%Y-%m-%d')),
 		c(0, y_max), # ORIG: c(0, 10),
@@ -19,7 +29,7 @@ plotAddrInfo <- function(df, atype, app, multi) {
 		xlab='Month',
 		xaxt='n',
 		yaxt='n',
-		ylab='Number of New Sources')
+		ylab = g_ylab)
 
 	l_date <- df[length(df$date), 1]
 	if (multi) {
@@ -27,13 +37,13 @@ plotAddrInfo <- function(df, atype, app, multi) {
 		y_adj <- 1
 		text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.7)
 		axis(2, at=ya_info, labels=ya_info, las=1)
-		title(paste('New Delivery Sources', l_date, sep=' through '), cex.main=1)
+		title(paste(g_title, l_date, sep=' through '), cex.main=1)
 	} else {
 		axis(1, at=dl$tk, labels=F)
 		y_adj <- 0.75
 		text(dl$tk, y = 0 - y_adj, labels=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.8)
 		axis(2, at=ya_info, labels=ya_info, las=1)
-		title(paste('New Delivery Sources', l_date, sep=' through '))
+		title(paste(g_title, l_date, sep=' through '))
 	}
 
 	# draw a nice grid
@@ -41,16 +51,8 @@ plotAddrInfo <- function(df, atype, app, multi) {
 	abline(v=dl$tk, lty=3, col='black')
 
 	if(length(df$date) >= 2) {
-		if(atype == 'src') {
-			lines(as.Date(df$date, '%Y-%m-%d'), df$nNewSources)
-		} else {
-			lines(as.Date(df$date, '%Y-%m-%d'), df$nNewDests)
-		}
+		lines(as.Date(df$date, '%Y-%m-%d'), df_yvals)
 	} else {
-		if(atype == 'src') {
-			points(as.Date(df$date, '%Y-%m-%d'), df$nNewSources)
-		} else {
-			points(as.Date(df$date, '%Y-%m-%d'), df$nNewDests)
-		}
+		points(as.Date(df$date, '%Y-%m-%d'), df_yvals)
 	}
 }

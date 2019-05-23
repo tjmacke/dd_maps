@@ -26,7 +26,7 @@ while [ $# -gt 0 ] ; do
 		;;
 	-app)
 		shift
-		if [ $# -eq ] ; then
+		if [ $# -eq 0 ] ; then
 			LOG ERROR "-app requires app-name argument"
 			echo "$U_MSG" 1>&2
 			exit 1

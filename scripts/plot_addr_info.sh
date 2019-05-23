@@ -72,8 +72,6 @@ elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
 	exit 1
 fi
 
-LOG DEBUG "APP = $APP"
-
 if [ "$APP" != "any" ] && [ "$APP" != "gh" ] && [ "$APP" != "dd" ] && [ "$APP" != "pm" ] && [ "$APP" != "ue" ] ; then
 	LOG ERROR "unknown app $APP, must one of gh, dd, pm, ue or any"
 	echo "$U_MSG" 1>&2

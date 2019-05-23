@@ -48,6 +48,6 @@ if (dfn == '') {
 }
 
 df <- read.csv(dfn, sep='\t')
-ofn <- sprintf('newSources.%s.pdf', format(Sys.time(), '%Y-%m-%d'))
+ofn <- sprintf('new%s.%s.pdf', ifelse(atype == 'src', 'Sources', 'Dests'), format(Sys.time(), '%Y-%m-%d'))
 pdf(file=ofn)
 plotAddrInfo(df, atype, app, F)
