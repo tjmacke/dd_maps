@@ -2,10 +2,10 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] -at { src | dst } [ -app { any*|gh|dd|pm|ue } ] [ runs-file ]"
+U_MSG="usage: $0 [ -help ] -at { src | dst } [ -app { ALL*|gh|dd|cav|pm|ue } ] [ runs-file ]"
 
 ATYPE=
-APP=any
+APP=ALL
 FILE=
 
 while [ $# -gt 0 ] ; do
@@ -63,8 +63,8 @@ elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
 	exit 1
 fi
 
-if [ "$APP" != "any" ] && [ "$APP" != "gh" ] && [ "$APP" != "dd" ] && [ "$APP" != "pm" ] && [ "$APP" != "ue" ] ; then
-	LOG ERROR "unknown app $APP, must one of gh, dd, pm, ue or any"
+if [ "$APP" != "ALL" ] && [ "$APP" != "gh" ] && [ "$APP" != "dd" ] && [ "$APP" != "cav" ] && [ "$APP" != "pm" ] && [ "$APP" != "ue" ] ; then
+	LOG ERROR "unknown app $APP, must one of gh, dd, cav, pm, ue or ALL"
 	echo "$U_MSG" 1>&2
 	exit 1
 fi
@@ -77,6 +77,10 @@ awk -F'\t' 'BEGIN {
 }
 {
 	if($5 == "Job"){
+		if(app != "ALL"){
+			if($9 != app)
+				next
+		}
 		if(!($1 in dates))
 			n_dates++
 		dates[$1]++
@@ -84,6 +88,8 @@ awk -F'\t' 'BEGIN {
 			n_addrs++
 		addrs[$f_addr]++
 	}else if($5 == "END"){
+		if(n_dates == 0)
+			next
 		if(pr_hdr){
 			pr_hdr = 0
 			at_str = atype == "src" ? "Sources" : "Dests"

@@ -3,7 +3,7 @@
 . ~/etc/funcs.sh
 export LC_ALL=C
 
-U_MSG="usage: $0 [ -help ] -at { src | dst } [ -app { any*|gh|dd|pm|ue } ] source-file"
+U_MSG="usage: $0 [ -help ] -at { src | dst } [ -app { ALL*|gh|dd|cav|pm|ue } ] source-file"
 
 if [ -z "$DM_HOME" ] ; then
 	LOG ERROR "DM_HOME not defined"
@@ -14,7 +14,7 @@ DM_ETC=$DM_HOME/etc
 DM_LIB=$DM_HOME/lib
 DM_SCRIPTS=$DM_HOME/scripts
 
-APP=any
+APP=ALL
 ATYPE=
 FILE=
 
@@ -72,8 +72,8 @@ elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
 	exit 1
 fi
 
-if [ "$APP" != "any" ] && [ "$APP" != "gh" ] && [ "$APP" != "dd" ] && [ "$APP" != "pm" ] && [ "$APP" != "ue" ] ; then
-	LOG ERROR "unknown app $APP, must one of gh, dd, pm, ue or any"
+if [ "$APP" != "ALL" ] && [ "$APP" != "gh" ] && [ "$APP" != "dd" ] && [ "$APP" != "cav" ] && [ "$APP" != "pm" ] && [ "$APP" != "ue" ] ; then
+	LOG ERROR "unknown app $APP, must one of gh, dd, cav, pm, ue or ALL"
 	echo "$U_MSG" 1>&2
 	exit 1
 fi

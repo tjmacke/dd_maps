@@ -1,4 +1,4 @@
-plotFreshnessInfo <- function(df, stype, multi) {
+plotFreshnessInfo <- function(df, atype, multi) {
 
 	if (!exists('dm_home')) {
 		stop('dm_home is not defined.', call.=T)
@@ -27,13 +27,13 @@ plotFreshnessInfo <- function(df, stype, multi) {
 		text(dl$tk, y = 0 - y_adj, label=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.7)
 		axis(1, at=dl$tk, label=F)
 		axis(2, at=ya_info, labels=ya_info, las=1, cex=0.8)
-		title(paste(stype, ' Freshness through ', l_date, sep=''), cex.main=1)
+		title(paste(atype, ' Freshness through ', l_date, sep=''), cex.main=1)
 	} else {
 		y_adj <- 4.2
 		text(dl$tk, y = 0 - y_adj, label=dl$lb, srt=45, pos=2, off=-0.2, xpd=T, cex=0.8)
 		axis(1, at=dl$tk, label=F)
 		axis(2, at=ya_info, labels=ya_info, las=1)
-		title(paste(stype, ' Freshness through ', l_date, sep=''))
+		title(paste(atype, ' Freshness through ', l_date, sep=''))
 	}
 
 	# draw a nice grid

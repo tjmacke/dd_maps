@@ -40,7 +40,7 @@ if (atype == '') {
 	stop('ERROR: missing -at { src | dst } argument', call.=F)
 } else if(atype != 'src' && atype != 'dst') {
 	stop(paste('ERROR: unknown address type', atype, 'must be src or dst', sep=' '), call.=F)
-} else if(app != 'any' && app != 'gh' && app != 'dd' && app != 'pm' && app != 'ue') {
+} else if(app != 'ALL' && app != 'gh' && app != 'dd' && app != 'cav' && app != 'pm' && app != 'ue') {
 	stop(paste('ERROR: unknown app', app, 'must be one of gh, dd, pm, ue or any', sep=' '), call.=F)
 }
 if (dfn == '') {
@@ -48,6 +48,6 @@ if (dfn == '') {
 }
 
 df <- read.csv(dfn, sep='\t')
-ofn <- sprintf('new%s.%s.pdf', ifelse(atype == 'src', 'Sources', 'Dests'), format(Sys.time(), '%Y-%m-%d'))
+ofn <- sprintf('new%s.%s.%s.pdf', ifelse(atype == 'src', 'Sources', 'Dests'), app, format(Sys.time(), '%Y-%m-%d'))
 pdf(file=ofn)
 plotAddrInfo(df, atype, app, F)
