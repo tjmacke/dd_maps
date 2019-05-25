@@ -15,11 +15,6 @@ DM_SCRIPTS=$DM_HOME/scripts
 
 TMP_DFILE=/tmp/dashes.$$
 
-if [ ! -s $DM_DB ] ; then
-	LOG ERROR "database $DM_DB either does not exist or has zero size"
-	exit 1
-fi
-
 DM_DB=
 FILE=
 
