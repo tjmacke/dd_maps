@@ -22,6 +22,13 @@ plotAddrInfo <- function(df, atype, app, multi) {
 		g_title = 'New Delivery Destinations'
 	}
 
+	# TODO: do this right, allow > 1 col
+	if(app == 'ALL') {
+		l_msg = 'ALL apps'
+	} else {
+		l_msg = sprintf('%s app', app)
+	}
+
 	plot(
 		c(as.Date(dl$tk[1], '%Y-%m-%d'), as.Date(dl$tk[length(dl$tk)], '%Y-%m-%d')),
 		c(0, y_max), # ORIG: c(0, 10),
@@ -55,4 +62,8 @@ plotAddrInfo <- function(df, atype, app, multi) {
 	} else {
 		points(as.Date(df$date, '%Y-%m-%d'), df_yvals)
 	}
+
+	legend('topleft', inset=c(0.08, 0.02), bg='white',
+		legend=c(l_msg),
+		col=c('black'), lty=1, cex=ifelse(multi, 0.4, 0.7))
 }
