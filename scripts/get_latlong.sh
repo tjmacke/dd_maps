@@ -13,6 +13,14 @@ DM_ETC=$DM_HOME/etc
 
 . $DM_ETC/geocoder_defs.sh
 
+function ss_post {
+	awk -F'\t' '{
+		printf("%s, %s, %s %s\n", $1, $2, $4, $5)
+		if($3 != $2)
+			printf("%s, %s, %s %s\n", $1, $3, $4, $5)
+	}'
+}
+
 # TODO: fix this evil dependency
 JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
@@ -129,6 +137,27 @@ elif [ "$GEO" == "ocd" ] ; then
 	URL="https://api.opencagedata.com/geocode/v1/json?$PARMS"
 	JG_REQ='{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'
 	POST="sort -k 1rn,1"
+elif [ "$GEO" == "ss" ] ; then
+	URL_TEMPLATE="https://us-street.api.smartystreets.com/street-address?auth-id=%s&auth-token=%s&street=%s&city=%s&state=%s&candidates=%d"
+	AUTH_ID="$(cat ~/etc/smartystreets.auth-id)"
+	AUTH_TOKEN="$(cat ~/etc/smartystreets.auth-token)"
+	CANDIDATES=10
+	URL="$(
+		awk 'BEGIN {
+			url_template = "'"$URL_TEMPLATE"'"
+			auth_id = "'"$AUTH_ID"'"
+			auth_token = "'"$AUTH_TOKEN"'"
+			addr = "'"$E_ADDR"'"
+			candidates = "'"$CANDIDATES"'" + 0
+		}
+		END {
+			n_ary = split(addr, ary, "%2C")	# encoded comma
+			printf(url_template, auth_id, auth_token, ary[1], ary[2], ary[3], candidates)
+		}' < /dev/null
+	)"
+	JG_REQ='[1]{delivery_line_1, components}{city_name, default_city_name, state_abbreviation, zipcode}'
+	# couldn't get the quoting to work, so define a func!
+	POST=ss_post
 else 
 	LOG ERROR "unknown geocoder $GEO"
 	exit 1

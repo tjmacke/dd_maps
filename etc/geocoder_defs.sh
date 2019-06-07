@@ -2,8 +2,9 @@
 #
 
 # geocoder defs
-GEO_PRIMARY=geo		# geocod.io is the primary geocoder
-GEO_SECONDARY=ocd	# opencagedata.com is the secondary geocoder
+GEO_PRIMARY=geo		# geocod.io: free 2500/day
+GEO_SECONDARY=ocd	# opencagedata.com: free 2500/day
+GEO_TERTIARY=ss		# smartystreets.com: free 250/month!
 
 function chk_geocoders {
 
@@ -11,6 +12,7 @@ function chk_geocoders {
 	awk 'BEGIN {
 		k_geos["'"$GEO_PRIMARY"'"] = 1
 		k_geos["'"$GEO_SECONDARY"'"] = 1
+		k_geos["'"$GEO_TERTIARY"'"] = 1
 	}
 	{
 		n_ary = split($0, ary, ",")
