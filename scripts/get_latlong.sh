@@ -15,9 +15,9 @@ DM_ETC=$DM_HOME/etc
 
 function ss_post {
 	awk -F'\t' '{
-		printf("%s, %s, %s %s\n", $1, $2, $4, $5)
+		printf("1\t%s, %s, %s %s\t%s\t%s\n", $1, $2, $4, $5, $6, $7)
 		if($3 != $2)
-			printf("%s, %s, %s %s\n", $1, $3, $4, $5)
+			printf("2\t%s, %s, %s %s\t%s\t%s\n", $1, $3, $4, $5, $6, $7)
 	}'
 }
 
@@ -155,7 +155,7 @@ elif [ "$GEO" == "ss" ] ; then
 			printf(url_template, auth_id, auth_token, ary[1], ary[2], ary[3], candidates)
 		}' < /dev/null
 	)"
-	JG_REQ='[1]{delivery_line_1, components}{city_name, default_city_name, state_abbreviation, zipcode}'
+	JG_REQ='[1]{delivery_line_1, components}{city_name, default_city_name, state_abbreviation, zipcode},[1]{metadata}{latitude, longitude}'
 	# couldn't get the quoting to work, so define a func!
 	POST=ss_post
 else 
