@@ -3,6 +3,7 @@ add_geo_to_addrs.sh	yes	no	get_latlong.sh	uses $DM_ETC/address.info, $DM_ETC/geo
 add_new_addrs.sh	yes	no	get_addrs_from_runs.sh, insert_new_addrs.sh	use last mod date $DM_DB to select runs file wth new addresses
 cfg_to_json.sh	no	no	.	.
 chk_AU_parse.sh	yes	yes	.	uses $DM_ETC/address.info, $DM_LIB/cfg_utils.awk, $DM_LIB/addr_utils.awk
+chk_addr.sh	yes	no	get_geo_for_addrs.sh, cfg_to_json.sh, map_addrs.sh	uses $DM_ETC/geocoder_defs.sh, $DM_LIB/cfg_utils.awk, $DM_LIB/color_utils.awk, $DM_LIB/interp_utils.awk
 color_map_data.sh	yes	no	.	uses $DM_LIB/cfg_utils.awk, $DM_LIB/color_utils.awk, $DM_LIB/interp_utils.awk
 count_addrs.sh	no	no	.	.
 delete_unused_addrs.sh	yes	yes	.	.
