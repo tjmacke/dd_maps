@@ -4,7 +4,6 @@ add_new_addrs.sh	yes	no	get_addrs_from_runs.sh, insert_new_addrs.sh	use last mod
 cfg_to_json.sh	no	no	.	.
 chk_AU_parse.sh	yes	yes	.	uses $DM_ETC/address.info, $DM_LIB/cfg_utils.awk, $DM_LIB/addr_utils.awk
 chk_addr.sh	yes	no	get_geo_for_addrs.sh, cfg_to_json.sh, map_addrs.sh	uses $DM_ETC/geocoder_defs.sh, $DM_LIB/cfg_utils.awk, $DM_LIB/color_utils.awk, $DM_LIB/interp_utils.awk
-color_map_data.sh	yes	no	.	uses $DM_LIB/cfg_utils.awk, $DM_LIB/color_utils.awk, $DM_LIB/interp_utils.awk
 count_addrs.sh	no	no	.	.
 delete_unused_addrs.sh	yes	yes	.	.
 find_geo_aliases.sh	yes	yes	.	.
@@ -20,7 +19,6 @@ get_pay_rates.sh	no	no	.	.
 insert_new_addrs.sh	yes	yes	.	.
 insert_new_dashes.sh	yes	yes	.	.
 insert_new_jobs.sh	yes	yes	.	uses $DM_LIB/dash_utils.awk
-make_geojson.sh	no	no	.	uses $DM_LIB/geo_utils.awk
 map_addrs.sh	no	no	.	uses $DM_LIB/cfg_utils.awk, $JU_BIN/json_get, $CB_DATA/*, $CB_BIN/kml2geojson, $FM_BIN/getentry
 merge_geo_error_files.sh	no	no	.	.
 plot_all_stats.sh	yes	no	get_pay_rates.sh, get_new_sources.sh, get_freshness_info.sh, $DM_LIB/plotAllStatsMain.R	Requires R, Rscript
