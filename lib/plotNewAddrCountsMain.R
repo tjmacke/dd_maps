@@ -39,6 +39,7 @@ if (dfn == '') {
 }
 
 df <- read.csv(dfn, sep='\t')
+df[df == -1] <- NA
 ofn <- sprintf('new%s.%s.pdf', ifelse(atype == 'src', 'Sources', 'Dests'), format(Sys.time(), '%Y-%m-%d'))
 pdf(file=ofn)
 plotNewAddrCounts(df, atype, F)

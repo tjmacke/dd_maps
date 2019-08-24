@@ -114,10 +114,33 @@ END {
 	for(i = 1; i <= n_apps; i++)
 		printf("\t%s", apps[i])
 	printf("\n")
+	# check if 1st date is 1st of month, if not add YYYY-mm-01 -1 ...
+	if(out["date", 1] !~ /01$/){
+		printf("%s-01", substr(out["date", 1], 1, 7))
+		for(j = 1; j <= n_apps; j++)
+			printf("\t-1")
+		printf("\n")
+	}
 	for(i = 1; i <= n_aa_pairs; i++){
 		printf("%s", out["date", i])
 		for(j = 1; j <= n_apps; j++)
 			printf("\t%s", out[apps[j], i])
+		printf("\n")
+	}
+	# chexk if last date is 1st of month, if not add 1st of next month -1 ...
+	if(out["date", n_aa_pairs] !~ /01$/){
+		n_ary = split(out["date", n_aa_pairs], ary, "-")
+		for(i = 1; i <= n_ary; i++)
+			ary[i] += 0
+		if(ary[2] < 12)
+			ary[2]++
+		else{
+			ary[1]++
+			ary[2] = 1
+		}
+		printf("%04d-%02d-01", ary[1], ary[2])
+		for(j = 1; j <= n_apps; j++)
+			printf("\t-1")
 		printf("\n")
 	}
 }'	|
