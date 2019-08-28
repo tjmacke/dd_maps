@@ -54,7 +54,7 @@ elif [ "$ATYPE" != "src" ] && [ "$ATYPE" != "dst" ] ; then
 fi
 
 cat $FILE	|\
-awk -F'\t' 'BEGIN { 
+awk -F'\t' 'BEGIN {
 	f_atype = "'"$ATYPE"'" == "src" ? 6 : 7
 }
 $5 == "Job" { print $f_atype }'		|\

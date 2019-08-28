@@ -151,7 +151,7 @@ while read line ; do
 	fi
 
 	# get the dash id
-	# dashes, at this point are always contained in 1 calendar day: [00:00, 23:59], which 
+	# dashes, at this point are always contained in 1 calendar day: [00:00, 23:59], which
 	# is why the query checks only the date part of the time_start
 	date="$(echo "$line" | awk -F'\t' '{ print $1 }')"
 	tstart="$(echo "$line" | awk -F'\t' '{ print $2 }')"

@@ -121,15 +121,15 @@ BEGIN {
 		err = 1
 		exit err
 	}
- 
+
  	pa_options["rply"] = 0
  	pa_options["do_subs"] = 1
  	pa_options["no_name"] = "Residence"
- 
+
  	pq_options["rply"] = 0
  	pq_options["do_subs"] = 1
  	pq_options["no_name"] = "Residence"
- 
+
  	pr_options["rply"] = 1
  	pr_options["do_subs"] = 1
  	pr_options["no_name"] = ""

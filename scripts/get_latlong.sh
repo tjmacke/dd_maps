@@ -132,7 +132,7 @@ elif [ "$GEO" == "ocd" ] ; then
 	KEY=$(cat ~/etc/opencagedata.key)
 	PARMS="query=$E_ADDR&key=$KEY"
 	if [ ! -z "$LIMIT" ] ; then
-		PARMS="${PARMS}&limit=$LIMIT" 
+		PARMS="${PARMS}&limit=$LIMIT"
 	fi
 	URL="https://api.opencagedata.com/geocode/v1/json?$PARMS"
 	JG_REQ='{results}[1:$]{confidence, formatted, geometry}{lat, lng},{timestamp}{created_unix}'
@@ -158,7 +158,7 @@ elif [ "$GEO" == "ss" ] ; then
 	JG_REQ='[1]{delivery_line_1, components}{city_name, default_city_name, state_abbreviation, zipcode},[1]{metadata}{latitude, longitude}'
 	# couldn't get the quoting to work, so define a func!
 	POST=ss_post
-else 
+else
 	LOG ERROR "unknown geocoder $GEO"
 	exit 1
 fi

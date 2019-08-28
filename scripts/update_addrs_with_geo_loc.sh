@@ -157,7 +157,7 @@ while read line ; do
 		printf(".log stderr\\n")
 		printf("PRAGMA foreign_keys = on ;\\n")
 		# Status is geo.ok.$GEO, where $GEO is the name of the geocoder that was used to resolve the address.
-		printf("UPDATE addresses SET a_stat = %s, as_reason = %s, lng = %s, lat = %s, rply_address = %s, date_geo_checked = %s WHERE address = %s ;\n", 
+		printf("UPDATE addresses SET a_stat = %s, as_reason = %s, lng = %s, lat = %s, rply_address = %s, date_geo_checked = %s WHERE address = %s ;\n",
 			esc_string("G"), esc_string(sprintf("geo.ok.%s", geo)), $4, $5, esc_string($6), esc_string(date), esc_string($f_addr))
 	}
 	function esc_string(str,   work) {

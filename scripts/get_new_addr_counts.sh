@@ -61,7 +61,7 @@ fi
 sqlite3 $DB <<_EOF_ |
 .mode tabs
 PRAGMA foreign_keys = ON ;
-SELECT time_start, payment, $ATYPE.address 
+SELECT time_start, payment, $ATYPE.address
 FROM jobs
 INNER JOIN addresses AS $ATYPE ON $ATYPE.address_id = ${ATYPE}_addr_id
 ORDER BY time_start ;
@@ -149,12 +149,12 @@ awk -F'\t' 'NR == 1 {
 	next
 }
 {
-	date = substr($1, 1, 10) 
+	date = substr($1, 1, 10)
 	if(date != l_date){
 		if(l_date != ""){
 			n_ary = split(last, ary, "\t")
 			printf("%s", l_date)
-			for(i = 2; i <= n_ary; i++) 
+			for(i = 2; i <= n_ary; i++)
 				printf("\t%s", ary[i])
 			printf("\n")
 		}
@@ -166,7 +166,7 @@ END {
 	if(l_date != ""){
 		n_ary = split(last, ary, "\t")
 		printf("%s", l_date)
-		for(i = 2; i <= n_ary; i++) 
+		for(i = 2; i <= n_ary; i++)
 			printf("\t%s", ary[i])
 		printf("\n")
 	}

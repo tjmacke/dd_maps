@@ -7,7 +7,7 @@ U_MSG="usage: $0 [ -help ] [ config-file ]"
 FILE=
 
 while [ $# -gt 0 ] ; do
-	case $1 in 
+	case $1 in
 	-help)
 		echo "$U_MSG"
 		exit 0

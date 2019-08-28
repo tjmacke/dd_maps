@@ -161,7 +161,7 @@ while read line ; do
 		for(i = 1; i <= n_ary; i++){
 			sub(/^ */, "", ary[i])
 			sub(/ *$/, "", ary[i])
-		} 
+		}
 		printf(".log stderr\\n")
 		printf("PRAGMA foreign_keys = on ;\\n")
 		if($1 == "I"){
