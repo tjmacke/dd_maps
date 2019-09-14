@@ -7,6 +7,10 @@ function GU_d2r(d) {
 function GU_r2d(r) {
 	return (r+0)*180.0/GU_pi()
 }
+function GU_get_style_defaults(sd) {
+	sd["marker-color"] = "#aae"
+	sd["marker-size"]  = "small"
+}
 function GU_is_righthanded(count, first, x, y,   area, p, x1, y1, x2, y2) {
 	area = 0
 	for(p = 0; p < p_count[poly]; p++){
