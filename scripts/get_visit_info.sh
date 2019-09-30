@@ -81,8 +81,8 @@ sqlite3 $DB <<_EOF_
 .mode tabs
 PRAGMA foreign_keys = ON ;
 SELECT	printf('%.5f', (julianday((SELECT strftime('%Y-%m-%d', MAX(time_start)) FROM jobs)) - julianday(MAX(strftime('%Y-%m-%d', time_start))))/7) AS weeks,
-	count($ATYPE.address) AS visits,
-	max(strftime('%Y-%m-%d', time_start)) AS last,
+	COUNT($ATYPE.address) AS visits,
+	MAX(strftime('%Y-%m-%d', time_start)) AS last,
 	$ATYPE.address AS address,
 	$ATYPE.lng AS lng,
 	$ATYPE.lat AS lat
