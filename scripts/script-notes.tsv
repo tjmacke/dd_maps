@@ -16,6 +16,7 @@ get_geo_for_new_db_addrs.sh	yes	yes	add_geo_to_addrs.sh	$DM_ETC/geocoder_defs.sh
 get_latlong.sh	yes	no	.	uses $DM_ETC/geocoder_defs.sh, ~/etc/opencagedata.key, ~/etc/geocodio.key, $JU_BIN/json_get
 get_new_sources.sh	no	no	.	.
 get_pay_rates.sh	no	no	.	.
+get_visit_info.sh	no	yes	.	.
 insert_new_addrs.sh	yes	yes	.	.
 insert_new_dashes.sh	yes	yes	.	.
 insert_new_jobs.sh	yes	yes	.	uses $DM_LIB/dash_utils.awk
