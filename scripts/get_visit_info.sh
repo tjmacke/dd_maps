@@ -80,12 +80,13 @@ sqlite3 $DB <<_EOF_
 .headers on
 .mode tabs
 PRAGMA foreign_keys = ON ;
-SELECT	printf('%.5f', (julianday((SELECT strftime('%Y-%m-%d', MAX(time_start)) FROM jobs)) - julianday(MAX(strftime('%Y-%m-%d', time_start))))/7) AS weeks,
-	COUNT($ATYPE.address) AS visits,
-	MAX(strftime('%Y-%m-%d', time_start)) AS last,
+SELECT	MAX(strftime('%Y-%m-%d', time_start)) AS last,
 	$ATYPE.address AS address,
+	COUNT($ATYPE.address) AS visits,
 	$ATYPE.lng AS lng,
-	$ATYPE.lat AS lat
+	$ATYPE.lat AS lat,
+	printf('%.5f', (julianday((SELECT strftime('%Y-%m-%d', MAX(time_start)) FROM jobs)) - julianday(MAX(strftime('%Y-%m-%d', time_start))))/7) AS weeks,
+	printf('%s:<br/>visits=%s, last=%s', address, COUNT($ATYPE.address), MAX(strftime('%Y-%m-%d', time_start))) AS title
 FROM jobs
 INNER JOIN addresses $ATYPE ON $ATYPE.address_id = jobs.${ATYPE}_addr_id
 GROUP BY $ATYPE.address ;
