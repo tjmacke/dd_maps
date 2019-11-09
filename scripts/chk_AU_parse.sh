@@ -155,9 +155,10 @@ BEGIN {
 	aq_match = AU_match(mt_options, addr_ary, qry_ary)
 
 	# chk rply -> qry, "set geocoder specific flags
+	# TODO: make this less brittle
 	split(reason, ary, ".")
 	geo = ary[3]
-	pr_options["us_only"] = geo == "geo"
+	pr_options["us_only"] = (geo == "geo") || (geo == "ss")
 	AU_parse(pr_options, rply_addr, rply_ary, us_states, us_states_long, towns_r2q, st_types_2qry, dirs_2qry, ords_2qry)
 
 	qr_match = AU_match(mt_options, qry_ary, rply_ary)

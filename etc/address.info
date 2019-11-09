@@ -91,6 +91,9 @@ towns_r2q = {
 
 # Known street types and their canonical forms.
 st_types_2qry = {
+	Aly       = Alley
+        Aly.      = Alley
+	Alley     = Alley
 	Ave       = Avenue
 	Ave.      = Avenue
 	Avenue    = Avenue
