@@ -135,6 +135,7 @@ else
 fi
 
 # do the work
+rval=0
 for geo in $(echo $GC_LIST | tr ',' ' '); do
 	if [ ! -z "$ADDR" ] ; then
 		echo "$ADDR"
@@ -186,6 +187,9 @@ LOG INFO "$n_OFILE/$n_ADDRS addresses were found"
 if [ -s $TMP_EFILE ] ; then
 	LOG ERROR "$n_EFILE_1/$n_ADDRS addresses were not found"
 	cat $TMP_EFILE 1>&2
+	rval=1
 fi
 
 rm -f $TMP_AFILE $TMP_OFILE $TMP_EFILE $TMP_EFILE_1 $TMP_EFILE_2
+
+exit $rval
