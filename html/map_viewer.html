@@ -63,8 +63,11 @@
           var contents = e.target.result;
           var json = JSON.parse(contents);
           makeMap(json.geojson);
+/*
           if(json.scaleConfig != null)
             makeMapScales(json.scaleConfig);
+*/
+          makeMapScales(json.scaleConfig);
         };
         r.readAsText(f);
   

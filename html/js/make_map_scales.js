@@ -2,9 +2,17 @@ function makeMapScales(scaleData) {
 
   var fontSize = window.devicePixelRatio == 2 ? 12 : 10;
 
+  if(scaleData == null) {
+    document.getElementById("dataStats").innerHTML = '';
+    document.getElementById("mainScaleBox").innerHTML = '';
+    document.getElementById("auxScaleBox").innerHTML = '';
+    return;
+  }
+
   if("data_stats" in scaleData) {
     document.getElementById("dataStats").innerHTML = "Stats: " + scaleData.data_stats;
-  }
+  }else
+    document.getElementById("dataStats").innerHTML = '';
 
   var mainScaleProps = {}
   // properties that define the scale
@@ -72,6 +80,7 @@ function makeMapScales(scaleData) {
     makeScale(mainScaleProps);
   } else {
     // Clear the div
+    document.getElementById("mainScaleBox").innerHTML = '';
   }
 
   var auxScaleProps = {};
@@ -129,5 +138,6 @@ function makeMapScales(scaleData) {
     makeScale(auxScaleProps);
   } else {
     // Clear the div
+    document.getElementById("auxScaleBox").innerHTML = '';
   }
 }
