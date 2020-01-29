@@ -37,14 +37,14 @@
     </div>
     <div id="mainScaleBox">
       <div id="mainInfo">
-        Pin Color:
+        Main Scale:
       </div>
       <div id="mainScale">
       </div>
     </div>
     <div id="auxScaleBox">
       <div id="auxInfo">
-        Pin Size:
+        Aux Scale:
       </div>
       <div id="auxScale">
       </div>
@@ -63,10 +63,6 @@
           var contents = e.target.result;
           var json = JSON.parse(contents);
           makeMap(json.geojson);
-/*
-          if(json.scaleConfig != null)
-            makeMapScales(json.scaleConfig);
-*/
           makeMapScales(json.scaleConfig);
         };
         r.readAsText(f);

@@ -29,9 +29,11 @@ function makeMapScales(scaleData) {
   // properties that provide the scale data
   mainScaleProps.sp_divId = "#mainScale";
   mainScaleProps.sp_svgId = "#svgMainScale";
-  // TODO: Deal with missing "main" scale
   if ("main" in scaleData) {
+    // set up the mainScaleBox
     var msp = scaleData["main"];
+    var divTitle = "divTitle" in msp ? msp.divTitle : "Main Scale";
+    document.getElementById("mainScaleBox").innerHTML = '<div id="mainInfo">' + divTitle + ':</div><div id="mainScale"></div>';
     mainScaleProps.sp_values = msp.values;
     if(msp.scale_type == "factor")
        mainScaleProps.sp_values.push(msp.def_value[0]);
@@ -79,7 +81,7 @@ function makeMapScales(scaleData) {
     }
     makeScale(mainScaleProps);
   } else {
-    // Clear the div
+    // Clear the mainScaleBox
     document.getElementById("mainScaleBox").innerHTML = '';
   }
 
@@ -98,9 +100,11 @@ function makeMapScales(scaleData) {
   // properties that provide the scale data
   auxScaleProps.sp_divId = "#auxScale";
   auxScaleProps.sp_svgId = "#svgAuxScale";
-  // TODO: deal with missing aux scale
   if ("aux" in scaleData) {
+    // set up the auxScaleBox
     var asp = scaleData["aux"];
+    var divTitle = "divTitle" in asp ? asp.divTitle : "Aux Scale";
+    document.getElementById("auxScaleBox").innerHTML = '<div id="auxInfo">' + divTitle + ':</div><div id="auxScale"></div>';
     auxScaleProps.sp_values = asp.values;
     var aux_sp_breaks = asp.breaks;
     auxScaleProps.sp_breaks_idx_off = 1;
@@ -137,7 +141,7 @@ function makeMapScales(scaleData) {
     auxScaleProps.sp_box_text_color = "black";
     makeScale(auxScaleProps);
   } else {
-    // Clear the div
+    // Clear the auxScaleBox
     document.getElementById("auxScaleBox").innerHTML = '';
   }
 }
