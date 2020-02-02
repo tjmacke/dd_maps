@@ -41,31 +41,34 @@ function makeScale(scaleProps) {
       .attr("fill", scaleProps.sp_box_text_color);
   }
 
-  // Draw the ticks
-  d3.select(scaleProps.sp_svgId)
-    .selectAll("line")
-    .data(scaleProps.sp_breaks)
-    .enter()
-    .append("line")
-    .attr("x1", function(d, i) { return (i+scaleProps.sp_breaks_idx_off) * scaleProps.sp_width + scaleProps.sp_xoff; })
-    .attr("y1", scaleProps.sp_tick_yoff)
-    .attr("x2", function(d, i) { return (i+scaleProps.sp_breaks_idx_off) * scaleProps.sp_width + scaleProps.sp_xoff; })
-    .attr("y2", scaleProps.sp_tick_yoff + scaleProps.sp_tick_len)
-    .style("stroke", "black")
-    .style("stroke-width", "1px");
-
-  // Draw the tick labels
-  d3.select(scaleProps.sp_svgId)
-    .selectAll("text.tick")
-    .data(scaleProps.sp_breaks)
-    .enter()
-    .append("text")
-    .attr("class", "tick")
-    .attr("x", function(d, i) { return (i+scaleProps.sp_breaks_idx_off) * scaleProps.sp_width + scaleProps.sp_xoff; })
-    .attr("y", scaleProps.sp_tick_text_yoff)
-    .attr("font-size", scaleProps.sp_tick_font_size)
-    .attr("text-anchor", "middle")
-    .text(function(d) { return d; });
+  // factor scales do not have ticks, so no sp_breaks or sp_breaks == null
+  if(("sp_breaks" in scaleProps) && scaleProps.sp_breaks != null){
+    // Draw the ticks
+    d3.select(scaleProps.sp_svgId)
+      .selectAll("line")
+      .data(scaleProps.sp_breaks)
+      .enter()
+      .append("line")
+      .attr("x1", function(d, i) { return (i+scaleProps.sp_breaks_idx_off) * scaleProps.sp_width + scaleProps.sp_xoff; })
+      .attr("y1", scaleProps.sp_tick_yoff)
+      .attr("x2", function(d, i) { return (i+scaleProps.sp_breaks_idx_off) * scaleProps.sp_width + scaleProps.sp_xoff; })
+      .attr("y2", scaleProps.sp_tick_yoff + scaleProps.sp_tick_len)
+      .style("stroke", "black")
+      .style("stroke-width", "1px");
+  
+    // Draw the tick labels
+    d3.select(scaleProps.sp_svgId)
+      .selectAll("text.tick")
+      .data(scaleProps.sp_breaks)
+      .enter()
+      .append("text")
+      .attr("class", "tick")
+      .attr("x", function(d, i) { return (i+scaleProps.sp_breaks_idx_off) * scaleProps.sp_width + scaleProps.sp_xoff; })
+      .attr("y", scaleProps.sp_tick_text_yoff)
+      .attr("font-size", scaleProps.sp_tick_font_size)
+      .attr("text-anchor", "middle")
+      .text(function(d) { return d; });
+  }
 
   // Draw the scale title
   d3.select(scaleProps.sp_svgId)

@@ -9,9 +9,9 @@ function makeMapScales(scaleData) {
     return;
   }
 
-  if("data_stats" in scaleData) {
+  if("data_stats" in scaleData)
     document.getElementById("dataStats").innerHTML = "Stats: " + scaleData.data_stats;
-  }else
+  else
     document.getElementById("dataStats").innerHTML = '';
 
   var mainScaleProps = {}
