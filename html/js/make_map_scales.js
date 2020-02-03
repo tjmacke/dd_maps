@@ -54,7 +54,7 @@ function makeMapScales(scaleData) {
       }
     }
     mainScaleProps.sp_breaks = main_sp_breaks;
-    mainScaleProps.sp_title = ("title" in msp) ? msp.title : ["Main Scale"];
+    mainScaleProps.sp_title = ("title" in msp) ? msp.title : [""];
     mainScaleProps.sp_fill_boxes_func = function(d, i) {
       return "rgb(" + Math.round(d[0]*255) + "," + Math.round(d[1]*255) + "," + Math.round(d[2]*255) + ")";	// DIFF!
     };
@@ -123,7 +123,7 @@ function makeMapScales(scaleData) {
       }
     }
     auxScaleProps.sp_breaks = aux_sp_breaks;
-    auxScaleProps.sp_title = ("title" in asp) ? asp.title : ["Aux. Scale"];
+    auxScaleProps.sp_title = ("title" in asp) ? asp.title : [""];
     auxScaleProps.sp_fill_boxes_func = function(d, i) {
       return "white";											// DIFF!
     }
