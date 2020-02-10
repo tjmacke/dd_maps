@@ -32,8 +32,8 @@ function makeMapScales(scaleData) {
   if ("main" in scaleData) {
     // set up the mainScaleBox
     var msp = scaleData["main"];
-    var divTitle = "divTitle" in msp ? msp.divTitle : "Main Scale";
-    document.getElementById("mainScaleBox").innerHTML = '<div id="mainInfo">' + divTitle + ':</div><div id="mainScale"></div>';
+    var title = "title" in msp ? msp.title : "Main Scale";
+    document.getElementById("mainScaleBox").innerHTML = '<div id="mainInfo">' + title + ':</div><div id="mainScale"></div>';
     mainScaleProps.sp_values = msp.values;
     if(msp.scale_type == "factor")
        mainScaleProps.sp_values.push(msp.def_value[0]);
@@ -54,7 +54,7 @@ function makeMapScales(scaleData) {
       }
     }
     mainScaleProps.sp_breaks = main_sp_breaks;
-    mainScaleProps.sp_title = ("title" in msp) ? msp.title : [""];
+    mainScaleProps.sp_subtitle = ("subtitle" in msp) ? msp.subtitle : [""];
     mainScaleProps.sp_fill_boxes_func = function(d, i) {
       return "rgb(" + Math.round(d[0]*255) + "," + Math.round(d[1]*255) + "," + Math.round(d[2]*255) + ")";	// DIFF!
     };
@@ -103,8 +103,8 @@ function makeMapScales(scaleData) {
   if ("aux" in scaleData) {
     // set up the auxScaleBox
     var asp = scaleData["aux"];
-    var divTitle = "divTitle" in asp ? asp.divTitle : "Aux Scale";
-    document.getElementById("auxScaleBox").innerHTML = '<div id="auxInfo">' + divTitle + ':</div><div id="auxScale"></div>';
+    var title = "title" in asp ? asp.title : "Aux Scale";
+    document.getElementById("auxScaleBox").innerHTML = '<div id="auxInfo">' + title + ':</div><div id="auxScale"></div>';
     auxScaleProps.sp_values = asp.values;
     var aux_sp_breaks = asp.breaks;
     auxScaleProps.sp_breaks_idx_off = 1;
@@ -123,7 +123,7 @@ function makeMapScales(scaleData) {
       }
     }
     auxScaleProps.sp_breaks = aux_sp_breaks;
-    auxScaleProps.sp_title = ("title" in asp) ? asp.title : [""];
+    auxScaleProps.sp_subtitle = ("subtitle" in asp) ? asp.subtitle : [""];
     auxScaleProps.sp_fill_boxes_func = function(d, i) {
       return "white";											// DIFF!
     }

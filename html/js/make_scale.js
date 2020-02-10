@@ -73,7 +73,7 @@ function makeScale(scaleProps) {
   // Draw the scale title
   d3.select(scaleProps.sp_svgId)
     .selectAll("text.title")
-    .data(scaleProps.sp_title)
+    .data(scaleProps.sp_subtitle)
     .enter()
     .append("text")
     .attr("class", "title")
