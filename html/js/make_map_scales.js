@@ -36,7 +36,7 @@ function makeMapScales(scaleData) {
     document.getElementById("mainScaleBox").innerHTML = '<div id="mainInfo">' + title + ':</div><div id="mainScale"></div>';
     mainScaleProps.sp_values = msp.values;
     if(msp.scale_type == "factor")
-       mainScaleProps.sp_values.push(msp.def_value[0]);
+      mainScaleProps.sp_values.push(msp.def_value[0]);
     var main_sp_breaks = msp.breaks;
     mainScaleProps.sp_breaks_idx_off = 1;
     if (("min_value" in msp) || ("max_value" in msp)) {
@@ -74,7 +74,7 @@ function makeMapScales(scaleData) {
       for(var i = 0; i < msp.keys.length; i++) {
         main_box_text.push(msp.keys[i]);									// DIFF!
       }
-      main_box_text.push(msp.def_key_text);
+      main_box_text.push(msp.def_key);
       mainScaleProps.sp_box_text = main_box_text;
     } else {
       mainScaleProps.sp_box_text = null;									// DIFF!
@@ -106,6 +106,8 @@ function makeMapScales(scaleData) {
     var title = "title" in asp ? asp.title : "Aux Scale";
     document.getElementById("auxScaleBox").innerHTML = '<div id="auxInfo">' + title + ':</div><div id="auxScale"></div>';
     auxScaleProps.sp_values = asp.values;
+    if(asp.scale_type == "factor")
+      auxScaleProps.sp_values.push(asp.def_value[0]);
     var aux_sp_breaks = asp.breaks;
     auxScaleProps.sp_breaks_idx_off = 1;
     if (("min_value" in asp) || ("max_value" in asp)) {

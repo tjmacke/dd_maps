@@ -100,7 +100,7 @@ function IU_init(config, interp, name,    key, work, n_ary, ary, i, v_pat, parms
 			}
 		}
 		interp["def_value"] = work
-		key = name ".def_key_text"
+		key = name ".def_key"
 		work = config["_globals", key]
 		if(work == ""){
 			printf("ERROR: IU_init: no key named \"%s\" in config\n", key) > "/dev/stderr"
