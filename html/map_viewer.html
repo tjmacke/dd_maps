@@ -5,8 +5,8 @@
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no"/>
   <title>Map Viewer</title>
   <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-  <script src="https://api.mapbox.com/mapbox.js/v2.2.2/mapbox.js"></script>
-  <link href="https://api.mapbox.com/mapbox.js/v2.2.2/mapbox.css" rel="stylesheet"/>
+  <script src="https://api.mapbox.com/mapbox.js/v3.3.0/mapbox.js"></script>
+  <link href="https://api.mapbox.com/mapbox.js/v3.3.0/mapbox.css" rel="stylesheet"/>
   <style>
     body { margin: 0; padding: 0; }
     div.controls { position: absolute; width: 100%; height: 50px; top: 0; border: 2px solid black; }
@@ -76,10 +76,13 @@
     // This code sets up  the map
     L.mapbox.accessToken = "pk.eyJ1IjoidGptYWNrZSIsImEiOiJjaWZlZndqMmw2dXdycnlseHllc3hhaWxhIn0.BdoeGKCUMnGifNEsnzoOfg";
     // various map types.  I've been using mapbox.streets since day, but high-contrast seems more useful for chloropleths
-    var mapID = "mapbox.streets";
+    // var mapID = "mapbox.streets";
     // var mapID = "mapbox.high-contrast";
     // var mapID = "mapbox.light";
-    var map = L.mapbox.map("map", mapID).setView([37.4377, -122.1603], 14);
+    // var map = L.mapbox.map("map", mapID).setView([37.4377, -122.1603], 14);
+    var map = L.mapbox.map('map')
+        .setView([47.6, -122.3], 13)
+        .addLayer(L.mapbox.styleLayer('mapbox://styles/mapbox/streets-v11'));
     var myLayer = L.mapbox.featureLayer().addTo(map);
     // This function, called by the data-is-loaded callback passed to d3.json() draws the geoJson features
     function makeMap(geoJson) {
