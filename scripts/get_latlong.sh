@@ -25,6 +25,8 @@ function ss_post {
 JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
 
+CURL_MAX_CONNECT=3
+CURL_MAX_TIME=12
 CURL_OUT=/tmp/curl.json.$$
 CURL_ERR=/tmp/curl.err.$$
 JG_ERR=/tmp/jg.err.$$
@@ -163,7 +165,7 @@ else
 	exit 1
 fi
 
-curl -s -S $URL > $CURL_OUT 2> $CURL_ERR
+curl -fsS --connect-timeout $CURL_MAX_CONNECT -m $CURL_MAX_TIME $URL > $CURL_OUT 2> $CURL_ERR
 if [ -s $CURL_ERR ] ; then
 	cat $CURL_ERR 1>&2
 else
