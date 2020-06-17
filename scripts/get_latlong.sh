@@ -25,8 +25,8 @@ function ss_post {
 JU_HOME=$HOME/json_utils
 JU_BIN=$JU_HOME/bin
 
-CURL_MAX_CONNECT=3
-CURL_MAX_TIME=12
+CURL_MAX_CONNECT=2
+CURL_MAX_TIME=10
 CURL_OUT=/tmp/curl.json.$$
 CURL_ERR=/tmp/curl.err.$$
 JG_ERR=/tmp/jg.err.$$
