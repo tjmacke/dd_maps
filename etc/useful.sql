@@ -146,6 +146,7 @@ DELETE FROM addresses
 	WHERE address = A ;
 
 -- Used this to remove jobs that had bee incorrectly assigned to dashes
+-- This happened when we did two shifts in the same day, the count > 1
 DELETE FROM jobs
 WHERE DATE(time_start) IN (
 	SELECT date
