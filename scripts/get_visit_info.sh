@@ -2,9 +2,11 @@
 #
 . ~/etc/funcs.sh
 
-U_MSG="usage: $0 [ -help ] -at { src | dst } [ -meta meta-file ] db"
+U_MSG="usage: $0 [ -help ] -at { src | dst } [ -w where ] [ -u { weeks* | days } ] [ -meta meta-file ] db"
 
 ATYPE=
+WHERE=
+UNIT=
 MFILE=
 DB=
 
@@ -22,6 +24,26 @@ while [ $# -gt 0 ] ; do
 			exit 1
 		fi
 		ATYPE=$1
+		shift
+		;;
+	-w)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-w requires where clause argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		WHERE="$1"
+		shift
+		;;
+	-u)
+		shift
+		if [ $# -eq 0 ] ; then
+			LOG ERROR "-u require unit argument"
+			echo "$U_MSG" 1>&2
+			exit 1
+		fi
+		UNIT=$1
 		shift
 		;;
 	-meta)
@@ -67,6 +89,21 @@ else
 	exit 1
 fi
 
+if [ ! -z "$UNIT" ] ; then
+	if [ "$UNIT" == "weeks" ] ; then
+		U_DIV=7
+	elif [ "$UNIT" == "days" ] ; then
+		U_DIV=1
+	else
+		LOG ERROR "unknown unit \"$UNIT\", must be weeks, or days"
+		echo "$U_MSG" 1>&2
+		exit 1
+	fi
+else
+	UNIT="weeks"
+	U_DIV=7
+fi
+
 if [ -z "$DB" ] ; then
 	LOG ERROR "missing db argument"
 	echo "$U_MSG" 1>&2
@@ -74,6 +111,10 @@ if [ -z "$DB" ] ; then
 elif [ ! -s $DB ] ; then
 	LOG ERROR "database $DB either does not exist or has zero size"
 	exit 1
+fi
+
+if [ ! -z "$WHERE" ] ; then
+	WHERE="WHERE $WHERE"
 fi
 
 sqlite3 $DB <<_EOF_
@@ -85,10 +126,12 @@ SELECT	MAX(strftime('%Y-%m-%d', time_start)) AS last,
 	COUNT($ATYPE.address) AS visits,
 	$ATYPE.lng AS lng,
 	$ATYPE.lat AS lat,
-	printf('%.5f', (julianday((SELECT strftime('%Y-%m-%d', MAX(time_start)) FROM jobs)) - julianday(MAX(strftime('%Y-%m-%d', time_start))))/7) AS weeks,
+	printf('%.5f', (julianday((SELECT strftime('%Y-%m-%d', MAX(time_start)) FROM jobs)) - julianday(MAX(strftime('%Y-%m-%d', time_start))))/$U_DIV) AS $UNIT,
 	printf('%s:<br/>visits=%s, last=%s', address, COUNT($ATYPE.address), MAX(strftime('%Y-%m-%d', time_start))) AS title
 FROM jobs
 INNER JOIN addresses $ATYPE ON $ATYPE.address_id = jobs.${ATYPE}_addr_id
+-- WHERE date(time_start) >= '2021-03-22'
+$WHERE
 GROUP BY $ATYPE.address ;
 _EOF_
 
