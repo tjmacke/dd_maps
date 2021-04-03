@@ -136,7 +136,7 @@ function GU_str_escape(str,   work) {
 
 	work = str
 	gsub(/\\/, "\\\\", work)
-	gsub(/\"/, "\\\"", work)
+	gsub(/"/, "\\\"", work)
 	gsub(/\//, "\\/", work)
 	return work
 }
