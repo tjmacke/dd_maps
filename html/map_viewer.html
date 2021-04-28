@@ -8,7 +8,7 @@
   <script src="https://api.mapbox.com/mapbox.js/v3.3.0/mapbox.js"></script>
   <link href="https://api.mapbox.com/mapbox.js/v3.3.0/mapbox.css" rel="stylesheet"/>
   <style>
-    body { margin: 0; padding: 0; }
+    body { margin: 0; padding: 0; overflow-y: hidden; }
     div.controls { position: absolute; width: 100%; height: 50px; top: 0; border: 2px solid black; }
     #data {float: left; width: 25%; height: 100%; }
     #fileReader {float: left; width: 100%; height: 50%; }
@@ -22,7 +22,7 @@
     #auxInfo { float: left; width: 20%; height: 100%; }
     #auxScale { float: right; width: 80%; height: 100%; }
 
-    #map { position: absolute; width: 100%; height: 100%; top: 50px; border: 2px solid black; }
+    #map { position: absolute; width: 100%; height: 100%; top: 50px; border: 2px solid black; overflow: hidden; }
   </style>
 </head>
 <body>
