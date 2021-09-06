@@ -158,3 +158,22 @@ WHERE DATE(time_start) IN (
 		ORDER BY date
 	)
 ) ;
+
+-- Used this (a cte no less!) to find days when the number of deliveries in
+-- shift.data does not agree with the number of jobs in fp.*.log
+
+.headers on
+.mode tabs
+WITH dd(d_id, d_date, d_count) AS (
+	SELECT dash_id, DATE(time_start) AS d_date, SUM(deliveries) AS d_count
+	FROM dashes
+	GROUP BY d_date
+),
+	jd(j_date, j_count) AS (
+	SELECT DATE(time_start) AS j_date, COUNT(DATE(time_start)) AS j_count
+	FROM jobs
+	GROUP BY j_date
+)
+SELECT dd.d_id, dd.d_date, dd.d_count, jd.j_count
+FROM dd 
+INNER JOIN jd ON jd.j_date = dd.d_date AND jd.j_count != dd.d_count ;
